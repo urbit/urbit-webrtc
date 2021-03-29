@@ -5,7 +5,9 @@
 ::   %switchboard-state mark
 :: - by scrying the call uuid and seeing the state:qa
 ::
-:: TODO: convert marks to switchboard- prefix
+:: TODO: generalize "signal" type for SDP and ICE candidate messages,
+:: see RTCIceCandidateInit type for JSON of ICE candidates
+:: TOD: add `reject` poke that will end a call without starting it
 |%
 +$  versioned-state
   $%  state-0
