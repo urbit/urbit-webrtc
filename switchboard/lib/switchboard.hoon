@@ -24,12 +24,19 @@
         ^-  @tas
         `@tas`(so jon)
       ++  call
-        %-  of
-        :~
-          uuid+uuid
-          peer+peer
-          dap+dap
-        ==
+        |=  jon=json
+        ^-  call:switchboard
+        =/  output
+          %-
+            %-  ot
+              :~
+                uuid+uuid
+                peer+peer
+                dap+dap
+              ==
+            jon
+        ~!  outut
+        output
       ++  ring
         %-  of
         :~
@@ -39,23 +46,26 @@
       ++  signal
         |=  jon=json
         ^-  signal:switchboard
+        ?>  ?=  [%o *]  jon
         =/  ty  (~(got by p.jon) 'type')
         ?:  =(ty 'sdp')
           :-  %sdp
-          ((of ~[type+su sdp+su]) (~(got by p.jon) 'signal'))
+          ((of ~[type+so sdp+so]) (~(got by p.jon) 'signal'))
         ?:  =(ty 'icecandidate')
           =/  cjon  (~(got by p.jon) 'icecandidate')
+          ?>  ?=  [%o *]  cjon
           :*
             %icecandidate
-            ^=  candidate  (fall '' (biff (~(get by p.cjon) 'candidate') su))
-            ^=  sdp-mid  (biff (~(get by p.cjon) 'sdpMid') su)
-            ^=  sdp-m-line-index  (biff (~(get by p.cjon) 'sdpMLineIndex') su)
-            ^=  username-fragment  (biff (~(get by p.cjon) 'usernameFragment') su)
+            ^=  candidate  (fall (bind (~(get by p.cjon) 'candidate') so) '')
+            ^=  sdp-mid  (bind (~(get by p.cjon) 'sdpMid') so)
+            ^=  sdp-m-line-index  (bind (~(get by p.cjon) 'sdpMLineIndex') so)
+            ^=  username-fragment  (bind (~(get by p.cjon) 'usernameFragment') so)
           ==
         ~|  "signal type should be sdp or icecandidate"  !!
       ++  incoming
       |=  jon=json
       ^-  incoming:switchboard
+      ?>  ?=  [%o *]  jon
       =/  ty  (~(got by p.jon) 'type')
       ?:  =(ty 'incoming')
         :-  %incoming
@@ -63,7 +73,7 @@
           ::
       ?:  =(ty 'hangup')
         :-  %hangup
-        ^=  uuid  (su (~(got by p.jon) 'uuid'))
+        ^=  uuid  (so (~(got by p.jon) 'uuid'))
       ~|  "incoming type should be incoming or hangup"  !!
     --
   ++  enjs
@@ -81,7 +91,7 @@
       ++  incoming
         |=  =incoming:switchboard
         ^-  json
-        ?-  -.signal
+        ?-  -.incoming
             ::
             %incoming
           %-  pairs

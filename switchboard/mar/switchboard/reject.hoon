@@ -3,12 +3,12 @@
 |_  uuid=@ta
 ++  grab
   |%
-  ++  noun  |=(x=* `@ta`x)
+  ++  noun  |=(x=@ `@ta`x)
   ++  json  uuid:dejs
   --
 ++  grow
   |%
   ++  noun  uuid
-  ++  json  (uuid:enjs call)
+  ++  json  (uuid:enjs uuid)
   --
 --

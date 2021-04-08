@@ -83,7 +83,7 @@
       ::
       %switchboard-reject
     =/  uuid=@ta  !<(@ta vase)
-    =/  call-state (~(get by calls.state) uuid)
+    =/  call-state  (~(get by calls.state) uuid)
     ?~  call-state
       ~|  "Tried to reject non-existent call uuid {<uuid>}"  !!
     ?+  connection-state.u.call-state  `this
@@ -423,7 +423,7 @@
 ++  remote-disconnected
   |=  =call:switchboard
   ^-  (quip card _state)
-  =/  call-state (~(got by calls.state) uuid.call)
+  =/  call-state  (~(got by calls.state) uuid.call)
   :_  state(calls (~(del by calls.state) uuid.call), queue (~(del by queue.state) uuid.call))
   ?+  connection-state.call-state
     :~
@@ -441,7 +441,7 @@
       :*
         %give  %fact
         ~[/incoming/[dap.call]]
-        %incoming  !>((incoming:switchboard [%hangup uuid]))
+        %incoming  !>((incoming:switchboard [%hangup uuid.call]))
       ==
     ==
   ==
