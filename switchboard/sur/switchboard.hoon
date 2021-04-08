@@ -1,10 +1,16 @@
 |%
   +$  call
     [uuid=@ta peer=@p dap=@tas]
+  +$  incoming
+    $%  [%incoming call=call]
+        [%hangup uuid=@ta]
+    ==
   +$  ring
     [uuid=@ta dap=@tas]
   +$  signal
-    [type=@t sdp=@t]
+    $%  [%sdp type=@t sdp=@t]
+        [%icecandidate candidate=@t sdp-mid=(unit @t) sdp-m-line-index=(unit @t) username-fragment=(unit @t)]
+    ==
   +$  call-signal
     [uuid=@ta =signal]
   +$  call-state

@@ -39,6 +39,8 @@
 ::      lib/switchboard.hoon
 ::   -  peer=@p, the remote ship to call
 ::   -  dap=@tas, the remote app to call
+:: %reject: Reject an incoming call
+::   The envased type is just the uuid
 :: %ring:
 ::   initial inter-ship call placement: tell a remote switchboard that
 ::   we want to call a particular dap
@@ -78,6 +80,34 @@
     =^  cards  state
     (move-to-state:helper [uuid=uuid.ring peer=src.bowl dap=dap.ring] %incoming-ringing)
     [cards this]
+      ::
+      %switchboard-reject
+    =/  uuid=@ta  !<(@ta vase)
+    =/  call-state (~(get by calls.state) uuid)
+    ?~  call-state
+      ~|  "Tried to reject non-existent call uuid {<uuid>}"  !!
+    ?+  connection-state.u.call-state  `this
+        ::
+        %ringing
+      :_  this(calls.state (~(del by calls.state) uuid), queue.state (~(del by queue.state) uuid))
+      :~
+        :*
+          %give  %kick
+          ~[/call/[uuid]]
+          ~
+        ==
+      ==
+        ::
+        %incoming-ringing
+      :_  this(calls.state (~(del by calls.state) uuid), queue.state (~(del by queue.state) uuid))
+      :~
+        :*
+          %pass  /reject-poke/[uuid]
+          %agent  [peer.call.u.call-state %switchboard]
+          %poke  [%switchboard-reject !>(uuid)]
+        ==
+      ==
+    ==
   ==
 :: watches
 :: - /incoming/[dap] for agents to register to receive calls
@@ -393,12 +423,26 @@
 ++  remote-disconnected
   |=  =call:switchboard
   ^-  (quip card _state)
+  =/  call-state (~(got by calls.state) uuid.call)
   :_  state(calls (~(del by calls.state) uuid.call), queue (~(del by queue.state) uuid.call))
-  :~
-    :*
-      %give  %kick
-      ~[/call/[uuid.call]]
-      ~
+  ?+  connection-state.call-state
+    :~
+      :*
+        %give  %kick
+        ~[/call/[uuid.call]]
+        ~
+      ==
+    ==
+      ::
+      :: in this case, tell the listening app that the call has been
+      :: hung up on
+      %incoming-ringing
+    :~
+      :*
+        %give  %fact
+        ~[/incoming/[dap.call]]
+        %incoming  !>((incoming:switchboard [%hangup uuid]))
+      ==
     ==
   ==
 ++  local-disconnected
