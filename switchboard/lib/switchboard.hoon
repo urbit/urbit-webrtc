@@ -38,7 +38,7 @@
         ~!  outut
         output
       ++  ring
-        %-  of
+        %-  ot
         :~
           uuid+uuid
           dap+dap
@@ -50,7 +50,7 @@
         =/  ty  (~(got by p.jon) 'type')
         ?:  =(ty 'sdp')
           :-  %sdp
-          ((of ~[type+so sdp+so]) (~(got by p.jon) 'signal'))
+          ((ot ~[type+so sdp+so]) (~(got by p.jon) 'signal'))
         ?:  =(ty 'icecandidate')
           =/  cjon  (~(got by p.jon) 'icecandidate')
           ?>  ?=  [%o *]  cjon
