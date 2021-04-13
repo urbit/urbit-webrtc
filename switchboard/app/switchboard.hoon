@@ -52,8 +52,8 @@
   ^-  (quip card _this)
   ?+  mark  ~|  "switchboard: poked with unknown mark: {<mark>}"  !!
       %switchboard-call
-    ~|  "switchboard: starting call: {<uuid>} with peer {<peer}>}"
     =/  =call:switchboard  !<(call:switchboard vase)
+    ~|  "switchboard: starting call: {<uuid.call>} with peer {<peer.call>}"
     =^  cards  state
     (move-to-state:helper call %starting)
     [cards this]
