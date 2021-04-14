@@ -2,12 +2,8 @@
 /+  default-agent, dbug, switchboard-lib=switchboard
 :: Apps informed 2 ways about call state updates
 :: - by notifications on the /call/[uuid] channel with the
-::   %switchboard-state mark
+::   %switchboard-connection-state mark
 :: - by scrying the call uuid and seeing the state:qa
-::
-:: TODO: generalize "signal" type for SDP and ICE candidate messages,
-:: see RTCIceCandidateInit type for JSON of ICE candidates
-:: TOD: add `reject` poke that will end a call without starting it
 |%
 +$  versioned-state
   $%  state-0
@@ -58,7 +54,7 @@
     (move-to-state:helper call %starting)
     [cards this]
       ::
-      %switchboard-signal
+      %switchboard-call-signal
     =/  =call-signal:switchboard  !<(call-signal:switchboard vase)
     =/  call-state  (~(get by calls.state) uuid.call-signal)
     ?~  call-state
@@ -251,11 +247,20 @@
         :: %connected
         :: if negative, kick dap
         %watch-ack
-      =^  cards  state
-      ?~  +.sign
-        (move-to-state:helper call.u.call-state %connected)
-      (remote-disconnected:helper call.u.call-state)
-      [cards this]
+      ?+  connection-state.u.call-state ::-::
+        ?~  +.sign
+          `this
+        =^  cards  state
+        (remote-disconnected:helper call.u.call-state)
+        [cards this]
+          :: %answered -> %connected
+          %answered
+        =^  cards  state
+        ?~  +.sign
+          (move-to-state:helper call.u.call-state %connected)
+        (remote-disconnected:helper call.u.call-state)
+        [cards this]
+      ==
         :: SDP message, relay to dap
         %fact
       :_  this
@@ -285,7 +290,7 @@
         %poke-ack
       =^  cards  state
       ?~  +.sign
-        (move-to-state:helper call.u.call-state %dialing)
+        (move-to-state:helper call.u.call-state %ringing)
       (remote-disconnected:helper call.u.call-state)
       [cards this]
     ==
@@ -326,7 +331,7 @@
       :*
         %give  %fact
         ~[/call/[uuid.call]]
-        %switchboard-state  !>((connection-state:switchboard %dialing))
+        %switchboard-connection-state  !>((connection-state:switchboard %dialing))
       ==
     ==
     :: We got the poke-ack for our %ring poke, awaiting
@@ -342,12 +347,12 @@
       :*
         %give  %fact
         ~[/call/[uuid.call]]
-        %switchboard-state  !>((connection-state:switchboard %ringing))
+        %switchboard-connection-state  !>((connection-state:switchboard %ringing))
       ==
     ==
     :: We got a subscription from the remote switchboard, subscribe back
     :: to them
-      %answered
+     %answered
     ?>  (~(has by calls.state) uuid.call)
     =/  state-call  call:(~(got by calls.state) uuid.call)
     :: make sure we are not modifying the call record, which should
@@ -363,18 +368,18 @@
       :*
         %give  %fact
         ~[/call/[uuid.call]]
-        %switchboard-state  !>((connection-state:switchboard %answered))
+        %switchboard-connection-state  !>((connection-state:switchboard %answered))
       ==
     ==
     :: We got a %ring poke from a remote agent, let the proper app know
       %incoming-ringing
     ?<  (~(has by calls.state) uuid.call) :: don't overwrite an existing call!
-    :_  state(calls (~(put by calls.state) uuid.call [call=call connection-state=%starting]))
+    :_  state(calls (~(put by calls.state) uuid.call [call=call connection-state=%incoming-ringing]))
     :~
       :*
         %give  %fact
         ~[/incoming/[dap.call]]
-        %switchboard-call  !>(call)
+        %switchboard-incoming  !>([%incoming call])
       ==
     ==
     :: Local app watched the incoming call, subscribe to the
@@ -388,9 +393,14 @@
     :_  state(calls (~(put by calls.state) uuid.call [call=call connection-state=%connecting]))
     :~
       :*
+        %pass   /peer-signal/[uuid.call]
+        %agent  [peer.call %switchboard]
+        %watch  /call-peer/[uuid.call]
+      ==
+      :*
         %give  %fact
         ~[/call/[uuid.call]]
-        %switchboard-state  !>((connection-state:switchboard %connecting))
+        %switchboard-connection-state  !>((connection-state:switchboard %connecting))
       ==
     ==
     :: Remote switchboard (caller) subscribed to us (callee), or
@@ -408,10 +418,11 @@
       :*
         %give  %fact
         ~[/call/[uuid.call]]
-        %switchboard-state  !>((connection-state:switchboard %connected))
+        %switchboard-connection-state  !>((connection-state:switchboard %connected))
       ==
       :: We've been queuing up any SDP messages from our app until now,
       :: it's time to send them to the remote switchboard
+      :: TODO: clear the SDP message queue for the call
       %:  turn  call-queue
         |=  =signal:switchboard
           :*
@@ -442,7 +453,7 @@
       :*
         %give  %fact
         ~[/incoming/[dap.call]]
-        %incoming  !>((incoming:switchboard [%hangup uuid.call]))
+        %switchboard-incoming  !>([%hangup uuid.call])
       ==
     ==
   ==

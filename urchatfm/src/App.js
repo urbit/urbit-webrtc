@@ -5,6 +5,7 @@ import {UrbitRTCApp} from 'switchboard';
 import {useState, useEffect, useRef} from 'react';
 
 // TODO:
+// oops
 // test and bugfix
 // call picked up event
 // *hangup button*
@@ -27,31 +28,36 @@ function Urchat(urbit, urbitRtcApp) {
   const [incomingCall, setIncomingCall] = useState(null);
   // if there is a call ongoing, we place it here
   const [ongoingCall, setOngoingCall] = useState(null);
+  // if we are the caller, this is true, otherwise false
+  const [isCaller, setIsCaller] = useState(false);
 
   // Set up the incoming call handler
   useEffect( () => {
     urbitRtcApp.addEventListener("incomingcall", (incomingCallEvt) => {
       if(incomingCall === null && ongoingCall === null) {
         setIncomingCall(incomingCallEvt);
+        console.log("incoming: ", incomingCallEvt);
       } else {
         incomingCallEvt.reject();
+        console.log("rejected: ", incomingCallEvt);
       }
     });
   }, [urbitRtcApp]);
 
   return (
     <React.Fragment>
-    {(incomingCall === null) ? "" : (<UrchatIncoming incoming={incomingCall} setIncoming={setIncomingCall} setOngoing={setOngoingCall} />)}
-    {(ongoingCall === null) ? "" : (<UrchatChat ongoing={ongoingCall} setOngoing={setOngoingCall} />)}
-    {(incomingCall === null && ongoingCall === null) ?  (<UrchatCall setOngoing={setOngoingCall} urbitRtcApp={urbitRtcApp} />) : ""}
+    {(incomingCall === null) ? "" : (<UrchatIncoming incoming={incomingCall} setIncoming={setIncomingCall} setOngoing={setOngoingCall} setIsCaller={setIsCaller} />)}
+    {(ongoingCall === null) ? "" : (<UrchatChat ongoing={ongoingCall} setOngoing={setOngoingCall} isCaller={isCaller} />)}
+    {(incomingCall === null && ongoingCall === null) ?  (<UrchatCall setOngoing={setOngoingCall} setIsCaller={setIsCaller} urbitRtcApp={urbitRtcApp} />) : ""}
     </React.Fragment>
   );
 }
 
-function UrchatIncoming({incoming, setIncoming, setOngoing}) {
+function UrchatIncoming({incoming, setIncoming, setOngoing, setIsCaller}) {
   const answer = () => {
     setOngoing({call: incoming.call, conn: incoming.answer()});
     setIncoming(null);
+    setIsCaller(false);
   }
 
   const reject = () => {
@@ -67,21 +73,21 @@ function UrchatIncoming({incoming, setIncoming, setOngoing}) {
   )
 }
 
-function UrchatChat({ongoing, setOngoing}) {
-  const dataChannelRef = useRef(null);
+function UrchatChat({ongoing, setOngoing, isCaller}) {
+  const [dataChannel, setDataChannel] = useState(null);
+  const [dataChannelOpen, setDataChannelOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [composedMessage, setComposedMessage] = useState("");
-  const dataChannel = dataChannelRef.current;
 
   const incomingChatMessage = (evt) => {
-    setMessages(messages.push({sender: ongoing.call.peer, message: evt.data}));
+    setMessages(messages.concat([{sender: ongoing.call.peer, message: evt.data}]));
   }
 
   const sendMessage = (evt) => {
-    dataChannel.send(composedMessage);
-    setMessages(messages.push({sender: "me", message: composedMessage}));
-    setComposedMessage("");
     evt.preventDefault()
+    dataChannel.send(composedMessage);
+    setMessages(messages.concat([{sender: "me", message: composedMessage}]));
+    setComposedMessage("");
   }
 
   const hangup = () => {
@@ -94,18 +100,39 @@ function UrchatChat({ongoing, setOngoing}) {
   }
 
   const setupDataChannel = () => {
-    dataChannelRef.current = ongoing.conn.createDataChannel("urchatfm", { id: 5, negotiated: true });
-    dataChannelRef.addEventListener("message", incomingChatMessage);
+    const newDataChannel = ongoing.conn.createDataChannel("urchatfm", {});
+    setDataChannel(newDataChannel);
+    newDataChannel.addEventListener("open", () => { console.log("Data channel open"); setDataChannelOpen(true)});
+    newDataChannel.addEventListener("close", () => { console.log("Data channel closed"); setDataChannelOpen(false)});
   };
 
-  useEffect(() => {
-    ongoing.conn.addEventListener("statechanged", (evt) => { if(evt.state === "connected") { setupDataChannel() }});
-  });
+  const receiveDataChannel = (evt) => {
+    const newDataChannel = evt.channel;
+    setDataChannel(newDataChannel);
+    newDataChannel.addEventListener("open", () => { console.log("Data channel open"); setDataChannelOpen(true)});
+    newDataChannel.addEventListener("close", () => { console.log("Data channel closed"); setDataChannelOpen(false)});
+  }
 
-  const urchatMessage = ({sender, message}) => {
+  useEffect(() => {
+    if(isCaller) {
+      ongoing.conn.addEventListener("statechanged", (evt) => { console.log("state changed", evt.urbitState); if(evt.urbitState === "connected") { setupDataChannel() }});
+    } else {
+      ongoing.conn.addEventListener("datachannel", receiveDataChannel)
+    }
+  }, [ongoing]);
+
+  // need to reset this each time to close over the messages queue
+  useEffect(() => {
+    if( dataChannel !== null ) {
+      dataChannel.onmessage = incomingChatMessage;
+    }
+  }, [dataChannel, messages]);
+    
+
+  const UrchatMessage = ({sender, message}) => {
     return (
       <div className="msg">
-        <span className="msg-sender">{sender}:</span>:
+        <span className="msg-sender" style={{fontWeight: "bold"}}>{sender}: </span>
         <span className="msg-content">{message}</span>
       </div>
     )
@@ -114,25 +141,28 @@ function UrchatChat({ongoing, setOngoing}) {
   return (
     <div className="Urchat-chat">
       <div className="messages">
-        {messages.map(urchatMessage)}
+          {messages.map((msg, index) => (
+            <UrchatMessage key={index} sender={msg.sender} message={msg.message} />
+          ))}
       </div>
       <form onSubmit={sendMessage}>
         <input type="text" value={composedMessage} onChange={(evt) => setComposedMessage(evt.target.value)}/>
-        <input type="submit" value="Send"/>
+        <input type="submit" value="Send" disabled={dataChannel === null || ! dataChannelOpen}/>
       </form>
       <button type="button" onClick={hangup}>Hang Up</button>
     </div>
   )
 }
 
-function UrchatCall({setOngoing, urbitRtcApp}) {
+function UrchatCall({setOngoing, setIsCaller, urbitRtcApp}) {
   const [ship, setShip] = useState("zod");
   
   const placeCall = (evt) => {
+    evt.preventDefault();
     const conn = urbitRtcApp.call(ship, "urchatfm");
     const call = { peer: ship, dap: "urchatfm", uuid: conn.uuid };
     setOngoing({ conn: conn, call: call });
-    evt.preventDefault();
+    setIsCaller(true);
   };
 
   return (

@@ -11,4 +11,5 @@
   ++  noun  signal
   ++  json  (signal:enjs signal)
   --
+++  grad  %noun
 --

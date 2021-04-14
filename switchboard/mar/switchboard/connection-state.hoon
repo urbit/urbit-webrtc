@@ -11,4 +11,5 @@
   ++  noun  connection-state
   ++  json  (connection-state:enjs connection-state)
   --
+++  grad  %noun
 --

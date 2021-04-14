@@ -11,5 +11,6 @@
   ++  noun  ring
   ++  json  (ring:enjs ring)
   --
+++  grad  %noun
 --
 

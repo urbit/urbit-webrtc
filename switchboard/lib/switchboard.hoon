@@ -47,10 +47,10 @@
         |=  jon=json
         ^-  signal:switchboard
         ?>  ?=  [%o *]  jon
-        =/  ty  (~(got by p.jon) 'type')
+        =/  ty  (so (~(got by p.jon) 'type'))
         ?:  =(ty 'sdp')
           :-  %sdp
-          ((ot ~[type+so sdp+so]) (~(got by p.jon) 'signal'))
+          ((ot ~[type+so sdp+so]) (~(got by p.jon) 'sdp'))
         ?:  =(ty 'icecandidate')
           =/  cjon  (~(got by p.jon) 'icecandidate')
           ?>  ?=  [%o *]  cjon
@@ -62,6 +62,10 @@
             ^=  username-fragment  (bind (~(get by p.cjon) 'usernameFragment') so)
           ==
         ~|  "signal type should be sdp or icecandidate"  !!
+      ++  call-signal
+        |=  jon=json
+        ^-  call-signal:switchboard
+        ((ot ~[uuid+uuid signal+signal]) jon) 
       ++  incoming
       |=  jon=json
       ^-  incoming:switchboard
@@ -145,6 +149,14 @@
                 ==
             ==
           ==
+      ++  call-signal
+        |=  =call-signal:switchboard
+        ^-  json
+        %-  pairs
+        :~
+          uuid+(uuid uuid.call-signal)
+          signal+(signal signal.call-signal)
+        ==
       ++  uuid
         |=  uuid=@ta
         ^-  json
