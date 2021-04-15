@@ -72,7 +72,7 @@ class UrbitRTCApp extends EventTarget {
  */
 class UrbitRTCPeerConnection extends RTCPeerConnection {
   constructor(peer, dap, uuid = undefined, urbit, configuration = undefined) {
-    super(configuration);
+    super({iceServers: [{urls: "stun:stun.l.google.com:19302"}]});
     // Urbit airlock
     this.urbit = urbit;
     // Name of ship we are calling
@@ -88,13 +88,11 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
     // ICE candidate callback
     this.onicecandidate = (evt) => {
       // Always trickle ICE candidates, if we can
-      if((! evt.candidate === null) && this.canTrickleIceCandidates) {
+      if((evt.candidate !== null) && this.canTrickleIceCandidates) {
+        console.log("Sending ICE candidate: ", evt.candidate);
         this.urbit.poke({app: 'switchboard', mark: 'switchboard-call-signal', json: { uuid: this.uuid, signal: { type: "icecandidate", icecandidate: evt.candidate.toJSON() }}}).catch((err) => this.closeWithError(err));
       }
     };
-
-    // Signalling state change
-    this.onsignalingstatechange = (evt) => console.log("Signaling state: ", this.signalingState);
 
     // Renegotiation callback, called when media channels are added/deleted
     // 
@@ -114,9 +112,7 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
   /** With a UUID, tell switchboard about our call */
   async ring(uuid) {
     this.uuid = uuid;
-    console.log("calling", {uuid: this.uuid, peer: this.peer, dap: this.dap});
-    const id = await this.urbit.poke({app: 'switchboard', mark: 'switchboard-call', json: { uuid: this.uuid, peer: this.peer, dap: this.dap }}).then((id) => console.log("then.sent call poke", id)).catch((err) => console.log(err));
-    console.log("sent call poke", id);
+    const id = await this.urbit.poke({app: 'switchboard', mark: 'switchboard-call', json: { uuid: this.uuid, peer: this.peer, dap: this.dap }}).catch((err) => console.log(err));
     return this.subscribe();
   }
 
@@ -168,25 +164,26 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
       case 'object':
         switch(signal.type) {
           case "sdp":
-            if(signal.sdp.type !== "answer" || this.signalingState !== "stable") {
-              // Tell the RTCPeerConnection logic about the remote signal
-              await this.setRemoteDescription(signal.sdp);
-              // If this was an offer, then the remote peer is trying to (re)negotiate
-              // and we should answer them
-              if(signal.sdp.type === "offer") {
-                const answer = await this.createAnswer();
-                await this.setLocalDescription(answer);
-                if(! this.canTrickleIceCandidates) {
-                  await this.iceCandidatesGathered();
-                }
-                return this.sendSDP();
+            console.log("Setting remote description", signal.sdp);
+            // Tell the RTCPeerConnection logic about the remote signal
+            await this.setRemoteDescription(signal.sdp);
+            // If this was an offer, then the remote peer is trying to (re)negotiate
+            // and we should answer them
+            if(signal.sdp.type === "offer") {
+              const answer = await this.createAnswer();
+              console.log("Sending answer", answer);
+              await this.setLocalDescription(answer);
+              if(! this.canTrickleIceCandidates) {
+                await this.iceCandidatesGathered();
               }
-              return;
+              return this.sendSDP();
             }
+            return;
             break;
           case "icecandidate":
             // We got an ICE candidate from the remote peer
             // try it out
+            console.log("adding ICE candidate", signal.icecandidate);
             return this.addIceCandidate(signal.icecandidate);
             break;
         }
@@ -197,6 +194,7 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
   /** Called when negotiation is required */
   async renegotiate() {
     const offer = await this.createOffer();
+    console.log("Sending offer: ", offer);
     await this.setLocalDescription(offer);
     if(! this.canTrickleIceCandidates) {
       await this.iceCandidatesGathered();

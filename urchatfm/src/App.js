@@ -80,7 +80,7 @@ function UrchatChat({ongoing, setOngoing, isCaller}) {
   const [composedMessage, setComposedMessage] = useState("");
 
   const incomingChatMessage = (evt) => {
-    setMessages(messages.concat([{sender: ongoing.call.peer, message: evt.data}]));
+    setMessages(messages => messages.concat([{sender: ongoing.call.peer, message: evt.data}]));
   }
 
   const sendMessage = (evt) => {
@@ -104,6 +104,7 @@ function UrchatChat({ongoing, setOngoing, isCaller}) {
     setDataChannel(newDataChannel);
     newDataChannel.addEventListener("open", () => { console.log("Data channel open"); setDataChannelOpen(true)});
     newDataChannel.addEventListener("close", () => { console.log("Data channel closed"); setDataChannelOpen(false)});
+    newDataChannel.addEventListener("message", incomingChatMessage);
   };
 
   const receiveDataChannel = (evt) => {
@@ -111,6 +112,7 @@ function UrchatChat({ongoing, setOngoing, isCaller}) {
     setDataChannel(newDataChannel);
     newDataChannel.addEventListener("open", () => { console.log("Data channel open"); setDataChannelOpen(true)});
     newDataChannel.addEventListener("close", () => { console.log("Data channel closed"); setDataChannelOpen(false)});
+    newDataChannel.addEventListener("message", incomingChatMessage);
   }
 
   useEffect(() => {
@@ -120,14 +122,6 @@ function UrchatChat({ongoing, setOngoing, isCaller}) {
       ongoing.conn.addEventListener("datachannel", receiveDataChannel)
     }
   }, [ongoing]);
-
-  // need to reset this each time to close over the messages queue
-  useEffect(() => {
-    if( dataChannel !== null ) {
-      dataChannel.onmessage = incomingChatMessage;
-    }
-  }, [dataChannel, messages]);
-    
 
   const UrchatMessage = ({sender, message}) => {
     return (

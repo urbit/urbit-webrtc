@@ -58,7 +58,7 @@
             %icecandidate
             ^=  candidate  (fall (bind (~(get by p.cjon) 'candidate') so) '')
             ^=  sdp-mid  (bind (~(get by p.cjon) 'sdpMid') so)
-            ^=  sdp-m-line-index  (bind (~(get by p.cjon) 'sdpMLineIndex') so)
+            ^=  sdp-m-line-index  (bind (~(get by p.cjon) 'sdpMLineIndex') ni)
             ^=  username-fragment  (bind (~(get by p.cjon) 'usernameFragment') so)
           ==
         ~|  "signal type should be sdp or icecandidate"  !!
@@ -134,18 +134,18 @@
               type+s+'icecandidate'
               :-  'icecandidate'
                 %-  pairs
-                :-  ['candidate' [%s candidate.signal]]
-                %:  murn
-                  :~
-                    ['sdpMid' sdp-mid.signal]
-                    ['sdpMLineIndex' sdp-m-line-index.signal]
-                    ['usernameFragment' username-fragment.signal]
-                  ==
-                  |=  x=[tag=@t content=(unit @t)]
-                    %:  bind  content.x
-                    |=  crd=@t
-                      [tag.x [%s crd]]
-                    ==
+                %-  zing
+                :~
+                  :~  :-  'candidate'  [%s candidate.signal]  ==
+                  ?~  sdp-mid.signal
+                    ~
+                  :~  :-  'sdpMid'  [%s u.sdp-mid.signal]  ==
+                  ?~  sdp-m-line-index.signal
+                    ~
+                  :~  :-  'sdpMLineIndex'  %-  numb  u.sdp-m-line-index.signal  ==
+                  ?~  username-fragment.signal
+                    ~
+                  :~  :-  'usernameFragment'  [%s u.username-fragment.signal]  ==
                 ==
             ==
           ==

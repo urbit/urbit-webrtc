@@ -9,7 +9,7 @@
     [uuid=@ta dap=@tas]
   +$  signal
     $%  [%sdp type=@t sdp=@t]
-        [%icecandidate candidate=@t sdp-mid=(unit @t) sdp-m-line-index=(unit @t) username-fragment=(unit @t)]
+        [%icecandidate candidate=@t sdp-mid=(unit @t) sdp-m-line-index=(unit @) username-fragment=(unit @t)]
     ==
   +$  call-signal
     [uuid=@ta =signal]
