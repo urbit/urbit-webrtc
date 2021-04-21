@@ -1,6 +1,4 @@
-/-  spider, icepond
-/+  strandio
-=,  strand=strand:spider
+/-  icepond
 =/  m  (strand ,~)
 =,  m
 |%
@@ -10,23 +8,54 @@
 ++  google-open
   ^-  fetcher-config:icepond
   [%these-servers ~[[%server urls=~['stun:stun.l.google.com:19302'] auth=~]]]
-++  fact-or-kick
-  |=  =wire
-  =/  m  (strand ,(unit cage))
-  ^-  form:m
-  |=  tin=strand-input:strand
-  ?+  in.tin  `[%skip ~]
-      ~  `[%wait ~]
-      :: Kick
-      [~ %agent * %kick *]
-    ?.  =(watch+wire wire.u.in.tin)
-      `[%skip ~]
-    `[%done ~]
-      :: Fact
-      [~ %agent * %fact *]
-    ?.  =(watch+wire wire.u.in.tin)
-      `[%skip ~]
-    `[%done `cage.sign.u.in.tin]
-  ==
+++  enjs
+  |%
+  ++  server
+    |=  =server:switchboard
+    =,  enjs:format
+    %-  pairs
+    %-  zing
+    :~
+      ~[urls+[%a (turn urls.switchboard |=(url=@t [%s url]))]
+      ?~  auth.server
+        ~
+      :-  zing
+      :~
+        ~[username+(so username.u.auth)]
+        ~[credential+(so credential.u.auth)]
+        ?~  credential-type.u.auth
+          ~
+        ~[credentialType+(so u.credential-type.u.auth)]
+      ==
+    ==
+  --
+++  dejs
+  |%
+  ++  auth
+    |=  jon=json
+    ^-  auth:icepond
+    =/  username  (bind (~(get by p.jon) 'username') so)
+    ?~  username
+      ~
+    =/  credential  (bind (~(get by p.jon) 'credential') so)
+    ?~  credential
+      ~
+    =/  credential-type  (bind (~(get by p.jon) 'credentialType') so)
+    %-  some
+    :*
+      ^=  username  u.username
+      ^=  credential  u.credential
+      ^=  credentialType  credentialType
+    ==
+  ++  server
+    |=  jon=json
+    =,  dejs:format
+    ^-  server:icepond
+    :*
+      %server
+      ^=  urls  (ar so (~(got by p.jon) 'urls'))
+      ^=  auth  (auth jon)
+    ==
+  --
 --
 

@@ -1,8 +1,8 @@
 |%
 :: Optional auth information for a server
-+$  auth  $@(~ [username=@t credentials=@t credentials-type=$@(~ @t)])
++$  auth  [username=@t credential=@t credential-type=(unit @t)]
 :: A description of an ice server
-+$  server  [%server urls=(list @t) auth=auth]
++$  server  [%server urls=(list @t) auth=(unit auth)]
 :: How to respond to a request for ice servers
 +$  fetcher-config
   $%
