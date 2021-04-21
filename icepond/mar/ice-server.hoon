@@ -1,4 +1,3 @@
-:: TODO:test and merge icepond
 /-  icepond
 /+  *icepond
 |_  =server:icepond

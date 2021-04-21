@@ -1,6 +1,4 @@
 /-  icepond
-=/  m  (strand ,~)
-=,  m
 |%
 ++  default-config 
   ^-  fetcher-config:icepond
@@ -11,21 +9,23 @@
 ++  enjs
   |%
   ++  server
-    |=  =server:switchboard
+    |=  serv=server:icepond
     =,  enjs:format
     %-  pairs
     %-  zing
     :~
-      ~[urls+[%a (turn urls.switchboard |=(url=@t [%s url]))]
-      ?~  auth.server
+      ~[urls+[%a (turn urls.serv |=(url=@t [%s url]))]]
+      =/  aut  authentication.serv
+      ?~  aut
         ~
-      :-  zing
+      %-  zing
       :~
-        ~[username+(so username.u.auth)]
-        ~[credential+(so credential.u.auth)]
-        ?~  credential-type.u.auth
+        ~[username+s+username.u.aut]
+        ~[credential+s+credential.u.aut]
+        =/  cred-type  credential-type.u.aut
+        ?~  cred-type
           ~
-        ~[credentialType+(so u.credential-type.u.auth)]
+        ~[['credentialtype' s+u.cred-type]]
       ==
     ==
   --
@@ -33,28 +33,39 @@
   |%
   ++  auth
     |=  jon=json
-    ^-  auth:icepond
-    =/  username  (bind (~(get by p.jon) 'username') so)
-    ?~  username
-      ~
-    =/  credential  (bind (~(get by p.jon) 'credential') so)
-    ?~  credential
-      ~
-    =/  credential-type  (bind (~(get by p.jon) 'credentialType') so)
-    %-  some
-    :*
-      ^=  username  u.username
-      ^=  credential  u.credential
-      ^=  credentialType  credentialType
+    =,  dejs:format
+    ?+  jon
+      ~|  "Must parse authentication information from json object"  !!
+        ::
+        [%o *]
+      ^-  (unit auth:icepond)
+      =/  username  (bind (~(get by p.jon) 'username') so)
+      ?~  username
+        ~
+      =/  credential  (bind (~(get by p.jon) 'credential') so)
+      ?~  credential
+        ~
+      =/  credential-type  (bind (~(get by p.jon) 'credentialType') so)
+      %-  some
+      :*
+        ^=  username  u.username
+        ^=  credential  u.credential
+        ^=  credential-type  credential-type
+      ==
     ==
   ++  server
     |=  jon=json
     =,  dejs:format
     ^-  server:icepond
-    :*
-      %server
-      ^=  urls  (ar so (~(got by p.jon) 'urls'))
-      ^=  auth  (auth jon)
+    ?+  jon
+      ~|  "Must parse authentication information from json object"  !!
+        ::
+        [%o *]
+      :*
+        %server
+        ^=  urls  ((ar so) (~(got by p.jon) 'urls'))
+        ^=  authentication  (auth jon)
+      ==
     ==
   --
 --

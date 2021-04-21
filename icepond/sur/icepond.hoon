@@ -2,7 +2,7 @@
 :: Optional auth information for a server
 +$  auth  [username=@t credential=@t credential-type=(unit @t)]
 :: A description of an ice server
-+$  server  [%server urls=(list @t) auth=(unit auth)]
++$  server  [%server urls=(list @t) authentication=(unit auth)]
 :: How to respond to a request for ice servers
 +$  fetcher-config
   $%
