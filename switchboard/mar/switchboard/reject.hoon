@@ -3,7 +3,7 @@
 |_  uuid=@ta
 ++  grab
   |%
-  ++  noun  |=(x=@ `@ta`x)
+  ++  noun  knot
   ++  json  uuid:dejs
   --
 ++  grow
