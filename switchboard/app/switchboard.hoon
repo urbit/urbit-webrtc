@@ -60,15 +60,16 @@
     ?~  call-state
       ~|  "Tried to signal on non-existent call uuid {<uuid.call-signal>}"  !!
     ?+  connection-state.u.call-state
-        `this(queue.state (~(add ja queue.state) uuid.call-signal signal.call-signal))
+      `this(queue.state (~(add ja queue.state) uuid.call-signal signal.call-signal))
         ::
         %connected
       :_  this
-      :~  :*
-            %give  %fact
-            ~[/call-peer/[uuid.call-signal]]
-            %switchboard-signal  !>(signal.call-signal)
-          ==
+      :~
+        :*
+          %give  %fact
+          ~[/call-peer/[uuid.call-signal]]
+          %switchboard-signal  !>(signal.call-signal)
+        ==
       ==
     ==
       ::
@@ -121,18 +122,18 @@
   |=  =path
   ^-  (quip card _this)
   ?+  path  (on-watch:default path)
-    ::
-    [%incoming @tas ~]
-  =/  dap  +<.path
-  `this(reachable.state (~(put by reachable.state) dap (add 1 (~(gut by reachable.state) dap 0))))
-    ::
-    [%call @ta ~]
+      ::
+      [%incoming @tas ~]
+    =/  dap  +<.path
+    `this(reachable.state (~(put by reachable.state) dap (add 1 (~(gut by reachable.state) dap 0))))
+      ::
+      [%call @ta ~]
     =/  uuid  +<.path
     =/  call-state  (~(get by calls.state) uuid)
     ?~  call-state
       ~|  "No call with UUID {<uuid>}"  !!
     ?+  connection-state.u.call-state
-        ~|  "Connection {<uuid>} in state {<connection-state.u.call-state>} cannot take /call watch"  !!
+      ~|  "Connection {<uuid>} in state {<connection-state.u.call-state>} cannot take /call watch"  !!
         :: We've already been rung by a remote switchboard, which is
         :: waiting on our dap to answer
         %incoming-ringing
@@ -145,8 +146,8 @@
       (move-to-state:helper call.u.call-state %dialing)
       [cards this]
     ==
-    ::
-    [%call-peer @ta ~]
+      ::
+      [%call-peer @ta ~]
     =/  uuid  +<.path
     =/  call-state  (~(get by calls.state) uuid)
     ?~  call-state
@@ -164,8 +165,8 @@
       (move-to-state:helper call.u.call-state %connected)
       [cards this]
     ==
-    ::
-    [%uuid ~]
+      ::
+      [%uuid ~]
     :_  this
     :~
       :*
@@ -201,7 +202,7 @@
     =^  cards  state
     (remote-disconnected:helper call.u.call-state)
     [cards this]
-    ::
+      ::
       [%call @ta ~]
     =/  uuid  +<.path
     =/  call-state  (~(get by calls.state) uuid)
@@ -271,7 +272,6 @@
           cage.sign
         ==
       ==
-
         :: Hang up, kick dap
         %kick
       =^  cards  state
@@ -309,12 +309,12 @@
   |=  [=call:switchboard =connection-state:switchboard]
   ^-  (quip card _state)
   ?-  connection-state
-    :: We got a %call poke, add the call
+      :: We got a %call poke, add the call
       %starting
     ?<  (~(has by calls.state) uuid.call) :: don't overwrite an existing call!
     `state(calls (~(put by calls.state) uuid.call [call=call connection-state=%starting]))
-    :: The local app is watching us now, poke the remote switchboard
-    :: with %ring
+      :: The local app is watching us now, poke the remote switchboard
+      :: with %ring
       %dialing
     ?>  (~(has by calls.state) uuid.call)
     =/  state-call  call:(~(got by calls.state) uuid.call)
@@ -334,8 +334,8 @@
         %switchboard-connection-state  !>((connection-state:switchboard %dialing))
       ==
     ==
-    :: We got the poke-ack for our %ring poke, awaiting
-    :: cross-subscription from the remote switchboard
+      :: We got the poke-ack for our %ring poke, awaiting
+      :: cross-subscription from the remote switchboard
       %ringing
     ?>  (~(has by calls.state) uuid.call)
     =/  state-call  call:(~(got by calls.state) uuid.call)
@@ -350,9 +350,9 @@
         %switchboard-connection-state  !>((connection-state:switchboard %ringing))
       ==
     ==
-    :: We got a subscription from the remote switchboard, subscribe back
-    :: to them
-     %answered
+      :: We got a subscription from the remote switchboard, subscribe back
+      :: to them
+      %answered
     ?>  (~(has by calls.state) uuid.call)
     =/  state-call  call:(~(got by calls.state) uuid.call)
     :: make sure we are not modifying the call record, which should
@@ -371,7 +371,7 @@
         %switchboard-connection-state  !>((connection-state:switchboard %answered))
       ==
     ==
-    :: We got a %ring poke from a remote agent, let the proper app know
+      :: We got a %ring poke from a remote agent, let the proper app know
       %incoming-ringing
     ?<  (~(has by calls.state) uuid.call) :: don't overwrite an existing call!
     :_  state(calls (~(put by calls.state) uuid.call [call=call connection-state=%incoming-ringing]))
@@ -382,8 +382,8 @@
         %switchboard-incoming  !>([%incoming call])
       ==
     ==
-    :: Local app watched the incoming call, subscribe to the
-    :: remote(calling) switchboard
+      :: Local app watched the incoming call, subscribe to the
+      :: remote(calling) switchboard
       %connecting
     ?>  (~(has by calls.state) uuid.call)
     =/  state-call  call:(~(got by calls.state) uuid.call)
@@ -403,8 +403,8 @@
         %switchboard-connection-state  !>((connection-state:switchboard %connecting))
       ==
     ==
-    :: Remote switchboard (caller) subscribed to us (callee), or
-    :: Remote switchboard (callee) watch-acked our (caller) subscription
+      :: Remote switchboard (caller) subscribed to us (callee), or
+      :: Remote switchboard (callee) watch-acked our (caller) subscription
       %connected
     ?>  (~(has by calls.state) uuid.call)
     =/  state-call  call:(~(got by calls.state) uuid.call)
@@ -424,12 +424,12 @@
       :: it's time to send them to the remote switchboard
       :: TODO: clear the SDP message queue for the call
       %:  turn  call-queue
-        |=  =signal:switchboard
-          :*
-            %give  %fact
-            ~[/call-peer/[uuid.call]]
-            %switchboard-signal  !>(signal)
-          ==
+      |=  =signal:switchboard
+        :*
+          %give  %fact
+          ~[/call-peer/[uuid.call]]
+          %switchboard-signal  !>(signal)
+        ==
     ==
   ==
 ++  remote-disconnected
