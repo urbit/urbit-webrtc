@@ -19,11 +19,10 @@
 |_  =bowl:gall
 +*  this     .
     default  ~(. (default-agent this %|) bowl)
-    helper   ~(. +> bowl)
 ::
 ++  on-init
   ^-  (quip card _this)
-  `this(state [%0 reachable=*(map @tas @) calls=*(map @ta call-state:switchboard) queue=*(jar @ta signal:switchboard)])
+  `this
 ++  on-save
   !>(state)
 ++  on-load  on-load:default
@@ -46,64 +45,59 @@
 ++  on-poke
   |=  [=mark =vase]
   ^-  (quip card _this)
-  ?+  mark  ~|  "switchboard: poked with unknown mark: {<mark>}"  !!
+  ?+  mark  ~|("switchboard: poked with unknown mark: {<mark>}" !!)
       %switchboard-call
     =/  =call:switchboard  !<(call:switchboard vase)
     ~|  "switchboard: starting call: {<uuid.call>} with peer {<peer.call>}"
     =^  cards  state
-    (move-to-state:helper call %starting)
+      (move-to-state call %starting)
     [cards this]
-      ::
+  ::
       %switchboard-call-signal
     =/  =call-signal:switchboard  !<(call-signal:switchboard vase)
     =/  call-state  (~(get by calls.state) uuid.call-signal)
     ?~  call-state
-      ~|  "Tried to signal on non-existent call uuid {<uuid.call-signal>}"  !!
+      ~|("Tried to signal on non-existent call uuid {<uuid.call-signal>}" !!)
     ?+  connection-state.u.call-state
       `this(queue.state (~(add ja queue.state) uuid.call-signal signal.call-signal))
-        ::
+    ::
         %connected
-      :_  this
-      :~
-        :*
-          %give  %fact
-          ~[/call-peer/[uuid.call-signal]]
-          %switchboard-signal  !>(signal.call-signal)
-        ==
+      :_  this  :_  ~
+      :*
+        %give  %fact
+        ~[/call-peer/[uuid.call-signal]]
+        %switchboard-signal  !>(signal.call-signal)
       ==
     ==
-      ::
+  ::
       %switchboard-ring
     =/  =ring:switchboard  !<(ring:switchboard vase)
     =^  cards  state
-    (move-to-state:helper [uuid=uuid.ring peer=src.bowl dap=dap.ring] %incoming-ringing)
+      (move-to-state [uuid.ring src.bowl dap.ring] %incoming-ringing)
     [cards this]
-      ::
+  ::
       %switchboard-reject
     =/  uuid=@ta  !<(@ta vase)
     =/  call-state  (~(get by calls.state) uuid)
     ?~  call-state
-      ~|  "Tried to reject non-existent call uuid {<uuid>}"  !!
+      ~|("Tried to reject non-existent call uuid {<uuid>}" !!)
     ?+  connection-state.u.call-state  `this
-        ::
         %ringing
       :_  this(calls.state (~(del by calls.state) uuid), queue.state (~(del by queue.state) uuid))
-      :~
-        :*
-          %give  %kick
-          ~[/call/[uuid]]
-          ~
-        ==
+      :_  ~
+      :*
+        %give  %kick
+        ~[/call/[uuid]]
+        ~
       ==
-        ::
+    ::
         %incoming-ringing
       :_  this(calls.state (~(del by calls.state) uuid), queue.state (~(del by queue.state) uuid))
-      :~
-        :*
-          %pass  /reject-poke/[uuid]
-          %agent  [peer.call.u.call-state %switchboard]
-          %poke  [%switchboard-reject !>(uuid)]
-        ==
+      :_  ~
+      :*
+        %pass  /reject-poke/[uuid]
+        %agent  [peer.call.u.call-state %switchboard]
+        %poke  [%switchboard-reject !>(uuid)]
       ==
     ==
   ==
@@ -122,50 +116,49 @@
   |=  =path
   ^-  (quip card _this)
   ?+  path  (on-watch:default path)
-      ::
       [%incoming @tas ~]
     =/  dap  +<.path
     `this(reachable.state (~(put by reachable.state) dap (add 1 (~(gut by reachable.state) dap 0))))
-      ::
+  ::
       [%call @ta ~]
     =/  uuid  +<.path
     =/  call-state  (~(get by calls.state) uuid)
     ?~  call-state
-      ~|  "No call with UUID {<uuid>}"  !!
+      ~|("No call with UUID {<uuid>}" !!)
     ?+  connection-state.u.call-state
-      ~|  "Connection {<uuid>} in state {<connection-state.u.call-state>} cannot take /call watch"  !!
-        :: We've already been rung by a remote switchboard, which is
-        :: waiting on our dap to answer
+      ~|("Connection {<uuid>} in state {<connection-state.u.call-state>} cannot take /call watch" !!)
+    :: We've already been rung by a remote switchboard, which is
+    :: waiting on our dap to answer
         %incoming-ringing
       =^  cards  state
-      (move-to-state:helper call.u.call-state %connecting)
+        (move-to-state call.u.call-state %connecting)
       [cards this]
-        :: We just got the %call poke and now the watch by the app
+    :: We just got the %call poke and now the watch by the app
         %starting
       =^  cards  state
-      (move-to-state:helper call.u.call-state %dialing)
+        (move-to-state call.u.call-state %dialing)
       [cards this]
     ==
-      ::
+  ::
       [%call-peer @ta ~]
     =/  uuid  +<.path
     =/  call-state  (~(get by calls.state) uuid)
     ?~  call-state
-      ~|  "No call with UUID {<uuid>}"  !!
+      ~|("No call with UUID {<uuid>}" !!)
     ?+  connection-state.u.call-state 
-      ~|  "Connection {<uuid>} in state {<connection-state.u.call-state>} cannot-take /call-peer watch"  !!
-        ::
+      ~|("Connection {<uuid>} in state {<connection-state.u.call-state>} cannot-take /call-peer watch" !!)
+    ::
         %ringing
       =^  cards  state
-      (move-to-state:helper call.u.call-state %answered)
+        (move-to-state call.u.call-state %answered)
       [cards this]
-        ::
+    ::
         %connecting
       =^  cards  state
-      (move-to-state:helper call.u.call-state %connected)
+        (move-to-state call.u.call-state %connected)
       [cards this]
     ==
-      ::
+  ::
       [%uuid ~]
     :_  this
     :~
@@ -186,30 +179,29 @@
   |=  =path
   ^-  (quip card _this)
   ?+  path  (on-leave:default path)
-      ::
       [%incoming @tas ~]
     =/  dap  +<.path
     =/  ct  (~(got by reachable.state) dap)
     ?:  (gte 1 ct)
       `this(reachable.state (~(del by reachable.state) dap))
     `this(reachable.state (~(put by reachable.state) dap (dec ct)))
-      ::
+  ::
       [%call-peer @ta ~]
     =/  uuid  +<.path
     =/  call-state  (~(get by calls.state) uuid)
     ?~  call-state
       `this
     =^  cards  state
-    (remote-disconnected:helper call.u.call-state)
+      (remote-disconnected call.u.call-state)
     [cards this]
-      ::
+  ::
       [%call @ta ~]
     =/  uuid  +<.path
     =/  call-state  (~(get by calls.state) uuid)
     ?~  call-state
       `this
     =^  cards  state
-    (local-disconnected call.u.call-state)
+      (local-disconnected call.u.call-state)
     [cards this]
   ==
 :: TODO: scry per-call for state
@@ -217,13 +209,14 @@
 ++  on-peek
   |=  =path
   ^-  (unit (unit cage))
-  ?+  path  (on-peek:default path)
-      :: per-call state
+  ?+  path
+    (on-peek:default path)
+  :: per-call state
       [%x %callstate @ta ~]
     ?>  (team:title our.bowl src.bowl)
     =/  uuid  +>-.path
     (biff (~(get by calls.state) uuid) |=(=call-state:switchboard ``[%noun !>(call-state)]))
-      :: registered daps
+  :: registered daps
       [%x %registered ~]
     ?>  (team:title our.bowl src.bowl)
     ``[%noun !>(((list @tas) ~(tap in ~(key by reachable.state))))]
@@ -237,32 +230,32 @@
   |=  [=wire =sign:agent:gall]
   ^-  (quip card _this)
   ?+  wire  (on-agent:default wire sign)
-      ::
       [%peer-signal @ta ~]
     =/  uuid  +<.wire
     =/  call-state  (~(get by calls.state) uuid)
     ?~  call-state
       ~|  "No call with UUID {<uuid>}"  !!
-    ?+  -.sign  (on-agent:default wire sign)
-        :: check positive watch-ack, if so and %answered, ->
-        :: %connected
-        :: if negative, kick dap
+    ?+  -.sign
+      (on-agent:default wire sign)
+    :: check positive watch-ack, if so and %answered, ->
+    :: %connected
+    :: if negative, kick dap
         %watch-ack
-      ?+  connection-state.u.call-state ::-::
+      ?+  connection-state.u.call-state
         ?~  +.sign
           `this
         =^  cards  state
-        (remote-disconnected:helper call.u.call-state)
+          (remote-disconnected call.u.call-state)
         [cards this]
-          :: %answered -> %connected
+      :: %answered -> %connected
           %answered
         =^  cards  state
-        ?~  +.sign
-          (move-to-state:helper call.u.call-state %connected)
-        (remote-disconnected:helper call.u.call-state)
+          ?~  +.sign
+            (move-to-state call.u.call-state %connected)
+          (remote-disconnected call.u.call-state)
         [cards this]
       ==
-        :: SDP message, relay to dap
+    :: SDP message, relay to dap
         %fact
       :_  this
       :~
@@ -272,26 +265,27 @@
           cage.sign
         ==
       ==
-        :: Hang up, kick dap
+    :: Hang up, kick dap
         %kick
       =^  cards  state
-      (remote-disconnected:helper call.u.call-state)
+        (remote-disconnected call.u.call-state)
       [cards this]
     ==
-      ::
+  ::
       [%ring-poke @ta ~]
     =/  uuid  +<.wire
     =/  call-state  (~(get by calls.state) uuid)
     ?~  call-state
       ~|  "No call with UUID {<uuid>}"  !!
-    ?+  -.sign  (on-agent:default wire sign)
-        :: check positive poke-ack, if so and %dialing, -> %ringing
-        :: if negative, kick dap
+    ?+  -.sign
+      (on-agent:default wire sign)
+    :: check positive poke-ack, if so and %dialing, -> %ringing
+    :: if negative, kick dap
         %poke-ack
       =^  cards  state
-      ?~  +.sign
-        (move-to-state:helper call.u.call-state %ringing)
-      (remote-disconnected:helper call.u.call-state)
+        ?~  +.sign
+          (move-to-state call.u.call-state %ringing)
+        (remote-disconnected call.u.call-state)
       [cards this]
     ==
   ==
@@ -299,7 +293,7 @@
 ++  on-fail   on-fail:default
 --
 :: Helper core
-|_  bowl:gall
+|%
 :: Produce the proper state transition and cards when moving a
 :: connection into a state
 ::
@@ -309,12 +303,12 @@
   |=  [=call:switchboard =connection-state:switchboard]
   ^-  (quip card _state)
   ?-  connection-state
-      :: We got a %call poke, add the call
+  :: We got a %call poke, add the call
       %starting
     ?<  (~(has by calls.state) uuid.call) :: don't overwrite an existing call!
     `state(calls (~(put by calls.state) uuid.call [call=call connection-state=%starting]))
-      :: The local app is watching us now, poke the remote switchboard
-      :: with %ring
+  :: The local app is watching us now, poke the remote switchboard
+  :: with %ring
       %dialing
     ?>  (~(has by calls.state) uuid.call)
     =/  state-call  call:(~(got by calls.state) uuid.call)
@@ -334,8 +328,8 @@
         %switchboard-connection-state  !>((connection-state:switchboard %dialing))
       ==
     ==
-      :: We got the poke-ack for our %ring poke, awaiting
-      :: cross-subscription from the remote switchboard
+  :: We got the poke-ack for our %ring poke, awaiting
+  :: cross-subscription from the remote switchboard
       %ringing
     ?>  (~(has by calls.state) uuid.call)
     =/  state-call  call:(~(got by calls.state) uuid.call)
@@ -350,8 +344,8 @@
         %switchboard-connection-state  !>((connection-state:switchboard %ringing))
       ==
     ==
-      :: We got a subscription from the remote switchboard, subscribe back
-      :: to them
+  :: We got a subscription from the remote switchboard, subscribe back
+  :: to them
       %answered
     ?>  (~(has by calls.state) uuid.call)
     =/  state-call  call:(~(got by calls.state) uuid.call)
@@ -371,7 +365,7 @@
         %switchboard-connection-state  !>((connection-state:switchboard %answered))
       ==
     ==
-      :: We got a %ring poke from a remote agent, let the proper app know
+  :: We got a %ring poke from a remote agent, let the proper app know
       %incoming-ringing
     ?<  (~(has by calls.state) uuid.call) :: don't overwrite an existing call!
     :_  state(calls (~(put by calls.state) uuid.call [call=call connection-state=%incoming-ringing]))
@@ -382,8 +376,8 @@
         %switchboard-incoming  !>([%incoming call])
       ==
     ==
-      :: Local app watched the incoming call, subscribe to the
-      :: remote(calling) switchboard
+  :: Local app watched the incoming call, subscribe to the
+  :: remote(calling) switchboard
       %connecting
     ?>  (~(has by calls.state) uuid.call)
     =/  state-call  call:(~(got by calls.state) uuid.call)
@@ -403,8 +397,8 @@
         %switchboard-connection-state  !>((connection-state:switchboard %connecting))
       ==
     ==
-      :: Remote switchboard (caller) subscribed to us (callee), or
-      :: Remote switchboard (callee) watch-acked our (caller) subscription
+  :: Remote switchboard (caller) subscribed to us (callee), or
+  :: Remote switchboard (callee) watch-acked our (caller) subscription
       %connected
     ?>  (~(has by calls.state) uuid.call)
     =/  state-call  call:(~(got by calls.state) uuid.call)
@@ -413,23 +407,22 @@
     ?>  =(state-call call)
     :_  state(calls (~(put by calls.state) uuid.call [call=call connection-state=%connected]))
     =/  call-queue  (fall (~(get by queue.state) uuid.call) ~)
-      :-
+    :-
       :: Give state
       :*
         %give  %fact
         ~[/call/[uuid.call]]
         %switchboard-connection-state  !>((connection-state:switchboard %connected))
       ==
-      :: We've been queuing up any SDP messages from our app until now,
-      :: it's time to send them to the remote switchboard
-      :: TODO: clear the SDP message queue for the call
-      %:  turn  call-queue
-      |=  =signal:switchboard
-        :*
-          %give  %fact
-          ~[/call-peer/[uuid.call]]
-          %switchboard-signal  !>(signal)
-        ==
+    :: We've been queuing up any SDP messages from our app until now,
+    :: it's time to send them to the remote switchboard
+    :: TODO: clear the SDP message queue for the call
+    %+  turn  call-queue
+    |=  =signal:switchboard
+    :*
+      %give  %fact
+      ~[/call-peer/[uuid.call]]
+      %switchboard-signal  !>(signal)
     ==
   ==
 ++  remote-disconnected
@@ -438,34 +431,30 @@
   =/  call-state  (~(got by calls.state) uuid.call)
   :_  state(calls (~(del by calls.state) uuid.call), queue (~(del by queue.state) uuid.call))
   ?+  connection-state.call-state
-    :~
-      :*
-        %give  %kick
-        ~[/call/[uuid.call]]
-        ~
-      ==
+    :_  ~
+    :*
+      %give  %kick
+      ~[/call/[uuid.call]]
+      ~
     ==
-      ::
-      :: in this case, tell the listening app that the call has been
-      :: hung up on
+  :: in this case, tell the listening app that the call has been
+  :: hung up on
       %incoming-ringing
-    :~
-      :*
-        %give  %fact
-        ~[/incoming/[dap.call]]
-        %switchboard-incoming  !>([%hangup uuid.call])
-      ==
+    :_  ~
+    :*
+      %give  %fact
+      ~[/incoming/[dap.call]]
+      %switchboard-incoming  !>([%hangup uuid.call])
     ==
   ==
 ++  local-disconnected
   |=  =call:switchboard
   ^-  (quip card _state)
   :_  state(calls (~(del by calls.state) uuid.call), queue (~(del by queue.state) uuid.call))
-  :~
-    :*
-      %give  %kick
-      ~[/call-peer/[uuid.call]]
-      ~
-    ==
+  :_  ~
+  :*
+    %give  %kick
+    ~[/call-peer/[uuid.call]]
+    ~
   ==
 --
