@@ -1,22 +1,54 @@
 |%
 +$  call
   [uuid=@ta peer=@p dap=@tas]
-+$  incoming
-  $%  [%incoming call=call]
-      [%hangup uuid=@ta]
++$  sdp
+  [%sdp type=@t sdp=@t]
++$  icecandidate
+  [%icecandidate candidate=@t sdp-mid=(unit @t) sdp-m-line-index=(unit @) username-fragment=(unit @t)]
+:: mark for communications between remote switchboards
++$  switchboard-to-switchboard
+  $:  $=(uuid @ta)
+    $%  [%ring dap=@tas]
+        [%pickup ~]
+        [%hangup ~] :: NB used both for rejecting and ending calls
+        [%ask-turn ~]
+        [%give-turn ~]
+        sdp
+        icecandidate
+    ==
   ==
-+$  ring
-  [uuid=@ta dap=@tas]
+:: mark for pokes from the client to switchboard
++$  switchboard-from-client
+  $:  $=(uuid @ta)
+    $%  [%place-call peer=@p dap=@tas] 
+      [%reject ~]
+      [%ask-signal ~]
+      sdp
+      icecandidate
+    ==
+  ==
+:: mark for notifications of incoming calls
++$  incoming-call
+  $%  [%incoming-call peer=@p uuid=@ta]
+      [%incoming-call-hangup uuid=@ta]
+  ==
+:: mark for facts from the switchboard to the client
++$  switchboard-to-client
+  $%  [%connection-state =connection-state]
+    [%hungup ~]
+    sdp
+    icecandidate
+  ==
 +$  signal
-  $%  [%sdp type=@t sdp=@t]
-      [%icecandidate candidate=@t sdp-mid=(unit @t) sdp-m-line-index=(unit @) username-fragment=(unit @t)]
+  $%  sdp
+      icecandidate
   ==
 +$  call-signal
   [uuid=@ta =signal]
 +$  call-state
   [=call =connection-state]
 +$  connection-state
-  ?(%starting %dialing %ringing %answered %incoming-ringing %connecting %connected)
+  ?(%placing %dialing %ringing %incoming-ringing %answering %connected-their-turn %connected-our-turn %connected-want-turn %connected-our-turn-asked)
 +$  sdp-queue
   (jar @ta signal)
 --

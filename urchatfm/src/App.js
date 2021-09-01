@@ -1,258 +1,240 @@
-import './App.css';
-import Login from './Login.js';
+import useUrchatStore from './Store.js';
 import React from 'react';
-import { UrbitRTCApp } from 'switchboard';
-import Icepond from 'icepond';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import Urbit from '@urbit/http-api';
+import { MediaInput, VideoFromStream } from './Video.js';
 
-function WithIcepond(urbit, component, configuration = {}) {
-  const icepondRef = useRef(new Icepond(urbit));
-  const [iceServers, setIceServers] = useState([]);
-  useEffect(() => {
-    icepondRef.current.oniceserver = (evt) => {
-      const server = evt.newIceServer;
-      setIceServers(servers => servers.concat([server]));
-      console.log('Got server: ', server);
-    };
-    icepondRef.current.initialize();
-  }, [urbit]);
-  console.log('Servers:', iceServers);
-  const fixedServers = (typeof configuration.iceServers === 'undefined') ? [] : configuration.iceServers;
-  const iceConf = { iceServers: fixedServers.concat(iceServers) };
-  return component(urbit, { ...configuration, ...iceConf });
-}
+export default App;
 
-function WithUrbitRTCApp(urbit, dap, configuration, component) {
-  const urbitRtcAppRef = useRef(new UrbitRTCApp(dap, configuration, urbit));
-  const urbitRtcApp = urbitRtcAppRef.current;
-  useEffect(() => {
-    urbitRtcApp.urbit = urbit;
-  // eslint-disable-next-line
-  }, [urbit]);
-
-  useEffect(() => {
-    urbitRtcApp.dap = dap;
-  // eslint-disable-next-line
-  }, [dap]);
-
-  useEffect(() => {
-    urbitRtcApp.configuration = configuration;
-    console.log('urbitRtcApp.configuration set to', configuration);
-  // eslint-disable-next-line
-  });
-
-  useEffect(() => {
-    urbitRtcApp.onerror = err => console.log(`Urbit RTC app error: ${err.toString()}`);
-  // eslint-disable-next-line
-  }, []);
-
-  return component(urbit, urbitRtcAppRef.current);
-}
-
-function Urchat(urbit, urbitRtcApp) {
-  // if there is a call currently ringing, we place it here
-  const [incomingCall, setIncomingCall] = useState(null);
-  // if there is a call ongoing, we place it here
-  const [ongoingCall, setOngoingCall] = useState(null);
-  // if we are the caller, this is true, otherwise false
-  const [isCaller, setIsCaller] = useState(false);
-
-  // Set up the incoming call handler
-  useEffect( () => {
-    urbitRtcApp.addEventListener('incomingcall', (incomingCallEvt) => {
-      if(incomingCall === null && ongoingCall === null) {
-        setIncomingCall(incomingCallEvt);
-        console.log('incoming: ', incomingCallEvt);
-      } else {
-        incomingCallEvt.reject();
-        console.log('rejected: ', incomingCallEvt);
-      }
-    });
-  // eslint-disable-next-line
-  }, [urbitRtcApp]);
-
-  return (
-    <React.Fragment>
-    <IceServerList servers={ urbitRtcApp.configuration.iceServers } />
-    {(incomingCall === null) ? '' : (<UrchatIncoming incoming={incomingCall} setIncoming={setIncomingCall} setOngoing={setOngoingCall} setIsCaller={setIsCaller} />)}
-    {(ongoingCall === null) ? '' : (<UrchatChat ongoing={ongoingCall} setOngoing={setOngoingCall} isCaller={isCaller} />)}
-    {(incomingCall === null && ongoingCall === null) ?  (<UrchatCall setOngoing={setOngoingCall} setIsCaller={setIsCaller} urbitRtcApp={urbitRtcApp} />) : ''}
-    </React.Fragment>
+function App() {
+  const urbit = useUrchatStore(state => state.urbit);
+  return (urbit === null) ? (
+    <Login />
+  ) : (
+    <Urchat />
   );
 }
 
-function UrchatIncoming({ incoming, setIncoming, setOngoing, setIsCaller }) {
-  const answer = () => {
-    const conn = incoming.answer();
-    conn.initialize();
-    setOngoing({ call: incoming.call, conn: conn });
-    setIncoming(null);
-    setIsCaller(false);
+function Urchat() {
+  const incomingCall = useUrchatStore(state => state.incomingCall);
+  const ongoingCall = useUrchatStore(state => state.ongoingCall);
+  const answerCallState = useUrchatStore(state => state.answerCall);
+  const placeCallState = useUrchatStore(state => state.placeCall);
+  const rejectCall = useUrchatStore(state => state.rejectCall);
+  const hangupCall = useUrchatStore(state => state.hangup);
+
+  // local state
+  const [dataChannel, setDataChannel] = useState(null);
+  const [dataChannelOpen, setDataChannelOpen] = useState(false);
+  const [messages, setMessages] = useState([]);
+
+  // state-changing methods
+  const answerCall = () => answerCallState((peer, conn) => {
+    setDataChannelOpen(false);
+    setMessages([]);
+    conn.addEventListener('datachannel', (evt) => {
+      const channel = evt.channel;
+      channel.onopen = () => setDataChannelOpen(true);
+      channel.onmessage = (evt) => {
+        const data = evt.data;
+        setMessages(messages => messages.concat([{ speaker: peer, message: data }]));
+      };
+      setDataChannel(channel);
+    });
+  });
+
+  const placeCall = ship => placeCallState(ship, (conn) => {
+    console.log('placing call');
+    setDataChannelOpen(false);
+    setMessages([]);
+    const channel = conn.createDataChannel('urchatfm');
+    channel.onopen = () => setDataChannelOpen(true);
+    channel.onmessage= (evt) => {
+      const data = evt.data;
+      setMessages(messages => messages.concat([{ speaker: ship, message: data }]));
+    };
+    setDataChannel(channel);
+  });
+
+  const sendMessage = (msg) => {
+    dataChannel.send(msg);
+    setMessages(messages.concat([{ speaker: 'me', message: msg }]));
   };
 
-  const reject = () => {
-    incoming.reject().then(() => setIncoming(null));
+  if(incomingCall !== null) {
+    return (
+      <UrchatIncoming caller={ incomingCall.call.peer } answerCall={ answerCall } rejectCall={ rejectCall } />
+    );
+  } else if (ongoingCall !== null) {
+    return (
+      <UrchatOngoing sendMessage={ sendMessage } messages={ messages } ready={ dataChannelOpen } hangupCall = { hangupCall } />
+    );
+  } else {
+    return (
+      <UrchatPlaceCall placeCall={ placeCall } />
+    );
+  }
+}
+
+function UrchatIncoming({ caller, answerCall, rejectCall }) {
+  return (
+    <div className="incoming-call" >
+      Call from { caller }
+      <button onClick={ answerCall } >Answer</button>
+      <button onClick={ rejectCall } >Reject</button>
+    </div>
+  );
+}
+
+function UrchatOngoing({ sendMessage, messages, ready, hangupCall }) {
+  const [message, setMessage] = useState('');
+  const localStreamRef = useRef(new MediaStream());
+  const localStream = localStreamRef.current;
+  const remoteStreamRef = useRef(new MediaStream());
+  const remoteStream = remoteStreamRef.current;
+
+  const addTrackToCall = useUrchatStore(state => state.addTrackToCall);
+  const removeTrackFromCall = useUrchatStore(state => state.removeTrackFromCall);
+  const setOnTrack = useUrchatStore(state => state.setOnTrack);
+
+  const debugOnTrack = (evt) => {
+    console.log('Incoming track event', evt);
+    remoteStream.addTrack(evt.track);
+  };
+
+  const debugAddTrackToCall = (track) => {
+    console.log('Adding track to call', track);
+    localStream.addTrack(track);
+    addTrackToCall(track);
+  };
+
+  const debugRemoveTrackFromCall = (track) => {
+    console.log('Removing trakc from call', track);
+    localStream.removeTrack(track);
+    removeTrackFromCall(track);
+  };
+
+  useEffect(() => {
+    console.log('Setting up track callbacks');
+    setOnTrack(debugOnTrack);
+  }, []);
+
+  const onSubmitMessage = (evt) => {
+    evt.preventDefault();
+    sendMessage(message);
+    setMessage('');
   };
 
   return (
-    <div className="incoming-call">
-      Call from ~{incoming.peer}
-      <button type="button" onClick={answer}>Answer</button>
-      <button type="button" onClick={reject}>Reject</button>
-    </div>
+    <>
+      <div className="remoteMedia">
+        <VideoFromStream srcObject={remoteStream} style={{ 'max-height': '75%' }} />
+      </div>
+      <div className="inputMedia">
+        <VideoFromStream srcObject={localStream} muted="true" style={{ 'max-height': '10%' }} />
+        <MediaInput addTrack={debugAddTrackToCall} removeTrack={debugRemoveTrackFromCall} />
+      </div>
+      <div className="urchatChat">
+        <div className="messages">
+        { messages.map((msg, idx) => (
+            <div className="message" key={idx}>
+              <span style={{ fontWeight: 'bold' }}> {msg.speaker} </span>
+              {msg.message}
+            </div>
+          ))
+        }
+        </div>
+        <form onSubmit={onSubmitMessage} >
+          <label>
+            Message:
+          <input type="text" value={message} onChange={evt => setMessage(evt.target.value)} />
+          </label>
+          <input type="submit" value="Send" disabled={ ! ready } />
+        </form>
+        <button onClick={hangupCall} >Hang up</button>
+      </div>
+    </>
   );
 }
 
 // eslint-disable-next-line
-function UrchatChat({ ongoing, setOngoing, isCaller }) {
-  const [dataChannel, setDataChannel] = useState(null);
-  const [dataChannelOpen, setDataChannelOpen] = useState(false);
-  const [messages, setMessages] = useState([]);
-  const [composedMessage, setComposedMessage] = useState('');
-
-  const incomingChatMessage = (evt) => {
-    setMessages(messages => messages.concat([{ sender: ongoing.call.peer, message: evt.data }]));
-  };
-
-  const sendMessage = (evt) => {
-    evt.preventDefault();
-    dataChannel.send(composedMessage);
-    setMessages(messages.concat([{ sender: 'me', message: composedMessage }]));
-    setComposedMessage('');
-  };
-
-  const hangup = () => {
-    ongoing.conn.close();
-    setOngoing(null);
-  };
-
-  const hungup = () => {
-    setOngoing(null);
-  };
-
-  const setupDataChannel = () => {
-    const newDataChannel = ongoing.conn.createDataChannel('urchatfm', {});
-    setDataChannel(newDataChannel);
-    newDataChannel.addEventListener('open', () => {
-      console.log('Data channel open');
-      setDataChannelOpen(true);
-    });
-    newDataChannel.addEventListener('close', () => {
-      console.log('Data channel closed');
-      setDataChannelOpen(false);
-    });
-    newDataChannel.addEventListener('message', incomingChatMessage);
-  };
-
-  const receiveDataChannel = (evt) => {
-    const newDataChannel = evt.channel;
-    setDataChannel(newDataChannel);
-    newDataChannel.addEventListener('open', () => {
-      console.log('Data channel open');
-      setDataChannelOpen(true);
-    });
-    newDataChannel.addEventListener('close', () => {
-      console.log('Data channel closed');
-      setDataChannelOpen(false);
-    });
-    newDataChannel.addEventListener('message', incomingChatMessage);
-  };
-
-  useEffect(() => {
-    if(isCaller) {
-      ongoing.conn.addEventListener('statechanged', (evt) => {
-        console.log('state changed', evt.urbitState);
-        if(evt.urbitState === 'connected') {
-          setupDataChannel();
-        }
-      });
-    } else {
-      ongoing.conn.addEventListener('datachannel', receiveDataChannel);
-    }
-    ongoing.conn.addEventListener('hungupcall', hungup);
-  // eslint-disable-next-line
-  }, [ongoing]);
-
-  const UrchatMessage = ({ sender, message }) => {
-    return (
-      <div className="msg">
-        <span className="msg-sender" style={{ fontWeight: 'bold' }}>{sender}: </span>
-        <span className="msg-content">{message}</span>
-      </div>
-    );
-  };
+function IceServers() {
+  const servers = useUrchatStore(state => state.configuration.iceServers);
 
   return (
-    <div className="Urchat-chat">
-      <div className="messages">
-          {messages.map((msg, index) => (
-            <UrchatMessage key={index} sender={msg.sender} message={msg.message} />
-          ))}
-      </div>
-      <form onSubmit={sendMessage}>
-        <input type="text" value={composedMessage} onChange={evt => setComposedMessage(evt.target.value)} />
-        <input type="submit" value="Send" disabled={dataChannel === null || ! dataChannelOpen} />
-      </form>
-      <button type="button" onClick={hangup}>Hang Up</button>
+    <div className="iceServers">
+    <h4>Ice servers</h4>
+    { servers.map((server, idx) => (
+      <pre key={idx}>{server}</pre>
+    ))}
     </div>
   );
 }
 
-function IceServerList({ servers }) {
-  console.log('Servers sent to component: ', servers);
-  const serverUrls = [];
-  for(const i in servers) {
-    const server = servers[i];
-    console.log(server);
-    console.log('Type of server.urls: ', typeof server.urls);
-    if(typeof server.urls === 'string') {
-        serverUrls.push(server.urls);
-    } else {
-      for(const j in server.urls) {
-        serverUrls.push(server.urls[j]);
-      }
-    }
-  }
-  return (
-    <div>
-      <h2>ICE servers</h2>
-      <ul>{ serverUrls.map((url, i) => (
-        <li key={ i }><code style={{ display: 'inline' }} >{ url } </code></li>
-      ))}
-      </ul>
-    </div>
-   );
-}
+function UrchatPlaceCall({ placeCall }) {
+  const [ship, setShip] = useState('');
 
-function UrchatCall({ setOngoing, setIsCaller, urbitRtcApp }) {
-  const [ship, setShip] = useState('zod');
-
-  const placeCall = (evt) => {
+  const onSubmitCall = (evt) => {
     evt.preventDefault();
-    const conn = urbitRtcApp.call(ship, 'urchatfm');
-    conn.initialize();
-    const call = { peer: ship, dap: 'urchatfm', uuid: conn.uuid };
-    setOngoing({ conn: conn, call: call });
-    setIsCaller(true);
+    placeCall( ship );
+    setShip('');
   };
 
   return (
-    <form onSubmit={placeCall}>
+    <form onSubmit={ onSubmitCall }>
       <label>
         Ship:
-        <input type="text" value={ship} onChange={evt => setShip(evt.target.value)} />
+        <input type="text" value={ship} onChange={ evt => setShip(evt.target.value) } />
       </label>
       <input type="submit" value="Call" />
     </form>
   );
 }
 
-function App() {
-  return Login(({ urbit }) => {
-    return WithIcepond( urbit, (urbit, configuration) => {
-      return WithUrbitRTCApp(urbit, 'urchatfm', configuration, Urchat);
-    });
-  });
+function Login () {
+  const setUrbit = useUrchatStore(state => state.setUrbit);
+  const [host, setHost] = useState(window.location.host);
+  const [ship, setShip] = useState('');
+  const [code, setCode] = useState('');
+  const [err, setErr] = useState('');
+  const [errTimeout, setErrTimeout] = useState(null);
+
+  const makeUrbit = (evt) => {
+    evt.preventDefault();
+    setErr('');
+    Urbit.authenticate({ ship: ship, url: host, code: code, verbose: true })
+      .then(urbit => setUrbit(urbit))
+      .catch((err) => {
+        setErr(err.toString());
+        if( errTimeout !== null ) {
+          clearTimeout(errTimeout);
+          setErrTimeout(null);
+        }
+        setErrTimeout(setTimeout(() => {
+          setErr('');
+          setErrTimeout(null);
+        }, 5000));
+      });
+  };
+
+  return (
+    <>
+      <div id="loginError">{err}</div>
+      <form onSubmit={makeUrbit}>
+        <label>Ship
+          <input type="text" value={ship} onChange={evt => setShip(evt.target.value)} />
+        </label>
+
+        <label>Host
+          <input type="text" value={host} onChange={evt => setHost(evt.target.value)} />
+        </label>
+
+        <label>Code
+          <input type="password" value={code} onChange={evt => setCode(evt.target.value)} />
+        </label>
+        <input type="submit" value="Login" />
+      </form>
+    </>
+  );
 }
 
-export default App;
