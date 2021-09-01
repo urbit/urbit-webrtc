@@ -52,13 +52,13 @@ A ship can obtain ICE server connection information in the following ways:
 
 By default, the ICE servers obtained by a ship are those it will forward to ships it sponsors. This behavior too can be changed in the same ways as above. This default behavior is useful so that e.g. moons can receive ICE candidates via their sponsoring planet from the planet's sponsoring star.
 
-### `hyperluminal`: Application for calling between Azimuth points
+### `urchatfm`: Application for calling between Azimuth points
 
-`hyperluminal` is a Gall agent which serves a web application via [Eyre](https://urbit.org/docs/glossary/eyre/). It provides ship-to-ship media calls, multi-ship conference calls, and subscribable streams with ship-based URLs. It serves as a testbed for `switchboard` and `icepond`, as well as providing Urbit users an immediate solution for media calling and streaming.
+`urchatfm` is a web application which interfaces with Urbit via the `http-api` airlock. It provides ship-to-ship media calls and ephemeral text chat. It serves as a testbed for `switchboard` and `icepond`.
 
 ### Minor and replaceable components
 
-#### `urbit-ice`
+#### `urbit-ice` (TBW)
 
 This provides an example STUN/TURN server integration for a star. It would consist of containerized configurations of open-source STUN and TURN implementations, as well as a simple HTTP server which would proxy generating authentication tokens for the TURN server.
 
