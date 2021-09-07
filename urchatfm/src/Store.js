@@ -1,12 +1,14 @@
 import create from 'zustand';
 import { UrbitRTCApp } from 'switchboard';
 import Icepond from 'icepond';
+import Urbit from '@urbit/http-api';
 
 const dap = 'urchatfm';
 
 const useUrchatStore = create((set,get) => {
   const configuration = { iceServers: [] };
   const urbitRtcApp = new UrbitRTCApp(dap, configuration);
+  // Set up the event listener for an incoming call
   urbitRtcApp.addEventListener('incomingcall', incomingCallEvt => set((state) => {
     if(state.incomingCall === null) {
       return { incomingCall: incomingCallEvt };
@@ -15,25 +17,20 @@ const useUrchatStore = create((set,get) => {
       return {};
     }
   }));
+
+  const urbit = new Urbit('', '');
+  // requires <script> tag for /~landscape/js/session.js
+  urbit.ship = window.ship;
+  urbitRtcApp.urbit = urbit;
+
   return {
-    urbit: null,
+    urbit: urbit,
     icepond: null,
     configuration: { iceServers: [] },
     urbitRtcApp: urbitRtcApp,
     incomingCall: null,
     ongoingCall: null,
     isCaller: false,
-    setUrbit: urbit => set((state) => {
-      const update = { urbit: urbit, incomingCall: null, ongoingCall: null };
-      if(urbitRtcApp !== null) {
-        urbitRtcApp.urbit = urbit;
-      } else {
-        const urbitRtcApp = new UrbitRTCApp(dap, state.configuration, urbit);
-        urbitRtcApp.addEventListener('incomingcall', evt => set({ incomingCall: evt }));
-        update.urbitRtcApp = urbitRtcApp;
-      }
-      return update;
-    }),
     startIcepond: () => set((state) => {
       const icepond = new Icepond(state.urbit);
       icepond.oniceserver = (evt) => {

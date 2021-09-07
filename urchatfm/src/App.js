@@ -1,7 +1,6 @@
 import useUrchatStore from './Store.js';
 import React from 'react';
 import { useState, useRef, useEffect } from 'react';
-import Urbit from '@urbit/http-api';
 import { MediaInput, VideoFromStream } from './Video.js';
 
 export default App;
@@ -9,7 +8,7 @@ export default App;
 function App() {
   const urbit = useUrchatStore(state => state.urbit);
   return (urbit === null) ? (
-    <Login />
+    <p>Awaiting airlock</p>
   ) : (
     <Urchat />
   );
@@ -190,51 +189,3 @@ function UrchatPlaceCall({ placeCall }) {
     </form>
   );
 }
-
-function Login () {
-  const setUrbit = useUrchatStore(state => state.setUrbit);
-  const [host, setHost] = useState(window.location.host);
-  const [ship, setShip] = useState('');
-  const [code, setCode] = useState('');
-  const [err, setErr] = useState('');
-  const [errTimeout, setErrTimeout] = useState(null);
-
-  const makeUrbit = (evt) => {
-    evt.preventDefault();
-    setErr('');
-    Urbit.authenticate({ ship: ship, url: host, code: code, verbose: true })
-      .then(urbit => setUrbit(urbit))
-      .catch((err) => {
-        setErr(err.toString());
-        if( errTimeout !== null ) {
-          clearTimeout(errTimeout);
-          setErrTimeout(null);
-        }
-        setErrTimeout(setTimeout(() => {
-          setErr('');
-          setErrTimeout(null);
-        }, 5000));
-      });
-  };
-
-  return (
-    <>
-      <div id="loginError">{err}</div>
-      <form onSubmit={makeUrbit}>
-        <label>Ship
-          <input type="text" value={ship} onChange={evt => setShip(evt.target.value)} />
-        </label>
-
-        <label>Host
-          <input type="text" value={host} onChange={evt => setHost(evt.target.value)} />
-        </label>
-
-        <label>Code
-          <input type="password" value={code} onChange={evt => setCode(evt.target.value)} />
-        </label>
-        <input type="submit" value="Login" />
-      </form>
-    </>
-  );
-}
-
