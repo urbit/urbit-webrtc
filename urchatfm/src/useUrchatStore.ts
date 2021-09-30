@@ -1,39 +1,55 @@
 import create from 'zustand';
 import { UrbitRTCApp } from 'switchboard';
 import Icepond from 'icepond';
+import Urbit from '@urbit/http-api';
 
 const dap = 'urchatfm';
 
-const useUrchatStore = create((set,get) => {
+interface UrchatStore {
+  urbit: Urbit | null;
+  urbitRtcApp: any;
+  icepond: any;
+  configuration: any;
+  incomingCall: any;
+  ongoingCall: any;
+  isCaller: boolean;
+  setUrbit: (ur: Urbit) => void;
+  startIcepond: any;
+  placeCall: any;
+  answerCall: any;
+  rejectCall: any;
+  addTrackToCall: any;
+  removeTrackFromCall: any;
+  setOnTrack: any;
+  hangup: any;
+  hungup: any;
+}
+
+const useMock = import.meta.env.MODE === 'mock';
+
+const useUrchatStore = create<UrchatStore>((set, get) => {
   const configuration = { iceServers: [] };
   const urbitRtcApp = new UrbitRTCApp(dap, configuration);
-  urbitRtcApp.addEventListener('incomingcall', incomingCallEvt => set((state) => {
-    if(state.incomingCall === null) {
-      return { incomingCall: incomingCallEvt };
+  urbitRtcApp.addEventListener('incomingcall', incomingCallEvt => {
+    if(get().incomingCall === null) {
+      set({ incomingCall: incomingCallEvt });
     } else {
       incomingCallEvt.reject();
-      return {};
     }
-  }));
+  });
   return {
     urbit: null,
     icepond: null,
     configuration: { iceServers: [] },
-    urbitRtcApp: urbitRtcApp,
-    incomingCall: null,
+    urbitRtcApp,
+    incomingCall: useMock ? { call: { peer: '~nocsyx-lassul' }, reject: () => {} } : null,
     ongoingCall: null,
     isCaller: false,
-    setUrbit: urbit => set((state) => {
-      const update = { urbit: urbit, incomingCall: null, ongoingCall: null };
-      if(urbitRtcApp !== null) {
-        urbitRtcApp.urbit = urbit;
-      } else {
-        const urbitRtcApp = new UrbitRTCApp(dap, state.configuration, urbit);
-        urbitRtcApp.addEventListener('incomingcall', evt => set({ incomingCall: evt }));
-        update.urbitRtcApp = urbitRtcApp;
-      }
-      return update;
-    }),
+    setUrbit: urbit => {
+      const instance = useMock ? {} as Urbit : urbit;
+      get().urbitRtcApp.urbit = instance;
+      set({ urbit: instance });
+    },
     startIcepond: () => set((state) => {
       const icepond = new Icepond(state.urbit);
       icepond.oniceserver = (evt) => {
@@ -63,11 +79,21 @@ const useUrchatStore = create((set,get) => {
       const call = { peer: ship, dap: dap, uuid: conn.uuid };
       state.startIcepond();
       return {
+        ...state,
         isCaller: true,
         ongoingCall: { conn: conn, call: call }
       };
     }),
     answerCall: setHandlers => set((state) => {
+      if (useMock) {
+        return {
+          ...state,
+          isCaller: false,
+          ongoingCall: { conn: {}, call: () => {} },
+          incomingCall: null
+        }
+      }
+
       const call = state.incomingCall.call;
       const conn = state.incomingCall.answer();
       conn.addEventListener('hungupcall', state.hungup);
@@ -75,8 +101,9 @@ const useUrchatStore = create((set,get) => {
       conn.initialize();
       state.startIcepond();
       return {
+        ...state, 
         isCaller: false,
-        ongoingCall: { conn: conn, call: call },
+        ongoingCall: { conn, call },
         incomingCall: null
       };
     }),
@@ -95,18 +122,16 @@ const useUrchatStore = create((set,get) => {
       state.ongoingCall.conn.removeTrack(track.sender);
     }),
 
-     setOnTrack: onTrack => set((state) => {
-       state.ongoingCall.conn.ontrack = onTrack;
-     }),
+    setOnTrack: onTrack => set((state) => {
+      state.ongoingCall.conn.ontrack = onTrack;
+    }),
 
     hangup: () => set((state) => {
       state.ongoingCall.conn.close();
-      return { ongoingCall: null };
+      return { ...state, ongoingCall: null };
     }),
 
-    hungup: () => set(() => ({
-      ongoingCall: null
-    }))
+    hungup: () => set({ ongoingCall: null })
   };
 });
 

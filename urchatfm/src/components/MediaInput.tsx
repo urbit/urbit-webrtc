@@ -1,13 +1,16 @@
 import React from 'react';
-import { useState, useEffect, useRef } from 'react';
-
-export default MediaInput;
-export { MediaInput, VideoFromStream };
+import { useState, useEffect } from 'react';
+import { Camera } from '../icons/Camera';
+import { Exit } from '../icons/Exit';
+import { Mic } from '../icons/Mic';
+import useUrchatStore from '../useUrchatStore';
+import { IconToggle } from './IconToggle';
 
 // eslint-disable-next-line
-function MediaInput({ addTrack, removeTrack }) {
-  const [videoEnabled, setVideoEnabled] = useState(false);
-  const [audioEnabled, setAudioEnabled] = useState(false);
+export function MediaInput({ addTrack, removeTrack }) {
+  const hangup = useUrchatStore(s => s.hangup);
+  const [videoEnabled, setVideoEnabled] = useState(true);
+  const [audioEnabled, setAudioEnabled] = useState(true);
 
   // Available devices, the chosen video input, and the chosen audio input
   const [devices, setDevices] = useState([]);
@@ -108,24 +111,36 @@ function MediaInput({ addTrack, removeTrack }) {
     evt.preventDefault();
     setAudioDevice(dev);
   };
-
-  const onVideoEnabledChanged = evt => setVideoEnabled(!evt.target.checked);
-
-  const onAudioEnabledChanged = evt => setAudioEnabled(!evt.target.checked);
+  debugger;
 
   return (
     <div className="MediaInput">
+      <div className="flex justify-center p-3 space-x-3">
+        <IconToggle 
+          className="w-10 h-10" 
+          pressed={videoEnabled} 
+          onPressedChange={setVideoEnabled}
+        >
+          <Camera className="w-6 h-6" primary="fill-current opacity-80" secondary="fill-current" />
+        </IconToggle>
+        <IconToggle 
+          className="w-10 h-10" 
+          pressed={audioEnabled} 
+          onPressedChange={setAudioEnabled}
+        >
+          <Mic className="w-6 h-6" primary="fill-current opacity-80" secondary="fill-current" />
+        </IconToggle>
+        <button className="flex justify-center items-center w-10 h-10 text-white bg-pink-600 rounded-full default-ring" onClick={hangup}>
+          <Exit className="w-6 h-6" primary="fill-current opacity-80" secondary="fill-current" />
+          <span className="sr-only">Hang up</span>
+        </button>
+      </div>
       <div className="VideoInputs">
         { devices.filter(dev => dev.kind === 'videoinput').map((dev, key) =>
           (
             <button key={key} onClick={onVideoClick(dev)}>{dev.label === '' ? dev.groupId : dev.label}</button>
           ))
         }
-        <form>
-          <label>Mute video
-            <input type="checkbox" checked= {!videoEnabled } onChange={onVideoEnabledChanged} />
-          </label>
-        </form>
       </div>
       <div className="AudioInputs">
         { devices.filter(dev => dev.kind === 'audioinput').map((dev, key) =>
@@ -133,28 +148,7 @@ function MediaInput({ addTrack, removeTrack }) {
             <button key={key} onClick={onAudioClick(dev)}>{dev.lable === '' ? dev.groupId : dev.label}</button>
           ))
         }
-        <form>
-          <label>Mute audio
-            <input type="checkbox" checked= {!audioEnabled } onChange={onAudioEnabledChanged} />
-          </label>
-        </form>
-      </div>
+      </div> 
     </div>
   );
-}
-
-function VideoFromStream(attrs) {
-  const srcObject = attrs.srcObject;
-  const videoRef = useRef(null);
-  const childAttrs = { ...attrs, 'ref': videoRef };
-  delete childAttrs.srcObject;
-
-  useEffect(() => {
-    videoRef.current.srcObject = srcObject;
-    if( srcObject !== null ) {
-      videoRef.current.play();
-    }
-  }, [videoRef, srcObject]);
-
-  return React.createElement('video', childAttrs, null);
 }
