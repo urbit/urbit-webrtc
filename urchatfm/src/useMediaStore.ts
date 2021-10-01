@@ -71,6 +71,15 @@ function toggleMedia(media: Media): Media {
   return media;
 }
 
+const prefs = {
+  video: {
+    facingMode: "user",
+    width: 1280, 
+    height: 719
+  },
+  audio: null
+}
+
 async function changeDevice(device: MediaDeviceInfo, type: 'audio' | 'video', state: MediaStore, call: any): Promise<Media> {
   const media = state[type];
   const addTrack = (track: MediaStreamTrack) => {
@@ -88,7 +97,7 @@ async function changeDevice(device: MediaDeviceInfo, type: 'audio' | 'video', st
     track.stop();
   }
 
-  const constraints = { [type]: { deviceId: device.deviceId } };
+  const constraints = { [type]: { deviceId: device.deviceId, ...prefs[type] } };
   const stream = await navigator.mediaDevices.getUserMedia(constraints);
   
   ;

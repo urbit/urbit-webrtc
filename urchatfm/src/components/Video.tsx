@@ -15,7 +15,6 @@ type VideoFromStreamProps = {
 function VideoFromStream(attrs: VideoFromStreamProps) {
   const srcObject = attrs.srcObject;
   const videoRef = useRef<HTMLVideoElement>(null);
-  debugger;
   const childAttrs = { ...attrs, ref: videoRef };
   delete childAttrs.srcObject;
 
@@ -38,7 +37,7 @@ export const Video = ({ size, className, ...props }: VideoProps) => {
   return (
     <div className={
       classNames(
-        'relative rounded-xl bg-gray-300', 
+        'relative rounded-xl bg-gray-500 overflow-hidden', 
         size === 'mini' && 'w-64 shadow-md',
         size === 'large' && 'w-full',
         className

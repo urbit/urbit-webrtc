@@ -25,8 +25,8 @@ export const IconToggle = React.forwardRef(
         className={classNames(
           'flex items-center justify-center default-ring rounded-full',
           disabled && proxyPressed && 'text-gray-400 bg-gray-700',
-          !proxyPressed && 'text-gray-200 bg-gray-400',
-          proxyPressed && 'text-pink-900 bg-pink-500',
+          proxyPressed && 'text-gray-200 bg-gray-700',
+          !proxyPressed && 'text-pink-900 bg-pink-500',
           className
         )}
         pressed={proxyPressed}

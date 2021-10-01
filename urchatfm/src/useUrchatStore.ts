@@ -37,7 +37,7 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
     }
   });
 
-  const urbit = new Urbit('', '');
+  const urbit = useMock ? { subscribe: async () => {} } : new Urbit('', '');
   // requires <script> tag for /~landscape/js/session.js
   urbit.ship = (window as any).ship;
   urbitRtcApp.urbit = urbit;
@@ -56,6 +56,10 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
       set({ urbit: instance });
     },
     startIcepond: () => set((state) => {
+      if (useMock) {
+        set({ icepond: {} })
+      }
+
       const icepond = new Icepond(state.urbit);
       icepond.oniceserver = (evt) => {
         set((state) => {
@@ -130,7 +134,9 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
     }),
 
     hangup: () => set((state) => {
-      state.ongoingCall.conn.close();
+      if (!useMock) {
+        state.ongoingCall.conn.close();
+      }
       return { ...state, ongoingCall: null };
     }),
 

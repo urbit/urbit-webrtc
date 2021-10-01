@@ -20,7 +20,7 @@ module.exports = {
     },
     extend: {
       colors: {
-        pink: colors.pink
+        pink: colors.rose
       }
     },
   },
