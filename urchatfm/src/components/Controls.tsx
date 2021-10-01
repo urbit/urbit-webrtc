@@ -17,7 +17,7 @@ export const Controls = ({ className }: ControlsProps) => {
 
   const leaveCall = useCallback(() => {
     hangup();
-    push('/chat');
+    push('/');
   }, [])
 
   return (

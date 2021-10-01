@@ -1,3 +1,4 @@
 *.md.backup
 dev-ships
 node_modules
+*.local

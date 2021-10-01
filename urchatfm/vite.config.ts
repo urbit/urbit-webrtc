@@ -34,6 +34,6 @@ export default ({ mode }) => {
             }
           },
     plugins:
-      mode === 'mock' ? [] : [/*urbitPlugin({ base: 'grid', target: SHIP_URL }), */reactRefresh()]
+      mode === 'mock' ? [reactRefresh()] : [urbitPlugin({ base: 'urchatfm', target: SHIP_URL }), reactRefresh()]
   });
 };

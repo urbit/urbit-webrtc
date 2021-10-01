@@ -2,6 +2,7 @@ import create from 'zustand';
 import { UrbitRTCApp } from 'switchboard';
 import Icepond from 'icepond';
 import Urbit from '@urbit/http-api';
+import { useMock } from './util';
 
 const dap = 'urchatfm';
 
@@ -25,8 +26,6 @@ interface UrchatStore {
   hungup: any;
 }
 
-const useMock = import.meta.env.MODE === 'mock';
-
 const useUrchatStore = create<UrchatStore>((set, get) => {
   const configuration = { iceServers: [] };
   const urbitRtcApp = new UrbitRTCApp(dap, configuration);
@@ -37,8 +36,14 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
       incomingCallEvt.reject();
     }
   });
+
+  const urbit = new Urbit('', '');
+  // requires <script> tag for /~landscape/js/session.js
+  urbit.ship = (window as any).ship;
+  urbitRtcApp.urbit = urbit;
+
   return {
-    urbit: null,
+    urbit,
     icepond: null,
     configuration: { iceServers: [] },
     urbitRtcApp,
@@ -73,11 +78,12 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
     placeCall: (ship, setHandlers) => set((state) => {
       console.log('placeCall');
       const conn = state.urbitRtcApp.call(ship, dap);
-      setHandlers(conn);
+      const call = { peer: ship, dap: dap, uuid: conn.uuid };
+      setHandlers(conn, call);
       conn.addEventListener('hungupcall', state.hungup);
       conn.initialize();
-      const call = { peer: ship, dap: dap, uuid: conn.uuid };
       state.startIcepond();
+      debugger;
       return {
         ...state,
         isCaller: true,

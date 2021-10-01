@@ -1,5 +1,6 @@
 import React, { useCallback } from 'react';
 import { useForm } from 'react-hook-form';
+import { useMock } from '../util';
 
 interface Message {
   speaker: string;
@@ -13,20 +14,21 @@ interface ChatProps {
 }
 
 export const Chat = ({ sendMessage, messages, ready }: ChatProps) => {
-  const { register, handleSubmit } = useForm();
+  const { register, handleSubmit, reset } = useForm();
   const onSubmitMessage = useCallback(({ message }) => {
     sendMessage(message);
+    reset();
   }, []);
 
-  if (false) {
+  if (!ready && !useMock) {
     return (
       <div className="h-full bg-gray-300 rounded-xl" />
     )
   }
 
   return (
-    <div className="flex flex-col h-full p-6 bg-gray-300 rounded-xl overflow-hidden">
-      <div className="flex-1 flex flex-col justify-end space-y-6 bg-white rounded-md overflow-y-auto">
+    <div className="flex flex-col h-full p-6 bg-pink-100 rounded-xl overflow-hidden">
+      <div className="flex-1 flex flex-col justify-end px-4 py-3 space-y-6 bg-white rounded-md overflow-y-auto">
         { messages.map((msg, idx) => (
             <div className="message" key={idx}>
               <span className="font-bold mr-3">{ msg.speaker }:</span>

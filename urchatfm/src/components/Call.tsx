@@ -2,11 +2,10 @@ import React, { useCallback, useEffect } from "react";
 import { Redirect } from "react-router";
 import { useMediaStore } from "../useMediaStore";
 import useUrchatStore from "../useUrchatStore";
+import { useMock } from "../util";
 import { Controls } from "./Controls";
 import { MediaInput } from "./MediaInput";
 import { Video } from "./Video";
-
-const useMock = import.meta.env.MODE === 'mock';
 
 export const Call = () => {
   const { local, remote } = useMediaStore(s => ({ local: s.local, remote: s.remote }));
@@ -24,15 +23,16 @@ export const Call = () => {
     }
   }, [ongoingCall]);
 
+  debugger;
   if (!ongoingCall) {
-    return <Redirect to="/chat" />;
+    return <Redirect to="/" />;
   }
 
   return (
     <>
       <div className="relative w-full h-full">
         <div className="absolute z-10 top-6 left-6">
-          <Video size="mini" className="aspect-w-16 aspect-h-9" srcObject={local} muted />
+          <Video size="mini" className="aspect-w-16 aspect-h-9 border border-gray-400" srcObject={local} muted />
         </div>
         <Video size="large" className="absolute inset-0 h-full w-full object-contain" srcObject={useMock ? local : remote} muted={useMock} />
         <Controls className="absolute z-10 bottom-0 left-1/2 transform -translate-x-1/2" />

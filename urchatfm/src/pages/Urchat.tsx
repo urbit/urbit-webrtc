@@ -10,6 +10,7 @@ import { useMediaStore } from '../useMediaStore';
 export function Urchat() {
   const {
     incomingCall,
+    ongoingCall,
     answerCall: answerCallState,
     placeCall: placeCallState,
     rejectCall
@@ -28,6 +29,12 @@ export function Urchat() {
     return () => navigator.mediaDevices.removeEventListener('devicechange', getDevices);
   }, []);
 
+  useEffect(() => {
+    if (ongoingCall) {
+      push(`/chat/${ongoingCall.conn.uuid}`)
+    }
+  }, [ongoingCall]);
+
   // state-changing methods
   const answerCall = () => answerCallState((peer, conn, call) => {
     setDataChannelOpen(false);
@@ -43,10 +50,9 @@ export function Urchat() {
     });
 
     getDevices(call)
-    push(`/chat/${conn.uuid}`)
   });
 
-  const placeCall = ship => placeCallState(ship, (conn) => {
+  const placeCall = ship => placeCallState(ship, (conn, call) => {
     console.log('placing call');
     setDataChannelOpen(false);
     setMessages([]);
@@ -57,10 +63,12 @@ export function Urchat() {
       setMessages(messages => messages.concat([{ speaker: ship, message: data }]));
     };
     setDataChannel(channel);
+
+    getDevices(call)
   });
 
   const sendMessage = (msg) => {
-    dataChannel.send(msg);
+    dataChannel?.send(msg);
     setMessages(messages.concat([{ speaker: 'me', message: msg }]));
   };
 

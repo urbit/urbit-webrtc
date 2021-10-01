@@ -1,4 +1,5 @@
 import create from 'zustand';
+import { useMock } from './util';
 
 type Track = MediaStreamTrack & {
   sender: string;
@@ -54,7 +55,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     // trigger acquisition of microphone and camera permissions
     // via getUserMedia in effects below
     const video = await changeDevice(videoDevs[0], 'video', get(), call);
-    const audio = import.meta.env.MODE === 'mock' ? get().audio :  await changeDevice(audioDevs[0], 'audio', get(), call);
+    const audio = useMock ? get().audio :  await changeDevice(audioDevs[0], 'audio', get(), call);
     set({ devices, video, audio })
   }
 }))
