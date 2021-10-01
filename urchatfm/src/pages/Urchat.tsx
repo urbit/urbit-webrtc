@@ -7,6 +7,8 @@ import { Call } from '../components/Call';
 import { Dialer } from '../components/Dialer';
 import { useMediaStore } from '../useMediaStore';
 import { useMock } from '../util';
+import call from '/src/assets/enter-call.wav';
+import { TurnOnRinger } from '../components/TurnOnRinger';
 
 export interface Message {
   speaker: string;
@@ -38,6 +40,9 @@ export function Urchat() {
 
   useEffect(() => {
     if (ongoingCall) {
+      const audio = new Audio(call);
+      audio.volume = .3
+      audio.play();
       push(`/chat/${ongoingCall.conn.uuid}`)
     }
   }, [ongoingCall]);
@@ -115,6 +120,7 @@ export function Urchat() {
       {incomingCall && (
         <IncomingCall caller={incomingCall.call.peer} answerCall={answerCall} rejectCall={rejectCall} />
       )}
+      <TurnOnRinger />
     </main>
   )
 }

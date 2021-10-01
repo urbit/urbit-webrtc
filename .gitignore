@@ -2,3 +2,4 @@
 dev-ships
 node_modules
 *.local
+.DS_Store

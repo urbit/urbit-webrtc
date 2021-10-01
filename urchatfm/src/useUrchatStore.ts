@@ -6,6 +6,8 @@ import { useMock } from './util';
 
 const dap = 'urchatfm';
 
+export const mockIncomingCall = { call: { peer: '~nocsyx-lassul' }, reject: () => {} };
+
 interface UrchatStore {
   urbit: Urbit | null;
   urbitRtcApp: any;
@@ -47,7 +49,7 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
     icepond: null,
     configuration: { iceServers: [] },
     urbitRtcApp,
-    incomingCall: useMock ? { call: { peer: '~nocsyx-lassul' }, reject: () => {} } : null,
+    incomingCall: null,
     ongoingCall: null,
     isCaller: false,
     setUrbit: urbit => {
