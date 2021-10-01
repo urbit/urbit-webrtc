@@ -86,10 +86,16 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
     }),
     answerCall: setHandlers => set((state) => {
       if (useMock) {
+        setHandlers('~lassul-nocsyx', { uuid: '000', addEventListener: () => {} }, {});
         return {
           ...state,
           isCaller: false,
-          ongoingCall: { conn: {}, call: () => {} },
+          ongoingCall: { conn: { 
+            ontrack: () => {}, 
+            addTrack: () => {},
+            removeTrack: () => {},
+            close: () => {}
+          }, call: () => {} },
           incomingCall: null
         }
       }
@@ -111,15 +117,6 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
     rejectCall: () => set((state) => {
       state.incomingCall.reject();
       return { incomingCall: null };
-    }),
-
-    addTrackToCall: track => set((state) => {
-      const sender = state.ongoingCall.conn.addTrack(track);
-      track.sender = sender;
-    }),
-
-    removeTrackFromCall: track => set((state) => {
-      state.ongoingCall.conn.removeTrack(track.sender);
     }),
 
     setOnTrack: onTrack => set((state) => {

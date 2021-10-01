@@ -15,6 +15,7 @@ type VideoFromStreamProps = {
 function VideoFromStream(attrs: VideoFromStreamProps) {
   const srcObject = attrs.srcObject;
   const videoRef = useRef<HTMLVideoElement>(null);
+  debugger;
   const childAttrs = { ...attrs, ref: videoRef };
   delete childAttrs.srcObject;
 
@@ -37,13 +38,13 @@ export const Video = ({ size, className, ...props }: VideoProps) => {
   return (
     <div className={
       classNames(
-        'relative aspect-w-16 aspect-h-9 rounded-lg bg-gray-400', 
+        'relative rounded-xl bg-gray-300', 
         size === 'mini' && 'w-64 shadow-md',
         size === 'large' && 'w-full',
         className
       )}
     >
-      <VideoFromStream {...props} className={classNames('absolute w-full h-full')}/>
+      <VideoFromStream {...props} className={classNames('absolute w-full h-full transform')} style={{ transform: 'rotateY(180deg)' }} />
     </div>
   )
 }

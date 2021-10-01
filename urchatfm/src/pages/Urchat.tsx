@@ -1,26 +1,35 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import useUrchatStore from '../useUrchatStore';
-import { Video } from '../components/Video';
-import { MediaInput } from '../components/MediaInput';
 import { IncomingCall } from '../components/IncomingCall';
+import { Route, Switch, useHistory } from 'react-router';
+import { Chat } from '../components/Chat';
+import { Call } from '../components/Call';
+import { Dialer } from '../components/Dialer';
+import { useMediaStore } from '../useMediaStore';
 
 export function Urchat() {
   const {
     incomingCall,
-    ongoingCall,
     answerCall: answerCallState,
     placeCall: placeCallState,
-    rejectCall,
-    hangup: hangupCall
+    rejectCall
   } = useUrchatStore();
+  const getDevices = useMediaStore(s => s.getDevices);
+  const { push } = useHistory();
 
   // local state
   const [dataChannel, setDataChannel] = useState(null);
   const [dataChannelOpen, setDataChannelOpen] = useState(false);
   const [messages, setMessages] = useState([]);
 
+  // Set up callback to update device lists when a new device is added or removed
+  useEffect(() => {
+    navigator.mediaDevices.addEventListener('devicechange', getDevices);
+    return () => navigator.mediaDevices.removeEventListener('devicechange', getDevices);
+  }, []);
+
   // state-changing methods
-  const answerCall = () => answerCallState((peer, conn) => {
+  const answerCall = () => answerCallState((peer, conn, call) => {
     setDataChannelOpen(false);
     setMessages([]);
     conn.addEventListener('datachannel', (evt) => {
@@ -32,6 +41,9 @@ export function Urchat() {
       };
       setDataChannel(channel);
     });
+
+    getDevices(call)
+    push(`/chat/${conn.uuid}`)
   });
 
   const placeCall = ship => placeCallState(ship, (conn) => {
@@ -53,118 +65,27 @@ export function Urchat() {
   };
 
   return (
-    <main className="flex w-full h-full p-4 sm:p-8">
-      {incomingCall && <IncomingCall caller={ incomingCall.call.peer } answerCall={ answerCall } rejectCall={ rejectCall } />}
-      {ongoingCall && <UrchatOngoing sendMessage={ sendMessage } messages={ messages } ready={ dataChannelOpen } hangupCall = { hangupCall } />}
-      {!incomingCall && !ongoingCall && <UrchatPlaceCall placeCall={ placeCall } />}
-    </main>
-  )
-}
-
-function UrchatOngoing({ sendMessage, messages, ready, hangupCall }) {
-  const [message, setMessage] = useState('');
-  const localStreamRef = useRef(new MediaStream());
-  const localStream = localStreamRef.current;
-  const remoteStreamRef = useRef(new MediaStream());
-  const remoteStream = remoteStreamRef.current;
-
-  const addTrackToCall = useUrchatStore(state => state.addTrackToCall);
-  const removeTrackFromCall = useUrchatStore(state => state.removeTrackFromCall);
-  const setOnTrack = useUrchatStore(state => state.setOnTrack);
-
-  const debugOnTrack = (evt) => {
-    console.log('Incoming track event', evt);
-    remoteStream.addTrack(evt.track);
-  };
-
-  const debugAddTrackToCall = (track) => {
-    console.log('Adding track to call', track);
-    localStream.addTrack(track);
-    addTrackToCall(track);
-  };
-
-  const debugRemoveTrackFromCall = (track) => {
-    console.log('Removing trakc from call', track);
-    localStream.removeTrack(track);
-    removeTrackFromCall(track);
-  };
-
-  useEffect(() => {
-    console.log('Setting up track callbacks');
-    setOnTrack(debugOnTrack);
-  }, []);
-
-  const onSubmitMessage = (evt) => {
-    evt.preventDefault();
-    sendMessage(message);
-    setMessage('');
-  };
-
-  return (
-    <>
+    <main className="relative flex gap-6 w-full h-full p-4 sm:p-8 text-gray-700">
       <section className="flex-1 flex flex-col justify-center">
-        <div className="relative">
-          <div className="absolute z-10 top-6 left-6">
-            <Video size="mini" srcObject={localStream} muted />
-          </div>
-          <Video size="large" srcObject={import.meta.env.MODE === 'mock' ? localStream : remoteStream} />
-        </div>
-        <MediaInput addTrack={debugAddTrackToCall} removeTrack={debugRemoveTrackFromCall} />
+        <Switch>
+          <Route path="/chat/:id" component={Call} />
+          <Route path="/">
+            <div className="flex justify-center items-center w-full h-full bg-pink-100 rounded-xl">
+              <div>
+                <h1 className="mb-6 mx-12 text-3xl font-semibold font-mono">urChatFM</h1>
+                <Dialer placeCall={placeCall} />
+              </div>
+            </div>
+          </Route>
+        </Switch>
       </section>
       <aside className="flex-none w-full max-w-sm">
-        <div className="urchatChat">
-          <div className="messages">
-          { messages.map((msg, idx) => (
-              <div className="message" key={idx}>
-                <span style={{ fontWeight: 'bold' }}> {msg.speaker} </span>
-                {msg.message}
-              </div>
-            ))
-          }
-          </div>
-          <form onSubmit={onSubmitMessage} >
-            <label>
-              Message:
-            <input type="text" value={message} onChange={evt => setMessage(evt.target.value)} />
-            </label>
-            <input type="submit" value="Send" disabled={ ! ready } />
-          </form>
-        </div>
+        <Chat sendMessage={ sendMessage } messages={ messages } ready={ dataChannelOpen } />
       </aside>
-    </>
-  );
-}
-
-// eslint-disable-next-line
-function IceServers() {
-  const servers = useUrchatStore(state => state.configuration.iceServers);
-
-  return (
-    <div className="iceServers">
-    <h4>Ice servers</h4>
-    { servers.map((server, idx) => (
-      <pre key={idx}>{server}</pre>
-    ))}
-    </div>
-  );
-}
-
-function UrchatPlaceCall({ placeCall }) {
-  const [ship, setShip] = useState('');
-
-  const onSubmitCall = (evt) => {
-    evt.preventDefault();
-    placeCall( ship );
-    setShip('');
-  };
-
-  return (
-    <form onSubmit={ onSubmitCall }>
-      <label>
-        Ship:
-        <input type="text" value={ship} onChange={ evt => setShip(evt.target.value) } />
-      </label>
-      <input type="submit" value="Call" />
-    </form>
-  );
+      
+      {incomingCall && (
+        <IncomingCall caller={incomingCall.call.peer} answerCall={answerCall} rejectCall={rejectCall} />
+      )}
+    </main>
+  )
 }
