@@ -1,0 +1,1 @@
+export const useMock = import.meta.env.MODE === 'mock';

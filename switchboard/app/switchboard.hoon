@@ -1,5 +1,5 @@
 /-  switchboard
-/+  default-agent, dbug, switchboard-lib=switchboard
+/+  default-agent, dbug, switchboard-lib=switchboard, verb
 :: Apps informed 2 ways about call state updates
 :: - by notifications on the /call/[uuid] channel with the
 ::   %switchboard-connection-state mark
@@ -13,6 +13,7 @@
 +$  card  card:agent:gall
 --
 %-  agent:dbug
+%+  verb  %.n
 =|  state=state-0
 ^-  agent:gall
 =<
@@ -498,7 +499,7 @@
       :*
         %give  %fact
         ~[/incoming/[dap.call.callstate]]
-        %incoming-call  !>([%incoming-call-hangup uuid])
+        %switchboard-incoming-call  !>([%incoming-call-hangup uuid])
       ==
     ==
   ==
