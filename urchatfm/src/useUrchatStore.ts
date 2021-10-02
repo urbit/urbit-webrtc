@@ -140,7 +140,7 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
     }),
 
     hangup: () => set((state) => {
-      if (!useMock) {
+      if (!useMock && state.ongoingCall) {
         state.ongoingCall.conn.close();
       }
       return { ...state, ongoingCall: null };

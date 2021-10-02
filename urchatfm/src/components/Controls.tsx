@@ -20,6 +20,8 @@ export const Controls = ({ className }: ControlsProps) => {
 
   const leaveCall = useCallback(() => {
     hangup();
+    audio.tracks.forEach(track => track.stop());
+    video.tracks.forEach(track => track.stop());
     push('/');
   }, [])
 
