@@ -8,12 +8,19 @@ interface DialerProps {
 }
 
 export const Dialer = ({ placeCall }: DialerProps) => {
-  const { register, handleSubmit, reset, watch } = useForm({
-    mode: 'onChange'
+  const { register, handleSubmit, reset, watch } = useForm<{ ship: string }>({
+    mode: 'onChange',
+    defaultValues: {
+      ship: ''
+    }
   });
   const ship = watch('ship');
 
   const onSubmitCall = useCallback(({ ship }) => {
+    if (!ship) {
+      return
+    }
+    
     placeCall(deSig(ship));
     reset();
   }, []);
@@ -29,7 +36,7 @@ export const Dialer = ({ placeCall }: DialerProps) => {
           className="flex-1 input min-w-[200px] font-semibold font-mono rounded-r-none focus:outline-none"
           {...register('ship')} 
         />
-        <button type="submit" className="flex-none button px-6 text-pink-900 bg-pink-500 disabled:text-gray-900 disabled:bg-gray-400 disabled:cursor-default rounded-l-none" disabled={!isValidPatp(ship || '')}>Call</button>
+        <button type="submit" className="flex-none button px-6 text-pink-900 bg-pink-500 disabled:text-gray-900 disabled:bg-gray-400 disabled:cursor-default rounded-l-none" disabled={!isValidPatp(ship || '') && ship.length > 0}>Call</button>
       </div>
     </form>
   );
