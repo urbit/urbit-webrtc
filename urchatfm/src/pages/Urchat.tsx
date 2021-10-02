@@ -49,38 +49,42 @@ export function Urchat() {
   }, [ongoingCall]);
 
   // state-changing methods
-  const answerCall = () => answerCallState((peer, conn, call) => {
-    setDataChannelOpen(false);
-    setMessages([]);
-    conn.addEventListener('datachannel', (evt) => {
-      const channel = evt.channel;
+  const answerCall = async () => {
+    const call = await answerCallState((peer, conn) => {
+      setDataChannelOpen(false);
+      setMessages([]);
+      conn.addEventListener('datachannel', (evt) => {
+        const channel = evt.channel;
+        channel.onopen = () => setDataChannelOpen(true);
+        channel.onmessage = (evt) => {
+          const data = evt.data;
+          setMessages(messages => [{ speaker: peer, message: data }].concat(messages));
+          console.log('channel message', data);
+        };
+        setDataChannel(channel);
+      });
+    });
+
+    getDevices(call)
+  }
+
+  const placeCall = async ship => {
+    const call = await placeCallState(ship, (conn) => {
+      console.log('placing call');
+      setDataChannelOpen(false);
+      setMessages([]);
+      const channel = conn.createDataChannel('urchatfm');
       channel.onopen = () => setDataChannelOpen(true);
-      channel.onmessage = (evt) => {
+      channel.onmessage= (evt) => {
         const data = evt.data;
-        setMessages(messages => [{ speaker: peer, message: data }].concat(messages));
+        setMessages(messages => [{ speaker: ship, message: data }].concat(messages));
         console.log('channel message', data);
       };
       setDataChannel(channel);
     });
 
     getDevices(call)
-  });
-
-  const placeCall = ship => placeCallState(ship, (conn, call) => {
-    console.log('placing call');
-    setDataChannelOpen(false);
-    setMessages([]);
-    const channel = conn.createDataChannel('urchatfm');
-    channel.onopen = () => setDataChannelOpen(true);
-    channel.onmessage= (evt) => {
-      const data = evt.data;
-      setMessages(messages => [{ speaker: ship, message: data }].concat(messages));
-      console.log('channel message', data);
-    };
-    setDataChannel(channel);
-
-    getDevices(call)
-  });
+  }
 
   const sendMessage = useCallback((msg: string) => {
     if (!useMock) {

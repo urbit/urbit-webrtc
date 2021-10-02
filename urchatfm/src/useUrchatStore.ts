@@ -18,8 +18,8 @@ interface UrchatStore {
   isCaller: boolean;
   setUrbit: (ur: Urbit) => void;
   startIcepond: any;
-  placeCall: any;
-  answerCall: any;
+  placeCall: (ship: string, setHandlers: (conn: any) => void) => Promise<any>;
+  answerCall: (setHandlers: (ship: string, conn: any) => void) => Promise<any>;
   rejectCall: any;
   setOnTrack: any;
   hangup: any;
@@ -96,7 +96,7 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
     },
     answerCall: async setHandlers => {
       if (useMock) {
-        setHandlers('~lassul-nocsyx', { uuid: '000', addEventListener: () => {} }, {});
+        setHandlers('~lassul-nocsyx', { uuid: '000', addEventListener: () => {} });
         set({
           isCaller: false,
           ongoingCall: { conn: { 
@@ -113,10 +113,10 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
       const call = incomingCall.call;
       const conn = incomingCall.answer();
       conn.addEventListener('hungupcall', hungup);
-      setHandlers(call.peer, conn, call);
+      setHandlers(call.peer, conn);
       await conn.initialize();
       startIcepond();
-      
+
       set({ 
         isCaller: false,
         ongoingCall: { conn, call },
