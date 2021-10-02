@@ -6,5 +6,5 @@
   website+'https://tlon.io'
   license+'MIT'
   base+'urchatfm'
-  glob-http+['https://bootstrap.urbit.org/glob-0v3.prmh0.k5792.97v3m.fg9pl.o4e46.glob' 0v3.prmh0.k5792.97v3m.fg9pl.o4e46]
+  glob-http+['https://bootstrap.urbit.org/glob-0v5.8n4ks.a6bbr.ele6g.mppj8.t67s4.glob' 0v5.8n4ks.a6bbr.ele6g.mppj8.t67s4]
 ==
