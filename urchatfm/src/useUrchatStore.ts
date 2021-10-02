@@ -6,15 +6,58 @@ import { useMock } from './util';
 
 const dap = 'urchatfm';
 
-export const mockIncomingCall = { call: { peer: '~nocsyx-lassul' }, reject: () => {} };
+const mockCall = { peer: '~nocsyx-lassul', dap: '123', uuid: '123' }
+export const mockIncomingCall = { 
+  ...mockCall, 
+  call: mockCall,
+  urbit: {},
+  configuration: {},
+  answer: () => {},
+  dial: () => {},
+  reject: () => {} 
+};
+
+export type Call = {
+  peer: string;
+  dap: string;
+  uuid: string;
+}
+
+export interface Connection extends Call {
+  initialize: () => void;
+  dial: () => Promise<void>;
+  ring: (uuid: string) => Promise<void>;
+  subscribe: () => Promise<void>;
+  close: () => void;
+  remoteHungup: () => void;
+  closeWithError: (err: string) => void;
+  addEventListener: (event: string, handler: () => void) => void;
+  setConfiguration: (config: any) => void
+  ontrack: () => {}, 
+  addTrack: (track: MediaStreamTrack) => string,
+  removeTrack: (sender: string) => {},
+}
+
+export interface OngoingCall {
+  conn: Connection;
+  call: Call;
+}
+
+export interface IncomingCall extends Call {
+  call: Call;
+  urbit: Urbit;
+  configuration: {}
+  answer: () => Connection
+  reject: () => {}
+}
 
 interface UrchatStore {
   urbit: Urbit | null;
   urbitRtcApp: any;
   icepond: any;
   configuration: any;
-  incomingCall: any;
-  ongoingCall: any;
+  incomingCall: IncomingCall;
+  ongoingCall: OngoingCall;
   isCaller: boolean;
   setUrbit: (ur: Urbit) => void;
   startIcepond: any;
@@ -107,7 +150,7 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
             addTrack: () => {},
             removeTrack: () => {},
             close: () => {}
-          }, call: () => {} },
+          }, call: () => {} } as any,
           incomingCall: null
         })
       }

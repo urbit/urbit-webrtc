@@ -6,7 +6,7 @@ import { useMock } from '../util';
 export const TurnOnRinger = () => {
   const triggerMockCall = useCallback(() => {
     if (useMock) {
-      useUrchatStore.setState({ incomingCall: mockIncomingCall });
+      useUrchatStore.setState({ incomingCall: mockIncomingCall as any });
     }
   }, []);
   return (

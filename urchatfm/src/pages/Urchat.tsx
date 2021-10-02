@@ -42,9 +42,8 @@ export function Urchat() {
     if (ongoingCall) {
       const audio = new Audio(call);
       audio.volume = .3
-      debugger;
       audio.play();
-      push(`/chat/${ongoingCall.uuid}`)
+      push(`/chat/${ongoingCall.conn.uuid}`)
     }
   }, [ongoingCall]);
 

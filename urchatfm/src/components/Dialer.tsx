@@ -1,3 +1,5 @@
+import { deSig } from '@urbit/api';
+import { isValidPatp } from 'urbit-ob';
 import React, { useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 
@@ -6,10 +8,13 @@ interface DialerProps {
 }
 
 export const Dialer = ({ placeCall }: DialerProps) => {
-  const { register, handleSubmit, reset } = useForm();
+  const { register, handleSubmit, reset, watch } = useForm({
+    mode: 'onChange'
+  });
+  const ship = watch('ship');
 
   const onSubmitCall = useCallback(({ ship }) => {
-    placeCall(ship);
+    placeCall(deSig(ship));
     reset();
   }, []);
 
@@ -21,10 +26,10 @@ export const Dialer = ({ placeCall }: DialerProps) => {
           id="ship" 
           type="text" 
           placeholder="Ship"
-          className="flex-1 input min-w-[200px] rounded-r-none focus:outline-none"
+          className="flex-1 input min-w-[200px] font-semibold font-mono rounded-r-none focus:outline-none"
           {...register('ship')} 
         />
-        <button type="submit" className="flex-none button px-6 text-pink-900 bg-pink-500 rounded-l-none">Call</button>
+        <button type="submit" className="flex-none button px-6 text-pink-900 bg-pink-500 disabled:text-gray-900 disabled:bg-gray-400 disabled:cursor-default rounded-l-none" disabled={!isValidPatp(ship || '')}>Call</button>
       </div>
     </form>
   );

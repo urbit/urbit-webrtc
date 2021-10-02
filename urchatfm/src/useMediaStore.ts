@@ -1,4 +1,5 @@
 import create from 'zustand';
+import { OngoingCall } from './useUrchatStore';
 import { useMock } from './util';
 
 type Track = MediaStreamTrack & {
@@ -80,7 +81,7 @@ const prefs = {
   audio: null
 }
 
-async function changeDevice(device: MediaDeviceInfo, type: 'audio' | 'video', state: MediaStore, call: any): Promise<Media> {
+async function changeDevice(device: MediaDeviceInfo, type: 'audio' | 'video', state: MediaStore, call: OngoingCall): Promise<Media> {
   const media = state[type];
   const addTrack = (track: MediaStreamTrack) => {
     console.log('Adding track to call', track);
