@@ -89,10 +89,13 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
       const call = { peer: ship, dap: dap, uuid: conn.uuid };
       startIcepond();
 
+      const ongoingCall = { conn, call };
       set({
         isCaller: true,
-        ongoingCall: { conn, call }
+        ongoingCall
       });
+
+      return ongoingCall;
     },
     answerCall: async setHandlers => {
       if (useMock) {
@@ -117,11 +120,14 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
       await conn.initialize();
       startIcepond();
 
+      const ongoingCall = { conn, call };
       set({ 
         isCaller: false,
-        ongoingCall: { conn, call },
+        ongoingCall,
         incomingCall: null
       });
+
+      return ongoingCall;
     },
 
     rejectCall: () => set((state) => {
