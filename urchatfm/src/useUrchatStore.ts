@@ -113,7 +113,7 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
       const call = state.incomingCall.call;
       const conn = state.incomingCall.answer();
       conn.addEventListener('hungupcall', state.hungup);
-      setHandlers(call.peer, conn);
+      setHandlers(call.peer, conn, call);
       conn.initialize();
       state.startIcepond();
       return {
