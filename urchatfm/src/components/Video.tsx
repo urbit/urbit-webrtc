@@ -1,7 +1,7 @@
 import classNames from 'classnames';
 import React, { useRef, useEffect, HTMLAttributes } from 'react';
 
-export type VideoSize = 'mini' | 'large';
+export type VideoSize = 'xs-mini' | 'mini' | 'large';
 
 interface VideoProps extends VideoFromStreamProps {
   size: VideoSize;
@@ -35,13 +35,14 @@ export const Video = ({ size, className, ...props }: VideoProps) => {
   return (
     <div className={
       classNames(
-        'relative rounded-xl bg-gray-500 overflow-hidden', 
-        size === 'mini' && 'w-64 shadow-md',
-        size === 'large' && 'w-full',
+        'relative bg-gray-500 overflow-hidden', 
+        size === 'xs-mini' && 'w-20 sm:w-28 shadow-md rounded-xl',
+        size === 'mini' && 'w-32 sm:w-64',
+        size === 'large' && 'w-full lg:rounded-xl',
         className
       )}
     >
-      <VideoFromStream {...props} className={classNames('absolute w-full h-full transform')} style={{ transform: 'rotateY(180deg)' }} />
+      <VideoFromStream {...props} className={classNames('absolute w-full h-full object-cover md:object-contain transform')} style={{ transform: 'rotateY(180deg)' }} />
     </div>
   )
 }

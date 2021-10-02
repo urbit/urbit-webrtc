@@ -4,7 +4,7 @@ import { Close } from '../icons/Close'
 
 export const Dialog: FC<RadixDialog.DialogOwnProps> = ({ children, ...props }) => (
     <RadixDialog.Root {...props}>
-        <RadixDialog.Overlay className="fixed z-10 top-0 left-0 right-0 bottom-0 bg-white dark:bg-black opacity-30" />
+        <RadixDialog.Overlay className="fixed z-10 top-0 left-0 right-0 bottom-0 dark:bg-white bg-black opacity-30" />
         { children }
     </RadixDialog.Root>
 )
