@@ -3,7 +3,7 @@ import { OngoingCall } from './useUrchatStore';
 import { useMock } from './util';
 
 type Track = MediaStreamTrack & {
-  sender: string;
+  sender: RTCRtpSender;
 }
 
 interface Media {
@@ -11,7 +11,7 @@ interface Media {
   device: MediaDeviceInfo | null;
   tracks: Track[];
   toggle: () => void;
-  changeDevice: (device: MediaDeviceInfo, call: any) => void;
+  changeDevice: (device: MediaDeviceInfo, call: OngoingCall) => void;
 }
 
 interface MediaStore {
@@ -20,7 +20,7 @@ interface MediaStore {
   video: Media;
   audio: Media;
   devices: MediaDeviceInfo[];
-  getDevices: (call: any) => Promise<void>;
+  getDevices: (call: OngoingCall) => Promise<void>;
 }
 
 export const useMediaStore = create<MediaStore>((set, get) => ({
@@ -30,7 +30,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     enabled: true,
     device: null,
     tracks: [],
-    changeDevice: (device: MediaDeviceInfo, call: any) => changeDevice(device, 'video', get(), call),
+    changeDevice: (device: MediaDeviceInfo, call: OngoingCall) => changeDevice(device, 'video', get(), call),
     toggle: () => {
       ;
       set({ video: toggleMedia(get().video) })
@@ -40,15 +40,15 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     enabled: true,
     device: null,
     tracks: [],
-    changeDevice: (device: MediaDeviceInfo, call: any) => changeDevice(device, 'audio', get(), call),
+    changeDevice: (device: MediaDeviceInfo, call: OngoingCall) => changeDevice(device, 'audio', get(), call),
     toggle: () => {
       ;
       set({ audio: toggleMedia(get().audio) })
     }
   },
   devices: [],
-  getDevices: async (call: any) => {
-    const devices = await navigator.mediaDevices.enumerateDevices();
+  getDevices: async (call: OngoingCall) => {
+    const devices = await navigator.mediaDevices?.enumerateDevices();
     const videoDevs = devices.filter(dev => dev.kind === 'videoinput');
     const audioDevs = devices.filter(dev => dev.kind === 'audioinput');
 
@@ -99,7 +99,7 @@ async function changeDevice(device: MediaDeviceInfo, type: 'audio' | 'video', st
   }
 
   const constraints = { [type]: { deviceId: device.deviceId, ...prefs[type] } };
-  const stream = await navigator.mediaDevices.getUserMedia(constraints);
+  const stream = await navigator.mediaDevices?.getUserMedia(constraints);
   
   ;
   media.tracks.forEach(removeTrack);

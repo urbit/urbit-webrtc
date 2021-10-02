@@ -36,7 +36,7 @@ export const Dialer = ({ placeCall }: DialerProps) => {
           className="flex-1 input min-w-[200px] font-semibold font-mono rounded-r-none focus:outline-none"
           {...register('ship')} 
         />
-        <button type="submit" className="flex-none button px-6 text-pink-900 bg-pink-500 disabled:text-gray-900 disabled:bg-gray-400 disabled:cursor-default rounded-l-none" disabled={!isValidPatp(ship || '') && ship.length > 0}>Call</button>
+        <button type="submit" className="flex-none button px-6 text-pink-900 bg-pink-500 disabled:text-gray-900 disabled:bg-gray-400 disabled:cursor-default rounded-l-none" disabled={!isValidPatp(`~${deSig(ship)}` || '') && ship.length > 0}>Call</button>
       </div>
     </form>
   );

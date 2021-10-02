@@ -23,7 +23,7 @@ export type Call = {
   uuid: string;
 }
 
-export interface Connection extends Call {
+export type Connection = Call & RTCPeerConnection & {
   initialize: () => void;
   dial: () => Promise<void>;
   ring: (uuid: string) => Promise<void>;
@@ -31,11 +31,6 @@ export interface Connection extends Call {
   close: () => void;
   remoteHungup: () => void;
   closeWithError: (err: string) => void;
-  addEventListener: (event: string, handler: () => void) => void;
-  setConfiguration: (config: any) => void
-  ontrack: () => {}, 
-  addTrack: (track: MediaStreamTrack) => string,
-  removeTrack: (sender: string) => {},
 }
 
 export interface OngoingCall {
@@ -61,12 +56,12 @@ interface UrchatStore {
   isCaller: boolean;
   setUrbit: (ur: Urbit) => void;
   startIcepond: any;
-  placeCall: (ship: string, setHandlers: (conn: any) => void) => Promise<any>;
-  answerCall: (setHandlers: (ship: string, conn: any) => void) => Promise<any>;
-  rejectCall: any;
-  setOnTrack: any;
-  hangup: any;
-  hungup: any;
+  placeCall: (ship: string, setHandlers: (conn: Connection) => void) => Promise<any>;
+  answerCall: (setHandlers: (ship: string, conn: Connection) => void) => Promise<any>;
+  rejectCall: () => void;
+  setOnTrack: (onTrack: (evt: Event & { track: MediaStreamTrack }) => void) => void;
+  hangup: () => void;
+  hungup: () => void;
 }
 
 const useUrchatStore = create<UrchatStore>((set, get) => {
@@ -142,17 +137,29 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
     },
     answerCall: async setHandlers => {
       if (useMock) {
-        setHandlers('~lassul-nocsyx', { uuid: '000', addEventListener: () => {} });
-        set({
-          isCaller: false,
-          ongoingCall: { conn: { 
+        const call = {
+          peer: '~lassul-nocsyx',
+          uuid: '000'
+        } 
+        setHandlers('~lassul-nocsyx', { ...call, addEventListener: () => {} } as any);
+        const ongoingCall = { 
+          conn: {
+            ...call, 
             ontrack: () => {}, 
             addTrack: () => {},
             removeTrack: () => {},
             close: () => {}
-          }, call: () => {} } as any,
+          }, 
+          call
+        } as any;
+
+        set({
+          isCaller: false,
+          ongoingCall,
           incomingCall: null
         })
+        
+        return ongoingCall;
       }
 
       const { incomingCall, hungup, startIcepond } = get();

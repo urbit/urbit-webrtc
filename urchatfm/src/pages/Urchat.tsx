@@ -9,6 +9,7 @@ import { useMediaStore } from '../useMediaStore';
 import { useMock } from '../util';
 import call from '/src/assets/enter-call.wav';
 import { TurnOnRinger } from '../components/TurnOnRinger';
+import { SecureWarning } from '../components/SecureWarning';
 
 export interface Message {
   speaker: string;
@@ -21,7 +22,8 @@ export function Urchat() {
     ongoingCall,
     answerCall: answerCallState,
     placeCall: placeCallState,
-    rejectCall
+    rejectCall,
+    hangup
   } = useUrchatStore();
   const getDevices = useMediaStore(s => s.getDevices);
   const { push } = useHistory();
@@ -30,20 +32,25 @@ export function Urchat() {
   const [dataChannel, setDataChannel] = useState(null);
   const [dataChannelOpen, setDataChannelOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
-  console.log(messages);
+  const isSecure = location.protocol.startsWith('https') || location.hostname === 'localhost';
 
   // Set up callback to update device lists when a new device is added or removed
-  useEffect(() => {
-    navigator.mediaDevices.addEventListener('devicechange', getDevices);
-    return () => navigator.mediaDevices.removeEventListener('devicechange', getDevices);
-  }, []);
 
   useEffect(() => {
-    if (ongoingCall) {
+    window.addEventListener('beforeunload', hangup)
+    return () => window.removeEventListener('beforeunload', hangup)
+  }, [])
+
+  useEffect(() => {
+    if (isSecure && ongoingCall) {
       const audio = new Audio(call);
       audio.volume = .3
       audio.play();
       push(`/chat/${ongoingCall.conn.uuid}`)
+
+      const updateDevices = () => getDevices(ongoingCall);
+      navigator.mediaDevices.addEventListener('devicechange', updateDevices);
+      return () => navigator.mediaDevices.removeEventListener('devicechange', updateDevices);
     }
   }, [ongoingCall]);
 
@@ -96,8 +103,8 @@ export function Urchat() {
   }, [messages]);
 
   return (
-    <main className="relative flex gap-6 w-full h-full p-4 sm:p-8 text-gray-700">
-      <section className="flex-1 flex flex-col justify-center">
+    <main className="relative flex flex-col lg:flex-row lg:gap-6 w-full h-full lg:p-8 text-gray-700">
+      <section className="flex-auto lg:flex-1 flex flex-col justify-center h-[50%] lg:h-auto">
         <Switch>
           <Route path="/chat/:id" component={Call} />
           <Route path="/">
@@ -110,13 +117,13 @@ export function Urchat() {
           </Route>
         </Switch>
       </section>
-      <aside className="flex-none w-[33vw] max-w-sm">
+      <aside className="flex-auto lg:flex-none lg:w-[33vw] lg:max-w-sm h-[50%] lg:h-auto">
         <Switch>
           <Route path="/chat/:id">
             <Chat sendMessage={sendMessage} messages={messages} ready={dataChannelOpen} />
           </Route>
           <Route path="/">
-            <div className="h-full bg-gray-300 rounded-xl" />
+            <div className="h-full bg-gray-300 lg:rounded-xl" />
           </Route>
         </Switch>
       </aside>
@@ -124,7 +131,8 @@ export function Urchat() {
       {incomingCall && (
         <IncomingCall caller={incomingCall.call.peer} answerCall={answerCall} rejectCall={rejectCall} />
       )}
-      <TurnOnRinger />
+      {isSecure && <TurnOnRinger />}
+      {!isSecure && <SecureWarning />}
     </main>
   )
 }

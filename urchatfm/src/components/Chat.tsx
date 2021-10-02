@@ -24,7 +24,7 @@ export const Chat = ({ sendMessage, messages, ready }: ChatProps) => {
   }
 
   return (
-    <div className="flex flex-col h-full p-6 bg-pink-100 rounded-xl overflow-hidden">
+    <div className="flex flex-col h-full p-3 sm:p-6 text-sm bg-pink-100 lg:rounded-xl overflow-hidden">
       <div className="flex-1 h-full px-4 py-3 bg-white rounded-md overflow-y-auto">
         <div className="flex flex-col-reverse justify-start">
           { messages.map((msg, idx) => (
@@ -36,7 +36,7 @@ export const Chat = ({ sendMessage, messages, ready }: ChatProps) => {
           }
         </div>
       </div>
-      <form className="flex-none flex mt-6 relative rounded-md focus-within:ring-2 ring-pink-300 focus-within:outline-none" onSubmit={handleSubmit(onSubmitMessage)}>
+      <form className="flex-none flex mt-3 sm:mt-6 relative rounded-md focus-within:ring-2 ring-pink-300 focus-within:outline-none" onSubmit={handleSubmit(onSubmitMessage)}>
         <label htmlFor="message" className="sr-only">Send a Message:</label>
         <input 
           id="message" 
