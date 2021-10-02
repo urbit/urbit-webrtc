@@ -16,7 +16,7 @@ type VideoFromStreamProps = {
 function VideoFromStream(attrs: VideoFromStreamProps) {
   const srcObject = attrs.srcObject;
   const videoRef = useRef<HTMLVideoElement>(null);
-  const childAttrs = { ...attrs, ref: videoRef };
+  const childAttrs = { ...attrs, autoPlay: true, ref: videoRef };
   delete childAttrs.srcObject;
 
   useEffect(() => {
@@ -25,9 +25,6 @@ function VideoFromStream(attrs: VideoFromStreamProps) {
     }
 
     videoRef.current.srcObject = srcObject;
-    if( srcObject !== null ) {
-      videoRef.current.play();
-    }
   }, [videoRef, srcObject]);
 
   return React.createElement('video', childAttrs, null);

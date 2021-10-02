@@ -79,26 +79,25 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
       icepond.initialize();
       set({ icepond: icepond });
     }),
-    placeCall: (ship, setHandlers) => set((state) => {
+    placeCall: async (ship, setHandlers) => {
+      const { urbitRtcApp, hungup, startIcepond } = get();
       console.log('placeCall');
-      const conn = state.urbitRtcApp.call(ship, dap);
+      const conn = urbitRtcApp.call(ship, dap);
+      setHandlers(conn);
+      conn.addEventListener('hungupcall', hungup);
+      await conn.initialize();
       const call = { peer: ship, dap: dap, uuid: conn.uuid };
-      setHandlers(conn, call);
-      conn.addEventListener('hungupcall', state.hungup);
-      conn.initialize();
-      state.startIcepond();
-      debugger;
-      return {
-        ...state,
+      startIcepond();
+
+      set({
         isCaller: true,
-        ongoingCall: { conn: conn, call: call }
-      };
-    }),
-    answerCall: setHandlers => set((state) => {
+        ongoingCall: { conn, call }
+      });
+    },
+    answerCall: async setHandlers => {
       if (useMock) {
         setHandlers('~lassul-nocsyx', { uuid: '000', addEventListener: () => {} }, {});
-        return {
-          ...state,
+        set({
           isCaller: false,
           ongoingCall: { conn: { 
             ontrack: () => {}, 
@@ -107,22 +106,23 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
             close: () => {}
           }, call: () => {} },
           incomingCall: null
-        }
+        })
       }
 
-      const call = state.incomingCall.call;
-      const conn = state.incomingCall.answer();
-      conn.addEventListener('hungupcall', state.hungup);
+      const { incomingCall, hungup, startIcepond } = get();
+      const call = incomingCall.call;
+      const conn = incomingCall.answer();
+      conn.addEventListener('hungupcall', hungup);
       setHandlers(call.peer, conn, call);
-      conn.initialize();
-      state.startIcepond();
-      return {
-        ...state, 
+      await conn.initialize();
+      startIcepond();
+      
+      set({ 
         isCaller: false,
         ongoingCall: { conn, call },
         incomingCall: null
-      };
-    }),
+      });
+    },
 
     rejectCall: () => set((state) => {
       state.incomingCall.reject();

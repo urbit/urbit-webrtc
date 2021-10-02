@@ -23,10 +23,6 @@ export const Call = () => {
     }
   }, [ongoingCall]);
 
-  if (!ongoingCall) {
-    return <Redirect to="/" />;
-  }
-
   return (
     <>
       <div className="relative w-full h-full">
