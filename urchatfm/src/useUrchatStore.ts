@@ -21,8 +21,6 @@ interface UrchatStore {
   placeCall: any;
   answerCall: any;
   rejectCall: any;
-  addTrackToCall: any;
-  removeTrackFromCall: any;
   setOnTrack: any;
   hangup: any;
   hungup: any;
@@ -39,7 +37,7 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
     }
   });
 
-  const urbit = useMock ? { subscribe: async () => {} } : new Urbit('', '');
+  const urbit = useMock ? { ship: '', subscribe: async () => {} } as any : new Urbit('', '');
   // requires <script> tag for /~landscape/js/session.js
   urbit.ship = (window as any).ship;
   urbitRtcApp.urbit = urbit;

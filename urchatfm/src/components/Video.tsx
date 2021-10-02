@@ -6,6 +6,7 @@ export type VideoSize = 'mini' | 'large';
 interface VideoProps extends VideoFromStreamProps {
   size: VideoSize;
   className?: string;
+  muted: boolean;
 }
 
 type VideoFromStreamProps = {
