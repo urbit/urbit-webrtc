@@ -41,7 +41,6 @@ interface UrchatStore {
   placeCall: (ship: string, setHandlers: (conn: UrbitRTCPeerConnection) => void) => Promise<any>;
   answerCall: (setHandlers: (ship: string, conn: UrbitRTCPeerConnection) => void) => Promise<any>;
   rejectCall: () => void;
-  setOnTrack: (onTrack: (evt: Event & { track: MediaStreamTrack }) => void) => void;
   hangup: () => void;
   hungup: () => void;
 }
@@ -61,7 +60,6 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
   // requires <script> tag for /~landscape/js/session.js
   urbit.ship = (window as any).ship;
   urbitRtcApp.urbit = urbit;
-  const
 
   return {
     urbit,
@@ -166,10 +164,6 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
     rejectCall: () => set((state) => {
       state.incomingCall.reject();
       return { incomingCall: null };
-    }),
-
-    setOnTrack: onTrack => set((state) => {
-      state.ongoingCall.conn.ontrack = onTrack;
     }),
 
     hangup: () => set((state) => {

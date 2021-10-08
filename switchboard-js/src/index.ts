@@ -324,7 +324,7 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
       mark: 'switchboard-from-client', 
       json: { 'uuid': this.uuid, 'tag': 'sdp', ...this.localDescription?.toJSON() } 
     });
-    await this.signallingState.doneSending(this.askSignal);
+    await this.signallingState.doneSending(this.askSignal.bind(this));
   }
 
   async askSignal() {

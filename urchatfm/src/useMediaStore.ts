@@ -21,6 +21,7 @@ interface MediaStore {
   audio: Media;
   devices: MediaDeviceInfo[];
   getDevices: (call: OngoingCall) => Promise<void>;
+  resetStreams: () => void;
 }
 
 export const useMediaStore = create<MediaStore>((set, get) => ({
@@ -47,6 +48,12 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     }
   },
   devices: [],
+  resetStreams: () => {
+    set({
+      local: new MediaStream(),
+      remote: new MediaStream()
+    })
+  },
   getDevices: async (call: OngoingCall) => {
     const devices = await navigator.mediaDevices?.enumerateDevices();
     const videoDevs = devices.filter(dev => dev.kind === 'videoinput');
