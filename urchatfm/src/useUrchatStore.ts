@@ -1,5 +1,5 @@
 import create from 'zustand';
-import { UrbitRTCApp } from 'switchboard';
+import { UrbitRTCApp, UrbitRTCIncomingCallEvent, UrbitRTCPeerConnection } from 'switchboard';
 import Icepond from 'icepond';
 import Urbit from '@urbit/http-api';
 import { useMock } from './util';
@@ -23,41 +23,23 @@ export type Call = {
   uuid: string;
 }
 
-export type Connection = Call & RTCPeerConnection & {
-  initialize: () => void;
-  dial: () => Promise<void>;
-  ring: (uuid: string) => Promise<void>;
-  subscribe: () => Promise<void>;
-  close: () => void;
-  remoteHungup: () => void;
-  closeWithError: (err: string) => void;
-}
-
 export interface OngoingCall {
-  conn: Connection;
+  conn: UrbitRTCPeerConnection;
   call: Call;
-}
-
-export interface IncomingCall extends Call {
-  call: Call;
-  urbit: Urbit;
-  configuration: {}
-  answer: () => Connection
-  reject: () => {}
 }
 
 interface UrchatStore {
   urbit: Urbit | null;
-  urbitRtcApp: any;
-  icepond: any;
-  configuration: any;
-  incomingCall: IncomingCall;
+  urbitRtcApp: UrbitRTCApp;
+  icepond: Icepond;
+  configuration: RTCConfiguration;
+  incomingCall: UrbitRTCIncomingCallEvent;
   ongoingCall: OngoingCall;
   isCaller: boolean;
   setUrbit: (ur: Urbit) => void;
-  startIcepond: any;
-  placeCall: (ship: string, setHandlers: (conn: Connection) => void) => Promise<any>;
-  answerCall: (setHandlers: (ship: string, conn: Connection) => void) => Promise<any>;
+  startIcepond: () => void;
+  placeCall: (ship: string, setHandlers: (conn: UrbitRTCPeerConnection) => void) => Promise<any>;
+  answerCall: (setHandlers: (ship: string, conn: UrbitRTCPeerConnection) => void) => Promise<any>;
   rejectCall: () => void;
   setOnTrack: (onTrack: (evt: Event & { track: MediaStreamTrack }) => void) => void;
   hangup: () => void;
@@ -67,7 +49,7 @@ interface UrchatStore {
 const useUrchatStore = create<UrchatStore>((set, get) => {
   const configuration = { iceServers: [] };
   const urbitRtcApp = new UrbitRTCApp(dap, configuration);
-  urbitRtcApp.addEventListener('incomingcall', incomingCallEvt => {
+  urbitRtcApp.addEventListener('incomingcall', (incomingCallEvt: UrbitRTCIncomingCallEvent) => {
     if(get().incomingCall === null) {
       set({ incomingCall: incomingCallEvt });
     } else {
@@ -79,6 +61,7 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
   // requires <script> tag for /~landscape/js/session.js
   urbit.ship = (window as any).ship;
   urbitRtcApp.urbit = urbit;
+  const
 
   return {
     urbit,
@@ -95,7 +78,7 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
     },
     startIcepond: () => set((state) => {
       if (useMock) {
-        set({ icepond: {} })
+        set({ icepond: {} as Icepond })
       }
 
       const icepond = new Icepond(state.urbit);

@@ -92,9 +92,13 @@ async function changeDevice(device: MediaDeviceInfo, type: 'audio' | 'video', st
   }
 
   const removeTrack = (track: Track) => {
-    console.log('Removing trakc from call', track);
+    console.log('Removing track from call', track);
     state.local.removeTrack(track);
-    call.conn?.removeTrack(track.sender);
+    try {
+      call.conn?.removeTrack(track.sender);
+    } catch (err) {
+      console.log(err);
+    }
     track.stop();
   }
 
@@ -111,11 +115,3 @@ async function changeDevice(device: MediaDeviceInfo, type: 'audio' | 'video', st
 
   return media;
 }
-
-  // if(audioDevice !== null) {
-      // } else {
-  //   setAudioTracks((tracks) => {
-  //     tracks.map(track => track.stop());
-  //     return [];
-  //   });
-  // }

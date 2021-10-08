@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useEffect } from 'react';
+import React, { ChangeEvent } from 'react';
 import { useMediaStore } from '../useMediaStore';
 import useUrchatStore from '../useUrchatStore';
 
