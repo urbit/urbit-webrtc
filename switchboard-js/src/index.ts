@@ -1,9 +1,56 @@
-'use strict';
+import Urbit from '@urbit/http-api'
+
+declare global {
+  interface Window {
+    urbit: Urbit;
+  }
+}
+
+type UrbitState =
+  | 'dialing'
+  | 'incoming-ringing'
+  | 'connected-our-turn'
+  | 'connected-their-turn'
+  | 'connected-our-turn-asked';
+
+type SignalType = 'offer' | 'answer';
+
+type SignallingState =
+  | 'stable'
+  | 'waiting-to-send-offer'
+  | 'waiting-to-send-answer'
+  | 'sending'
+  | 'sending-waiting-to-send-offer';
+
+interface Call {
+  peer: string;
+  dap: string;
+  uuid: string;
+}
+
+type Tag = 'connection-state' | 'sdp' | 'hungup' | 'icecandidate';
+
+interface Fact extends RTCIceCandidateInit {
+  type: SignalType;
+  tag: Tag;
+  connectionState: UrbitState;
+}
+
 /**
  * Factory for UrbitRTCPeerConnections, which can be made either by calling a peer or receiving a call from a peer
  */
 class UrbitRTCApp extends EventTarget {
-  constructor(dap, configuration, urbit = window.urbit) {
+  _urbit: Urbit;
+  configuration: RTCConfiguration;
+  dap: string;
+  subscriptionId: number | null;
+  done: Promise<void> | null;
+
+  onincomingcall: (evt: UrbitRTCIncomingCallEvent) => Promise<void> | void;
+  onhungupcall: (evt: UrbitRTCHungupCallEvent) => Promise<void> | void;
+  onerror: (err: Error) => Promise<void> | void;
+  
+  constructor(dap: string, configuration: RTCConfiguration, urbit = window.urbit) {
     super();
     this._urbit = urbit;
     this.configuration = configuration;
@@ -16,20 +63,28 @@ class UrbitRTCApp extends EventTarget {
   }
 
   initialize() {
-    return new Promise((resolveOuter) => {
-      this.done = new Promise(resolve => this._urbit.subscribe({ app: 'switchboard', path: `/incoming/${this.dap}`, err: err => this.onerror(err), event: evt => this.handleIncoming(evt), quit: () => resolve() }).then(() => resolveOuter()));
+    return new Promise<void>((resolveOuter) => {
+      this.done = new Promise<void>(resolve => {
+        return this._urbit.subscribe({ 
+          app: 'switchboard', 
+          path: `/incoming/${this.dap}`, 
+          err: err => this.onerror(err), 
+          event: evt => this.handleIncoming(evt), 
+          quit: () => resolve() 
+        }).then(() => resolveOuter())
+      });
     });
   }
 
-  handleIncoming(evt) {
+  handleIncoming(evt: UrbitRTCIncomingCallEvent | UrbitRTCHungupCallEvent) {
     if(evt.type == 'incoming') {
-      this.incomingCall(evt);
+      this.incomingCall(evt as UrbitRTCIncomingCallEvent);
     } else if (evt.type == 'hangup') {
       this.hungupCall(evt.uuid);
     }
   }
 
-  set urbit(u) {
+  set urbit(u: Urbit) {
     this._urbit = u;
     this.initialize();
   }
@@ -39,7 +94,7 @@ class UrbitRTCApp extends EventTarget {
    * @param {Object} call the incoming call to dispatch
    * @returns {void}
    */
-  incomingCall(call) {
+  incomingCall(call: Call) {
     const callEvent = new UrbitRTCIncomingCallEvent(call.peer, this.dap, call.uuid, this._urbit, this.configuration);
     this.onincomingcall(callEvent);
     this.dispatchEvent(callEvent);
@@ -51,7 +106,7 @@ class UrbitRTCApp extends EventTarget {
    * @param {string} uuid The uuid of the call that hung up
    * @returns {void}
    */
-  hungupCall(uuid) {
+  hungupCall(uuid: string) {
     const hungupEvent = new UrbitRTCHungupCallEvent(uuid);
     this.onhungupcall(hungupEvent);
     this.dispatchEvent(hungupEvent);
@@ -64,7 +119,7 @@ class UrbitRTCApp extends EventTarget {
    * @param {string} dap the app identifier to call on the remote ship
    * @returns {UrbitRTCPeerConnection} connection which is awaiting pick-up by the remote
    */
-  call(peer, dap) {
+  call(peer: string, dap: string) {
     return new UrbitRTCPeerConnection(peer, dap, undefined, this._urbit, this.configuration);
   }
 }
@@ -77,7 +132,20 @@ class UrbitRTCApp extends EventTarget {
  * to an `incomingcall` event
  */
 class UrbitRTCPeerConnection extends RTCPeerConnection {
-  constructor(peer, dap, uuid = undefined, urbit, configuration = undefined) {
+  urbit: Urbit;
+  peer: string;
+  dap: string;
+  uuid: string | undefined;
+  subscriptionId: number | null;
+  urbitState: UrbitState | null;
+  signallingReady: (() => void) | null;
+  signallingReadyPromise: Promise<void>;
+  signallingState: UrbitRTCSignallingState;
+
+  onerror: (err: Error) => Promise<void> | void;
+  onurbitstatechanged: (evt: UrbitRTCStateChangedEvent) => Promise<void> | void;
+
+  constructor(peer: string, dap: string, uuid: string | undefined, urbit: Urbit, configuration?: RTCConfiguration) {
     super(configuration);
     // Urbit airlock
     this.urbit = urbit;
@@ -91,15 +159,17 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
     // Subscription ID of our subscription to /call/[uuid]
     this.subscriptionId = null;
     // Error-handling callback
-    this.onerror = (err) => {};
+    this.onerror = () => {};
     // State-change callback
-    this.onurbitstatechanged = (state) => {};
+    this.onurbitstatechanged = () => {};
     // Signal readiness to send SDP messages
     this.signallingReady = null;
     // Urbit ready signalling state
-    this.signallingReadyPromise = new Promise(ready => this.signallingReady = () => {
-      this.signallingReady = () => { return; };
-      ready();
+    this.signallingReadyPromise = new Promise(ready => {
+      return this.signallingReady = () => {
+        this.signallingReady = () => { return; };
+        ready();
+      }
     });
     // ICE candidate callback
     this.onicecandidate = (evt) => this.signallingState.whenDoneSending(() => {
@@ -109,7 +179,7 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
           if(this.urbit.verbose) {
             console.log("Sending ICE candidate for address ${evt.candidate.address}:${evt.candidate.port}");
           };
-          this.urbit.poke({ app: 'switchboard', mark: 'switchboard-from-client', json: { 'uuid': this.uuid, 'tag': 'icecandidate', ...evt.candidate.toJSON() } }) }).catch(err => this.closeWithError(err));
+          this.urbit.poke({ app: 'switchboard', mark: 'switchboard-from-client', json: { 'uuid': this.uuid, 'tag': 'icecandidate', ...evt.candidate?.toJSON() } }) }).catch(err => this.closeWithError(err));
         };
       });
 
@@ -157,7 +227,7 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
    * @param {string} uuid the UUID of our new call
    * @returns {Promise} a promise which resolves when we have successfuly subscribed to the call.
    */
-  async ring(uuid) {
+  async ring(uuid: string) {
     this.uuid = uuid;
     if(this.urbit.verbose) {
       console.log('Call UUID:', this.uuid);
@@ -196,7 +266,13 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
    * @returns {void}
    */
   close() {
-    this.urbit.poke({ app: 'switchboard', mark: 'switchboard-from-client', json: {'tag': 'reject', 'uuid': this.uuid } }).then(this.urbit.unsubscribe(this.subscriptionId)).then(super.close());
+    this.urbit.poke({ 
+      app: 'switchboard', 
+      mark: 'switchboard-from-client', 
+      json: {'tag': 'reject', 'uuid': this.uuid } 
+    })
+    .then(() => this.urbit.unsubscribe(this.subscriptionId || 0))
+    .then(() => super.close());
   }
 
   /**
@@ -207,7 +283,7 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
   remoteHungup() {
     if(this.connectionState != 'closed') {
       super.close();
-      super.dispatchEvent(new UrbitRTCHungupCallEvent(this.uuid));
+      super.dispatchEvent(new UrbitRTCHungupCallEvent(this.uuid || ''));
     }
   }
 
@@ -217,7 +293,7 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
    * @param {string} err The error
    * @returns {void}
    */
-  closeWithError(err) {
+  closeWithError(err: Error) {
     this.close();
     console.log('Closed with error', err);
     this.onerror(err);
@@ -243,8 +319,12 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
         await this.iceCandidatesGathered();
       }
     }
-    await this.urbit.poke({ app: 'switchboard', mark: 'switchboard-from-client', json: { 'uuid': this.uuid, 'tag': 'sdp', ...this.localDescription.toJSON() } });
-    await this.signallingState.doneSending(this.askSignal);
+    await this.urbit.poke({ 
+      app: 'switchboard', 
+      mark: 'switchboard-from-client', 
+      json: { 'uuid': this.uuid, 'tag': 'sdp', ...this.localDescription?.toJSON() } 
+    });
+    await this.signallingState.doneSending(this.askSignal.bind(this));
   }
 
   async askSignal() {
@@ -252,8 +332,9 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
   }
 
   // Move to a state to await sending?
-  async askSendSignal(signalType) {
+  async askSendSignal(signalType: SignalType) {
     await this.signallingReadyPromise;
+
     switch(signalType) {
       case 'offer':
         this.signallingState.needToMakeOffer();
@@ -264,6 +345,7 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
       default:
         throw('signalType must be offer or answer');
     }
+
     await this.askSignal();
   }
 
@@ -277,7 +359,7 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
    * @param {(Object|string)} signal The JSON of the signal we were sent
    * @returns {Promise} a promise which resolves after handling the signal
    */
-  handleFact(fact) {
+  handleFact(fact: Fact) {
     switch(fact.tag) {
       case 'connection-state':
         this.signallingState.whenDoneSettingRemote(() => this.dispatchUrbitState(fact.connectionState));
@@ -295,7 +377,7 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
       case 'icecandidate':
         if(this.urbit.verbose) {
           const candidate = new RTCIceCandidate(fact);
-          console.log("Got ICE candidate with address ${candidate.address}:${candidate.port}");
+          console.log(`Got ICE candidate with address ${candidate.address}:${candidate.port}`);
         }
         // We got an ICE candidate from the remote peer
         // try it out
@@ -305,7 +387,7 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
     }
   }
 
-  async handleSDP(sdp) {
+  async handleSDP(sdp: Fact) {
     // Tell the RTCPeerConnection logic about the remote signal
     await this.setRemoteDescription(sdp);
     // If this was an offer, then the remote peer is trying to (re)negotiate
@@ -316,14 +398,14 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
     return;
   }
 
-  dispatchUrbitState(state) {
+  dispatchUrbitState(state: UrbitState) {
     if(this.urbit.verbose) {
       console.log('Switchboard state', state)
     };
     switch(state) {
       case 'connected-our-turn':
       case 'connected-their-turn':
-        this.signallingReady();
+        this.signallingReady && this.signallingReady();
         break;
       case 'connected-our-turn-asked':
         this.sendSignal().catch(err => this.closeWithError(err));
@@ -331,8 +413,9 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
       default:
         break;
     };
+
     this.urbitState = state;
-    const evt = new UrbitRTCStateChangedEvent(this.uuid, state);
+    const evt = new UrbitRTCStateChangedEvent(this.uuid || '', state);
     this.dispatchEvent(evt);
     this.onurbitstatechanged(evt);
   }
@@ -349,10 +432,10 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
    * Automagically do an ICE restart if we switch out which servers we use.
    * this will trigger onnegotiationneed event which calls `renegotiate()`
    *
-   * @param {Object} configuration The RTCPeerConnection configuration
+   * @param {RTCConfiguration} configuration The RTCPeerConnection configuration
    * @return {void}
    */
-  setConfiguration(configuration) {
+  setConfiguration(configuration: RTCConfiguration) {
     const oldIceServers = super.getConfiguration().iceServers;
     super.setConfiguration(configuration);
     if(configuration.iceServers !== oldIceServers) {
@@ -368,7 +451,7 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
    */
   async iceCandidatesGathered() {
     const controller = new AbortController();
-    const p = new Promise((resolve) => {
+    const p = new Promise<void>((resolve) => {
       this.addEventListener('icegatheringstatechange', () => {
         if(this.iceGatheringState == 'complete') {
           resolve();
@@ -385,17 +468,24 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
 /**
  * Event for incoming calls
  */
-class UrbitRTCIncomingCallEvent extends Event {
+export class UrbitRTCIncomingCallEvent extends Event {
+  type = 'incomingcall';
+  peer: string;
+  dap: string;
+  uuid: string;
+  urbit: Urbit;
+  configuration: RTCConfiguration;
+
   /**
    * Not to be called by application code
    *
    * @param {string} peer The peer ship calling
    * @param {string} dap The peer dap calling
    * @param {string} uuid The UUID of the call
-   * @param {Object} urbit The Urbit airlock
-   * @param {Object} configuration The configuration for the new connection if answered
+   * @param {Urbit} urbit The Urbit airlock
+   * @param {RTCConfiguration} configuration The configuration for the new connection if answered
    */
-  constructor(peer, dap, uuid, urbit, configuration) {
+  constructor(peer: string, dap: string, uuid: string, urbit: Urbit, configuration: RTCConfiguration) {
     super('incomingcall');
     this.peer = peer;
     this.dap = dap;
@@ -418,37 +508,47 @@ class UrbitRTCIncomingCallEvent extends Event {
   }
 
   async reject() {
-    return this.urbit.poke({ app: 'switchboard', mark: 'switchboard-from-client', json: {'tag': 'reject', 'uuid': this.uuid } });
+    return this.urbit.poke({ 
+      app: 'switchboard', 
+      mark: 'switchboard-from-client', 
+      json: {'tag': 'reject', 'uuid': this.uuid } 
+    });
   }
 }
 
-class UrbitRTCHungupCallEvent extends Event {
+export class UrbitRTCHungupCallEvent extends Event {
+  type = 'hungupcall';
+  uuid: string;
+
   /**
    * Not to be called by application code
    *
    * @param {string} uuid The UUID of the call which hung up
    */
-  constructor(uuid) {
+  constructor(uuid: string) {
     super('hungupcall');
     this.uuid = uuid;
   }
 }
 
 class UrbitRTCStateChangedEvent extends Event {
-  constructor(uuid, state) {
+  type = 'statechanged';
+  uuid: string;
+  urbitState: UrbitState;
+
+  constructor(uuid: string, state: UrbitState) {
     super('statechanged');
     this.uuid = uuid;
     this.urbitState = state;
   }
 }
 
-// signalling state
-// 'stable'
-// 'waiting-to-send-offer'
-// 'waiting-to-send-answer'
-// 'sending'
-// 'sending-waiting-to-send-offer'
 class UrbitRTCSignallingState extends EventTarget {
+  _state: SignallingState;
+  _settingRemote: boolean;
+  _settingRemoteDoneK: () => void;
+  _whenDoneSendingK: () => void;
+
   constructor() {
     super();
     this._settingRemote = false;
@@ -467,7 +567,7 @@ class UrbitRTCSignallingState extends EventTarget {
     this._settingRemoteDoneK = () => { return; }
   }
 
-  whenDoneSettingRemote(k) {
+  whenDoneSettingRemote(k: () => void) {
     if(this._settingRemote) {
       const oldK = this._settingRemoteDoneK;
       this._settingRemoteDoneK = () => { oldK(); k(); };
@@ -515,14 +615,12 @@ class UrbitRTCSignallingState extends EventTarget {
       case 'sending':
       case 'sending-waiting-to-send-offer':
         throw('Cannot send while sending');
-        break;
       case 'stable':
         throw('Cannot send with nothing to send');
-        break;
     }
   }
 
-  doneSending(sendOfferK) {
+  doneSending(sendOfferK: () => void) {
     switch(this._state) {
       case 'sending':
         this._state = 'stable';
@@ -540,7 +638,7 @@ class UrbitRTCSignallingState extends EventTarget {
     }
   }
 
-  whenDoneSending(k) {
+  whenDoneSending(k: () => void) {
     switch(this._state) {
       case 'stable':
         k(); break;

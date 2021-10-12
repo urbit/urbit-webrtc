@@ -13,18 +13,15 @@ export const Chat = ({ sendMessage, messages, ready }: ChatProps) => {
   const { register, handleSubmit, reset } = useForm({
     defaultValues: { message: '' }
   });
+  const disabled = !ready && !useMock;
   const onSubmitMessage = useCallback(({ message }) => {
     console.log(message)
     sendMessage(message);
     reset();
   }, [sendMessage]);
 
-  if (!ready && !useMock) {
-    return null
-  }
-
   return (
-    <div className="flex flex-col h-full p-3 sm:p-6 text-sm bg-pink-100 lg:rounded-xl overflow-hidden">
+    <div className={`flex flex-col h-full p-3 sm:p-6 text-sm bg-pink-100 lg:rounded-xl overflow-hidden ${disabled ? 'opacity-50' : ''}`}>
       <div className="flex-1 h-full px-4 py-3 bg-white rounded-md overflow-y-auto">
         <div className="flex flex-col-reverse justify-start">
           { messages.map((msg, idx) => (
@@ -42,10 +39,12 @@ export const Chat = ({ sendMessage, messages, ready }: ChatProps) => {
           id="message" 
           type="text" 
           className="flex-1 input rounded-r-none focus:outline-none" 
-          {...register('message')} 
+          {...register('message')}
+          disabled={disabled}
         />
         <button 
           type="submit" 
+          disabled={disabled}
           className="flex-none button px-6 text-pink-900 bg-pink-500 rounded-l-none"
         >
           Send

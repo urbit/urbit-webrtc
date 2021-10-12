@@ -25,11 +25,11 @@ export function Urchat() {
     rejectCall,
     hangup
   } = useUrchatStore();
-  const getDevices = useMediaStore(s => s.getDevices);
+  const { resetStreams, getDevices } = useMediaStore(s => ({ getDevices: s.getDevices, resetStreams: s.resetStreams }));
   const { push } = useHistory();
 
   // local state
-  const [dataChannel, setDataChannel] = useState(null);
+  const [dataChannel, setDataChannel] = useState<RTCDataChannel>(null);
   const [dataChannelOpen, setDataChannelOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const isSecure = location.protocol.startsWith('https') || location.hostname === 'localhost';
@@ -54,8 +54,16 @@ export function Urchat() {
     }
   }, [ongoingCall]);
 
+  const onTrack = useCallback((evt: Event & { track: MediaStreamTrack }) => {
+    console.log('Incoming track event', evt);
+    const { remote } = useMediaStore.getState();
+    remote.addTrack(evt.track);
+  }, []);
+
   // state-changing methods
   const answerCall = async () => {
+    resetStreams();
+    
     const call = await answerCallState((peer, conn) => {
       setDataChannelOpen(false);
       setMessages([]);
@@ -69,12 +77,16 @@ export function Urchat() {
         };
         setDataChannel(channel);
       });
+
+      conn.ontrack = onTrack;
     });
 
     getDevices(call)
   }
 
   const placeCall = async ship => {
+    resetStreams();
+
     const call = await placeCallState(ship, (conn) => {
       console.log('placing call');
       setDataChannelOpen(false);
@@ -87,6 +99,7 @@ export function Urchat() {
         console.log('channel message', data);
       };
       setDataChannel(channel);
+      conn.ontrack = onTrack;
     });
 
     getDevices(call)
@@ -100,13 +113,15 @@ export function Urchat() {
     const newMessages = [{ speaker: 'me', message: msg }].concat(messages);
     console.log(messages, newMessages);
     setMessages(newMessages);
-  }, [messages]);
+  }, [messages, dataChannel]);
 
   return (
     <main className="relative flex flex-col lg:flex-row lg:gap-6 w-full h-full lg:p-8 text-gray-700">
       <section className="flex-auto lg:flex-1 flex flex-col justify-center h-[50%] lg:h-auto">
         <Switch>
-          <Route path="/chat/:id" component={Call} />
+          <Route path="/chat/:id">
+            <Call connected={dataChannelOpen} />
+          </Route>
           <Route path="/">
             <div className="flex justify-center items-center w-full h-full bg-pink-100 rounded-xl">
               <div>

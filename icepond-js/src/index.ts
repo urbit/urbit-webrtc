@@ -1,4 +1,16 @@
-'use strict';
+import Urbit from '@urbit/http-api'
+
+declare global {
+  interface Window {
+    urbit: Urbit;
+  }
+}
+
+export type IcepondState = 
+  | 'uninitialized'
+  | 'acquiring'
+  | 'done'
+  | 'error';
 
 /**
  * Acquire ICE servers from the `icepond` agent running on an Urbit
@@ -25,6 +37,14 @@
  * to initiate acquisition.
  */
 class Icepond extends EventTarget {
+  urbit: Urbit;
+  iceServers: RTCIceServer[];
+  state: IcepondState;
+  uid: string;
+
+  oniceserver: (evt: NewIcepondServer) => void;
+  onstatechange: (evt: IcepondStateChange) => void;
+
   constructor(urbit = window.urbit) {
     super();
     this.urbit = urbit;
@@ -47,35 +67,53 @@ class Icepond extends EventTarget {
       quit: () => this.done()
     });
     this.iceServers = [];
+    
     this.state = 'acquiring';
-    const evt = new Event('statechange');
-    evt.state = this.state;
+    const evt = new IcepondStateChange(this.state);
+    // Should there be a dispatch here?
   }
 
-  handleError(err) {
+  handleError(err: Error) {
     console.log('icepond error: ', err);
     this.state = 'error';
-    const evt = new Event('statechange');
-    evt.state = this.state;
+    const evt = new IcepondStateChange(this.state);
     this.dispatchEvent(evt);
     this.onstatechange(evt);
   }
 
-  iceServer(server) {
+  iceServer(server: RTCIceServer) {
     this.iceServers.push(server);
-    const evt = new Event('iceserver');
-    evt.newIceServer = server;
-    evt.iceServers = this.iceServers;
+    const evt = new NewIcepondServer(server, this.iceServers);
     this.dispatchEvent(evt);
     this.oniceserver(evt);
   }
 
   done() {
     this.state = 'done';
-    const evt = new Event('statechange');
-    evt.state = this.state;
+    const evt = new IcepondStateChange(this.state);
     this.dispatchEvent(evt);
     this.onstatechange(evt);
+  }
+}
+
+export class IcepondStateChange extends Event {
+  state: IcepondState;
+
+  constructor(state: IcepondState) {
+    super('statechange');
+    this.state = state;
+  }
+}
+
+export class NewIcepondServer extends Event {
+  newIceServer: RTCIceServer;
+  iceServers: RTCIceServer[];
+
+  constructor(newIceServer: RTCIceServer, iceServers: RTCIceServer[]) {
+    super('iceserver');
+
+    this.newIceServer = newIceServer;
+    this.iceServers = iceServers;
   }
 }
 
