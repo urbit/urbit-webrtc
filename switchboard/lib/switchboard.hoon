@@ -154,6 +154,16 @@
       type+s+type.sdp
       sdp+s+sdp.sdp
     ==
+  :: last-remote:enjs
+  ++  last-remote
+  |=  =last-remote:switchboard
+  ^-  json
+  ?~  last-remote  ~
+  %-  pairs
+  :~
+    count+(numb count.u.last-remote)
+    msg+(sdp sdp.u.last-remote)
+  ==
   :: call:enjs
   ++  call
     |=  =call:switchboard

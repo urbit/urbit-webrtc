@@ -6,6 +6,11 @@ declare global {
   }
 }
 
+interface LastRemote {
+  count: number;
+  msg: any; // SDP message which we don't type
+}
+
 type UrbitState =
   | 'dialing'
   | 'incoming-ringing'
@@ -43,8 +48,7 @@ class UrbitRTCApp extends EventTarget {
   _urbit: Urbit;
   configuration: RTCConfiguration;
   dap: string;
-  subscriptionId: number | null;
-  done: Promise<void> | null;
+  subscriptionId: Promise<number> | null;
 
   onincomingcall: (evt: UrbitRTCIncomingCallEvent) => Promise<void> | void;
   onhungupcall: (evt: UrbitRTCHungupCallEvent) => Promise<void> | void;
@@ -59,21 +63,18 @@ class UrbitRTCApp extends EventTarget {
     this.onhungupcall = () => {};
     this.onerror = () => {};
     this.subscriptionId = null;
-    this.done = null;
   }
 
   initialize() {
-    return new Promise<void>((resolveOuter) => {
-      this.done = new Promise<void>(resolve => {
-        return this._urbit.subscribe({ 
-          app: 'switchboard', 
-          path: `/incoming/${this.dap}`, 
-          err: err => this.onerror(err), 
-          event: evt => this.handleIncoming(evt), 
-          quit: () => resolve() 
-        }).then(() => resolveOuter())
+    this.subscriptionId = 
+      this._urbit.subscribe({ 
+        app: 'switchboard', 
+        path: `/incoming/${this.dap}`, 
+        err: err => this.onerror(err), 
+        event: evt => this.handleIncoming(evt), 
+        quit: () => this.initialize(),
       });
-    });
+    return this.subscriptionId;
   }
 
   handleIncoming(evt: UrbitRTCIncomingCallEvent | UrbitRTCHungupCallEvent) {
@@ -136,7 +137,7 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
   peer: string;
   dap: string;
   uuid: string | undefined;
-  subscriptionId: number | null;
+  subscriptionId: Promise<number> | null;
   urbitState: UrbitState | null;
   signallingReady: (() => void) | null;
   signallingReadyPromise: Promise<void>;
@@ -250,14 +251,30 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
    *
    * @returns {Promise} a promise which resolves when we have successfully subscribed to the call
    */
-  async subscribe() {
-    this.subscriptionId = await this.urbit.subscribe({
+  subscribe() {
+    this.subscriptionId = this.urbit.subscribe({
       app: 'switchboard',
       path: `/call/${this.uuid}`,
       err: err => this.closeWithError(err),
       event: fact => this.handleFact(fact),
-      quit: () => this.remoteHungup()
+      quit: () => this.resubscribe()
     });
+    return this.subscriptionId;
+  }
+
+  resubscribe() {
+    if(this.connectionState !== 'closed') {
+      this.subscribe()
+        .then(() => this.urbit.scry<LastRemote>({'app': 'switchboard', 'path': `/call/${this.uuid}/last-remote`}))
+        .then((last) => {
+          this.signallingState.startSettingRemote();
+          this.setRemoteDescription(last.msg)
+        })
+        .then(() => {
+          this.signallingState.doneSettingRemote();
+          this.restartIce();
+        });
+    }
   }
 
   /**
@@ -266,13 +283,15 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
    * @returns {void}
    */
   close() {
-    this.urbit.poke({ 
+    var closeP = new Promise<void>((resolve) => { super.close(); resolve(); });
+    var pokeP = this.urbit.poke({ 
       app: 'switchboard', 
       mark: 'switchboard-from-client', 
       json: {'tag': 'reject', 'uuid': this.uuid } 
-    })
-    .then(() => this.urbit.unsubscribe(this.subscriptionId || 0))
-    .then(() => super.close());
+    });
+    Promise.all([closeP, pokeP]).then(() => {
+      if( this.subscriptionId !== null) {
+        this.subscriptionId.then((subId) => this.urbit.unsubscribe(subId));}});
   }
 
   /**

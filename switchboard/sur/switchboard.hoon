@@ -5,6 +5,8 @@
   [%sdp type=@t sdp=@t]
 +$  icecandidate
   [%icecandidate candidate=@t sdp-mid=(unit @t) sdp-m-line-index=(unit @) username-fragment=(unit @t)]
+::  mark for scry for last SDP message and counter
++$  last-remote  (unit [count=@ =sdp])
 :: mark for communications between remote switchboards
 +$  switchboard-to-switchboard
   $:  $=(uuid @ta)
@@ -46,7 +48,11 @@
 +$  call-signal
   [uuid=@ta =signal]
 +$  call-state
+  [=call =connection-state =last-remote]
+::  lacks last-remote type
++$  call-state-0
   [=call =connection-state]
+:: mark for the state of a connection
 +$  connection-state
   ?(%placing %dialing %ringing %incoming-ringing %answering %connected-their-turn %connected-our-turn %connected-want-turn %connected-our-turn-asked)
 +$  sdp-queue
