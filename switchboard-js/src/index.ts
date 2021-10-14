@@ -11,6 +11,11 @@ interface LastRemote {
   msg: any; // SDP message which we don't type
 }
 
+interface Reconnect {
+  uuid: string;
+  urbit: Urbit | undefined;
+}
+
 type UrbitState =
   | 'dialing'
   | 'incoming-ringing'
@@ -134,6 +139,7 @@ class UrbitRTCApp extends EventTarget {
  */
 class UrbitRTCPeerConnection extends RTCPeerConnection {
   urbit: Urbit;
+  reconnect: bool;
   peer: string;
   dap: string;
   uuid: string | undefined;
@@ -150,6 +156,8 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
     super(configuration);
     // Urbit airlock
     this.urbit = urbit;
+    // Whether this is a reconnection to the same switchboard call
+    this.reconnect = false;
     // Name of ship we are calling
     this.peer = peer;
     // dap of application we are calling
@@ -199,14 +207,27 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
   }
 
   async initialize() {
-    // Kick things off
-    if(typeof this.uuid == 'undefined') {
+    if(this.reconnect) {
+      await this.resubscribe();
+      // Kick things off
+    } else if(typeof this.uuid == 'undefined') {
       this.dispatchUrbitState('dialing');
       await this.dial();
     } else {
       this.dispatchUrbitState('incoming-ringing');
       await this.subscribe();
     }
+  }
+
+  static async reconnect(params: Reconnect) {
+    var uuid = params.uuid;
+    var urbit = params.urbit ? params.urbit : window.urbit;
+    var peer = await urbit.scry<string>({app: 'switchboard', path: `/call/${uuid}/peer`});
+    var dap = await urbit.scry<string>({app: 'switchboard', path: `/call/${uuid}/dap`});
+
+    var conn = new UrbitRTCPeerConnection(peer, dap, uuid, urbit);
+    conn.reconnect = true;
+    return conn;
   }
 
   /**
@@ -262,18 +283,18 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
     return this.subscriptionId;
   }
 
-  resubscribe() {
+  async resubscribe() {
     if(this.connectionState !== 'closed') {
-      this.subscribe()
-        .then(() => this.urbit.scry<LastRemote>({'app': 'switchboard', 'path': `/call/${this.uuid}/last-remote`}))
-        .then((last) => {
-          this.signallingState.startSettingRemote();
-          this.setRemoteDescription(last.msg)
-        })
-        .then(() => {
-          this.signallingState.doneSettingRemote();
-          this.restartIce();
-        });
+      await this.subscribe()
+      var last =this.urbit.scry<LastRemote>({'app': 'switchboard', 'path': `/call/${this.uuid}/last-remote`});
+      if(last !== null) {
+        this.signallingState.startSettingRemote();
+        await this.setRemoteDescription(last.msg)
+        this.signallingState.doneSettingRemote();
+      }
+      this.restartIce();
+    } else {
+      throw "Will not resubscribe for closed connection";
     }
   }
 
