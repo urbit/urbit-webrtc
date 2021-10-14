@@ -33,6 +33,7 @@
 ::
 ++  on-load
   |=  vas=vase
+  ^-  (quip card _this)
   =/  stat  !<(versioned-state vas)
   ?-  stat
       :: Upgrade from version 0 by adding a null last-remote to all
@@ -43,7 +44,7 @@
         %+  turn  ~(tap in ~(key by reachable.stat))  kick-reachable
       %+  turn  ~(tap in ~(key by calls.stat))  kick-call
     =/  calls  (~(run by calls.stat) |=([=call:switchboard =connection-state:switchboard] ^-(call-state:switchboard [call connection-state ~])))
-    [cards [%1 reachable=*(map @tas @) calls=calls]]
+    [cards this(state [%1 reachable=*(map @tas @) calls=calls])]
       :: No upgrade needed, just kick everyone so they know to
       :: resubscribe
       [%1 *]
@@ -51,7 +52,7 @@
       %+  weld
         %+  turn  ~(tap in ~(key by reachable.stat))  kick-reachable
       %+  turn  ~(tap in ~(key by calls.stat))  kick-call
-    [cards stat]
+    [cards this(state stat)]
   ==
 ::
 ++  on-poke
@@ -217,15 +218,28 @@
     =/  uuid  +>-.pax
     =/  callstate  (~(get by calls.state) uuid)
     ?~  callstate  [~ ~]
-    =/  [=call =connection-state =last-remote]  u.callstate
-    ``switchboard-last-remote+last-remote
+    =/  [=call:switchboard =connection-state:switchboard =last-remote:switchboard]  u.callstate
+    ``switchboard-last-remote+!>(last-remote)
       ::
       [%x %call @tas %connection-state ~]
     =/  uuid  +>-.pax
     =/  callstate  (~(get by calls.state) uuid)
     ?~  callstate  [~ ~]
-    =/  [=call =connection-state =last-remote]  u.callstate
-    ``switchboard-connection-state+connection-state
+    =/  [=call:switchboard =connection-state:switchboard =last-remote:switchboard]  u.callstate
+    ``switchboard-connection-state+!>(connection-state)
+      ::
+      [%x %call @tas %peer ~]
+    =/  uuid  +>-.pax
+    =/  callstate  (~(get by calls.state) uuid)
+    ?~  callstate  [~ ~]
+    =/  [=call:switchboard =connection-state:switchboard =last-remote:switchboard]  u.callstate
+    ``switchboard-peer+!>(peer.call)
+      [%x %call @tas %dap ~]
+    =/  uuid  +>-.pax
+    =/  callstate  (~(get by calls.state) uuid)
+    ?~  callstate  [~ ~]
+    =/  [=call:switchboard =connection-state:switchboard =last-remote:switchboard]  u.callstate
+    ``switchboard-dap+!>(dap.call)
   ==
 ::
 ++  on-arvo  on-arvo:default
