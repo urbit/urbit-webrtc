@@ -7,14 +7,17 @@
 |%
 +$  versioned-state
   $%  state-0
+      state-1
   ==
 +$  state-0
-    [%0 reachable=(map @tas @) calls=(map @ta call-state:switchboard)]
+    [%0 reachable=(map @tas @) calls=(map @ta call-state-0:switchboard)]
++$  state-1
+    [%1 reachable=(map @tas @) calls=(map @ta call-state:switchboard)]
 +$  card  card:agent:gall
 --
 %-  agent:dbug
 %+  verb  %.n
-=|  state=state-0
+=|  state=state-1
 ^-  agent:gall
 =<
 |_  =bowl:gall
@@ -29,7 +32,28 @@
   !>(state)
 ::
 ++  on-load
-  on-load:default
+  |=  vas=vase
+  ^-  (quip card _this)
+  =/  stat  !<(versioned-state vas)
+  ?-  stat
+      :: Upgrade from version 0 by adding a null last-remote to all
+      :: calls
+      [%0 *]
+    =/  cards
+      %+  weld
+        %+  turn  ~(tap in ~(key by reachable.stat))  kick-reachable
+      %+  turn  ~(tap in ~(key by calls.stat))  kick-call
+    =/  calls  (~(run by calls.stat) |=([=call:switchboard =connection-state:switchboard] ^-(call-state:switchboard [call connection-state ~])))
+    [cards this(state [%1 reachable=*(map @tas @) calls=calls])]
+      :: No upgrade needed, just kick everyone so they know to
+      :: resubscribe
+      [%1 *]
+    =/  cards
+      %+  weld
+        %+  turn  ~(tap in ~(key by reachable.stat))  kick-reachable
+      %+  turn  ~(tap in ~(key by calls.stat))  kick-call
+    [cards this(state stat)]
+  ==
 ::
 ++  on-poke
   |=  [=mark =vase]
@@ -150,8 +174,7 @@
 ++  on-leave  
   |=  =path
   ^-  (quip card _this)
-  ?+  path
-    ~|  'No match for leave path {<path>}'  !!
+  ?+  path  (on-leave:default path)
       ::
       [%incoming @tas ~]
     =/  dap  +<.path
@@ -159,7 +182,6 @@
     `this(reachable.state (~(mar by reachable.state.this) dap ?:(=(0 reachcount) ~ (some reachcount))))
       ::
       [%call @ta ~]
-    =/  uuid  +<.path
     `this
   ==
 ::
@@ -187,7 +209,38 @@
     [cards this]
   ==
 ::
-++  on-peek  on-peek:default
+++  on-peek
+  |=  pax=path
+  ^-  (unit (unit cage))
+  ?+  pax  (on-peek:default pax)
+      ::
+      [%x %call @tas %last-remote ~]
+    =/  uuid  +>-.pax
+    =/  callstate  (~(get by calls.state) uuid)
+    ?~  callstate  [~ ~]
+    =/  [=call:switchboard =connection-state:switchboard =last-remote:switchboard]  u.callstate
+    ``switchboard-last-remote+!>(last-remote)
+      ::
+      [%x %call @tas %connection-state ~]
+    =/  uuid  +>-.pax
+    =/  callstate  (~(get by calls.state) uuid)
+    ?~  callstate  [~ ~]
+    =/  [=call:switchboard =connection-state:switchboard =last-remote:switchboard]  u.callstate
+    ``switchboard-connection-state+!>(connection-state)
+      ::
+      [%x %call @tas %peer ~]
+    =/  uuid  +>-.pax
+    =/  callstate  (~(get by calls.state) uuid)
+    ?~  callstate  [~ ~]
+    =/  [=call:switchboard =connection-state:switchboard =last-remote:switchboard]  u.callstate
+    ``switchboard-peer+!>(peer.call)
+      [%x %call @tas %dap ~]
+    =/  uuid  +>-.pax
+    =/  callstate  (~(get by calls.state) uuid)
+    ?~  callstate  [~ ~]
+    =/  [=call:switchboard =connection-state:switchboard =last-remote:switchboard]  u.callstate
+    ``switchboard-dap+!>(dap.call)
+  ==
 ::
 ++  on-arvo  on-arvo:default
 ::
@@ -215,13 +268,13 @@
       :: We got a %call poke, add the call
       %placing
     ?<  (~(has by calls.state) uuid.call)
-    `state(calls (~(put by calls.state) uuid.call [call=call connection-state=%placing])) 
+    `state(calls (~(put by calls.state) uuid.call [call=call connection-state=%placing last-remote=~])) 
       :: Our client watched the call so we will now tell the other switchboard
       %dialing
     ?>  (~(has by calls.state) uuid.call)
-    =/  state-call  call:(~(got by calls.state) uuid.call)
+    =/  [state-call=call:switchboard =connection-state:switchboard =last-remote:switchboard]  (~(got by calls.state) uuid.call)
     ?>  =(state-call call)
-    :_  state(calls (~(put by calls.state) uuid.call [call=call connection-state=%dialing]))
+    :_  state(calls (~(put by calls.state) uuid.call [call=call connection-state=%dialing last-remote=last-remote]))
     :~
       :*
         %pass   /ring-poke/[uuid.call]
@@ -238,9 +291,9 @@
       :: call is ringing at their end
       %ringing
     ?>  (~(has by calls.state) uuid.call)
-    =/  state-call  call:(~(got by calls.state) uuid.call)
+    =/  [state-call=call:switchboard =connection-state:switchboard =last-remote:switchboard]  (~(got by calls.state) uuid.call)
     ?>  =(state-call call)
-    :_  state(calls (~(put by calls.state) uuid.call [call=call connection-state=%ringing]))
+    :_  state(calls (~(put by calls.state) uuid.call [call=call connection-state=%ringing last-remote=last-remote]))
     :~
       :*
         %give  %fact
@@ -250,7 +303,7 @@
     ==
       :: We've been poked by a remote switchboard for a call
       %incoming-ringing
-    :_  state(calls (~(put by calls.state) uuid.call [call=call connection-state=%incoming-ringing]))
+    :_  state(calls (~(put by calls.state) uuid.call [call=call connection-state=%incoming-ringing last-remote=~]))
     :~
       :*
         %give  %fact
@@ -261,9 +314,9 @@
       :: The client watched the path for an incoming call
       %answering
     ?>  (~(has by calls.state) uuid.call)
-    =/  state-call  call:(~(got by calls.state) uuid.call)
+    =/  [state-call=call:switchboard =connection-state:switchboard =last-remote:switchboard]  (~(got by calls.state) uuid.call)
     ?>  =(state-call call)
-    :_  state(calls (~(put by calls.state) uuid.call [call=call connection-state=%answering]))
+    :_  state(calls (~(put by calls.state) uuid.call [call=call connection-state=%answering last-remote=last-remote]))
     :~
       :*
         %pass   /answer-poke/[uuid.call]
@@ -281,7 +334,7 @@
   |=  uuid=@ta
   =/  callstate  (~(got by calls.state) uuid)
   ?>  =(connection-state.callstate %ringing)
-  :_  state(calls (~(put by calls.state) uuid [call=call.callstate connection-state=%connected-our-turn])) 
+  :_  state(calls (~(put by calls.state) uuid [call=call.callstate connection-state=%connected-our-turn last-remote=last-remote.callstate])) 
   :~
     :*
       %give  %fact
@@ -293,7 +346,7 @@
   |=  uuid=@ta
   =/  callstate  (~(got by calls.state) uuid)
   ?>  =(connection-state.callstate %answering)
-  :_  state(calls (~(put by calls.state) uuid [call.callstate %connected-their-turn]))
+  :_  state(calls (~(put by calls.state) uuid [call.callstate %connected-their-turn last-remote=last-remote.callstate]))
   :~
     :*
       %give  %fact
@@ -305,6 +358,9 @@
   |=  [uuid=@ta =sdp:switchboard]
   ?>  (~(has by calls.state) uuid)
   =/  call-state  (~(got by calls.state) uuid)
+  ::  we need to increment the sdp counter
+  =/  sdp-counter
+    .+  ?~  last-remote.call-state  0  -.last-remote.call-state
   =/  result-state
     ?+  connection-state.call-state
       ~|("Cannot receive SDP in state {<connection-state.call-state>} (call {<uuid>})" !!)
@@ -315,7 +371,7 @@
         %connected-want-turn
       %connected-our-turn-asked
     ==
-  :_  state(calls (~(put by calls.state) uuid [call=call.call-state connection-state=result-state]))
+  :_  state(calls (~(put by calls.state) uuid [call=call.call-state connection-state=result-state last-remote=`[sdp-counter sdp]]))
   :~
     :*
       %give  %fact
@@ -333,7 +389,7 @@
   ?>  (~(has by calls.state) uuid)
   =/  call-state  (~(got by calls.state) uuid)
   ?>  =(connection-state.call-state %connected-want-turn)
-  :_  state(calls (~(put by calls.state) uuid [call=call.call-state connection-state=%connected-our-turn-asked]))
+  :_  state(calls (~(put by calls.state) uuid [call=call.call-state connection-state=%connected-our-turn-asked last-remote=last-remote.call-state]))
   :~
     :*
       %give  %fact
@@ -349,7 +405,7 @@
       :: it's our turn but our client has not asked to send anything
       :: so we can let the remote peer go
       %connected-our-turn
-    :_  state(calls (~(put by calls.state) uuid [call=call.call-state connection-state=%connected-their-turn]))
+    :_  state(calls (~(put by calls.state) uuid [call=call.call-state connection-state=%connected-their-turn last-remote=last-remote.call-state]))
     :~
       :*
         %give  %fact
@@ -369,7 +425,7 @@
   =/  call-state  (~(got by calls.state) uuid)
   =/  call  call.call-state
   ?>  =(connection-state.call-state %connected-our-turn-asked)
-  :_  state(calls (~(put by calls.state) uuid [call=call.call-state connection-state=%connected-their-turn]))
+  :_  state(calls (~(put by calls.state) uuid [call=call.call-state connection-state=%connected-their-turn last-remote=last-remote.call-state]))
   :~
     :*
       %pass   /inter-poke/[uuid]
@@ -391,7 +447,7 @@
     ~|("Cannot ask to send SDP in state {<connection-state.call-state>} (call {<uuid>})" !!)
       ::
       %connected-their-turn
-    :_  state(calls (~(put by calls.state) uuid [call=call.call-state connection-state=%connected-want-turn]))
+    :_  state(calls (~(put by calls.state) uuid [call=call.call-state connection-state=%connected-want-turn last-remote=last-remote.call-state]))
     :~
       :*
         %pass  /inter-poke/[uuid]
@@ -406,7 +462,7 @@
     ==
       ::
       %connected-our-turn
-    :_  state(calls (~(put by calls.state) uuid [call=call.call-state connection-state=%connected-our-turn-asked]))
+    :_  state(calls (~(put by calls.state) uuid [call=call.call-state connection-state=%connected-our-turn-asked last-remote=last-remote.call-state]))
     :~
       :*
         %give  %fact
@@ -502,5 +558,21 @@
         %switchboard-incoming-call  !>([%incoming-call-hangup uuid])
       ==
     ==
+  ==
+++  kick-reachable
+  |=  dap=@tas
+  ^-  card
+  :*
+    %give  %kick
+    ~[/incoming/[dap]]
+    ~
+  ==
+++  kick-call
+  |=  uuid=@ta
+  ^-  card
+  :*
+    %give  %kick
+    ~[/call/[uuid]]
+    ~
   ==
 --

@@ -2,9 +2,9 @@
   title+'urChatFM'
   info+'2-Way Video Calling'
   color+0xff.e4e6
-  version+[0 1 0]
+  version+[0 2 0]
   website+'https://tlon.io'
   license+'MIT'
   base+'urchatfm'
-  glob-http+['https://bootstrap.urbit.org/glob-0v5.6pdg7.i6hdv.dguki.dn1lb.m6cev.glob' 0v5.6pdg7.i6hdv.dguki.dn1lb.m6cev]
+  glob-ames+[~topwyn-labbyr-ritpub-sipsyl 0v2.jka84.lj70l.5glvs.4l5tn.kvhj9]
 ==
