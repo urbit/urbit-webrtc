@@ -139,7 +139,7 @@ class UrbitRTCApp extends EventTarget {
  */
 class UrbitRTCPeerConnection extends RTCPeerConnection {
   urbit: Urbit;
-  reconnect: bool;
+  reconnect: boolean;
   peer: string;
   dap: string;
   uuid: string | undefined;
@@ -286,8 +286,9 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
   async resubscribe() {
     if(this.connectionState !== 'closed') {
       await this.subscribe()
-      var last =this.urbit.scry<LastRemote>({'app': 'switchboard', 'path': `/call/${this.uuid}/last-remote`});
-      if(last !== null) {
+      const last = await this.urbit.scry<LastRemote>({'app': 'switchboard', 'path': `/call/${this.uuid}/last-remote`});
+      
+      if (last !== null) {
         this.signallingState.startSettingRemote();
         await this.setRemoteDescription(last.msg)
         this.signallingState.doneSettingRemote();
