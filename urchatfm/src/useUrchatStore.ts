@@ -3,6 +3,7 @@ import { UrbitRTCApp, UrbitRTCIncomingCallEvent, UrbitRTCPeerConnection } from '
 import Icepond from 'icepond';
 import Urbit from '@urbit/http-api';
 import { useMock } from './util';
+import { matchPath } from 'react-router';
 
 const dap = 'urchatfm';
 
@@ -176,5 +177,25 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
     hungup: () => set({ ongoingCall: null })
   };
 });
+
+async function reconnect() {
+  const urbit = useUrchatStore.getState().urbit;
+  const match = matchPath<{ uuid: string }>(window.location.pathname, {
+    path: '/apps/urchatfm/chat/:uuid'
+  })
+
+  if (match?.params.uuid) {
+    const uuid = match.params.uuid;
+    const conn = await UrbitRTCPeerConnection.reconnect({ urbit, uuid });
+    const ongoingCall = { 
+      call: { uuid, peer: conn.peer, dap: conn.dap },
+      conn
+    }
+
+    useUrchatStore.setState({ ongoingCall });
+  }
+}
+
+reconnect();
 
 export default useUrchatStore;

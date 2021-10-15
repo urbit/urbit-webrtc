@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import useUrchatStore from '../useUrchatStore';
 import { IncomingCall } from '../components/IncomingCall';
-import { Route, Switch, useHistory } from 'react-router';
+import { Route, Switch, useHistory, useRouteMatch } from 'react-router';
 import { Chat } from '../components/Chat';
 import { Call } from '../components/Call';
 import { Dialer } from '../components/Dialer';
@@ -119,7 +119,7 @@ export function Urchat() {
     <main className="relative flex flex-col lg:flex-row lg:gap-6 w-full h-full lg:p-8 text-gray-700">
       <section className="flex-auto lg:flex-1 flex flex-col justify-center h-[50%] lg:h-auto">
         <Switch>
-          <Route path="/chat/:id">
+          <Route path="/chat/:uuid">
             <Call connected={dataChannelOpen} />
           </Route>
           <Route path="/">
@@ -134,7 +134,7 @@ export function Urchat() {
       </section>
       <aside className="flex-auto lg:flex-none lg:w-[33vw] lg:max-w-sm h-[50%] lg:h-auto">
         <Switch>
-          <Route path="/chat/:id">
+          <Route path="/chat/:uuid">
             <Chat sendMessage={sendMessage} messages={messages} ready={dataChannelOpen} />
           </Route>
           <Route path="/">
