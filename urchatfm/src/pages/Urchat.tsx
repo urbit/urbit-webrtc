@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import useUrchatStore from '../useUrchatStore';
 import { IncomingCall } from '../components/IncomingCall';
-import { Route, Switch, useHistory, useRouteMatch } from 'react-router';
+import { matchPath, Route, Switch, useHistory, useRouteMatch } from 'react-router';
 import { Chat } from '../components/Chat';
 import { Call } from '../components/Call';
 import { Dialer } from '../components/Dialer';
@@ -17,22 +17,32 @@ export interface Message {
 }
 
 export function Urchat() {
+  const { push } = useHistory();
   const {
     incomingCall,
     ongoingCall,
     answerCall: answerCallState,
     placeCall: placeCallState,
+    reconnectCall,
     rejectCall,
     hangup
   } = useUrchatStore();
   const { resetStreams, getDevices } = useMediaStore(s => ({ getDevices: s.getDevices, resetStreams: s.resetStreams }));
-  const { push } = useHistory();
+  const isSecure = location.protocol.startsWith('https') || location.hostname === 'localhost';
 
   // local state
   const [dataChannel, setDataChannel] = useState<RTCDataChannel>(null);
   const [dataChannelOpen, setDataChannelOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
-  const isSecure = location.protocol.startsWith('https') || location.hostname === 'localhost';
+  const setupChannel = useCallback((channel: RTCDataChannel, peer: string) => {
+    channel.onopen = () => setDataChannelOpen(true);
+    channel.onmessage = (evt) => {
+      const data = evt.data;
+      setMessages(messages => [{ speaker: peer, message: data }].concat(messages));
+      console.log('channel message', data);
+    };
+    setDataChannel(channel);
+  }, [])
 
   // Set up callback to update device lists when a new device is added or removed
 
@@ -69,13 +79,7 @@ export function Urchat() {
       setMessages([]);
       conn.addEventListener('datachannel', (evt) => {
         const channel = evt.channel;
-        channel.onopen = () => setDataChannelOpen(true);
-        channel.onmessage = (evt) => {
-          const data = evt.data;
-          setMessages(messages => [{ speaker: peer, message: data }].concat(messages));
-          console.log('channel message', data);
-        };
-        setDataChannel(channel);
+        setupChannel(channel, peer);
       });
 
       conn.ontrack = onTrack;
@@ -83,6 +87,34 @@ export function Urchat() {
 
     getDevices(call)
   }
+  
+  useEffect(() => {
+    async function reconnect() {
+      const match = matchPath<{ uuid: string }>(window.location.pathname, {
+        path: '/apps/urchatfm/chat/:uuid'
+      })
+
+      if (!match?.params.uuid) {
+        return;
+      }
+
+      resetStreams();
+      const call = await reconnectCall(match.params.uuid, (peer, conn) => {
+        setDataChannelOpen(false);
+        setMessages([]);
+        conn.addEventListener('datachannel', (evt) => {
+          const channel = evt.channel;
+          setupChannel(channel, peer);
+        });
+  
+        conn.ontrack = onTrack;
+      });
+      
+      getDevices(call);
+    }
+    
+    reconnect();
+  },[])
 
   const placeCall = async ship => {
     resetStreams();
@@ -92,13 +124,7 @@ export function Urchat() {
       setDataChannelOpen(false);
       setMessages([]);
       const channel = conn.createDataChannel('urchatfm');
-      channel.onopen = () => setDataChannelOpen(true);
-      channel.onmessage= (evt) => {
-        const data = evt.data;
-        setMessages(messages => [{ speaker: ship, message: data }].concat(messages));
-        console.log('channel message', data);
-      };
-      setDataChannel(channel);
+      setupChannel(channel, ship);
       conn.ontrack = onTrack;
     });
 

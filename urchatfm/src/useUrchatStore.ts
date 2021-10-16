@@ -3,7 +3,6 @@ import { UrbitRTCApp, UrbitRTCIncomingCallEvent, UrbitRTCPeerConnection } from '
 import Icepond from 'icepond';
 import Urbit from '@urbit/http-api';
 import { useMock } from './util';
-import { matchPath } from 'react-router';
 
 const dap = 'urchatfm';
 
@@ -41,6 +40,7 @@ interface UrchatStore {
   startIcepond: () => void;
   placeCall: (ship: string, setHandlers: (conn: UrbitRTCPeerConnection) => void) => Promise<any>;
   answerCall: (setHandlers: (ship: string, conn: UrbitRTCPeerConnection) => void) => Promise<any>;
+  reconnectCall: (uuid: string, setHandlers: (ship: string, conn: UrbitRTCPeerConnection) => void) => Promise<any>;
   rejectCall: () => void;
   hangup: () => void;
   hungup: () => void;
@@ -162,6 +162,25 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
       return ongoingCall;
     },
 
+    reconnectCall: async (uuid, setHandlers) => {
+      const urbit = get().urbit;
+      const conn = await UrbitRTCPeerConnection.reconnect({ urbit, uuid });
+      const call = { uuid, peer: conn.peer, dap: conn.dap };
+      const ongoingCall = { 
+        call,
+        conn
+      }
+      
+      const { hungup, startIcepond } = get();
+      conn.addEventListener('hungupcall', hungup);
+      setHandlers(call.peer, conn);
+      await conn.initialize();
+      startIcepond();
+
+      set({ ongoingCall });
+      return ongoingCall;
+    },
+
     rejectCall: () => set((state) => {
       state.incomingCall.reject();
       return { incomingCall: null };
@@ -177,25 +196,5 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
     hungup: () => set({ ongoingCall: null })
   };
 });
-
-async function reconnect() {
-  const urbit = useUrchatStore.getState().urbit;
-  const match = matchPath<{ uuid: string }>(window.location.pathname, {
-    path: '/apps/urchatfm/chat/:uuid'
-  })
-
-  if (match?.params.uuid) {
-    const uuid = match.params.uuid;
-    const conn = await UrbitRTCPeerConnection.reconnect({ urbit, uuid });
-    const ongoingCall = { 
-      call: { uuid, peer: conn.peer, dap: conn.dap },
-      conn
-    }
-
-    useUrchatStore.setState({ ongoingCall });
-  }
-}
-
-reconnect();
 
 export default useUrchatStore;
