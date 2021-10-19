@@ -195,7 +195,7 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
     // Renegotiation callback, called when media channels are added/deleted
     //
     // Create an SDP offer and send it to our peer
-    this.onnegotiationneeded = () => this.renegotiate();
+    this.onnegotiationneeded = this.renegotiate.bind(this);
 
     // Urbit state is null until we initialize
     this.urbitState = null;
