@@ -11,8 +11,9 @@
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "tsup --watch",
-    "build": "tsup src/index.ts --dts --format esm,cjs --sourcemap"
+    "dev": "tsup src/index.ts --watch",
+    "build": "tsup src/index.ts --dts --format esm,cjs --sourcemap",
+    "prepare": "npm run build"
   },
   "repository": {
     "type": "git",

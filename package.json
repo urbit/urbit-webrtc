@@ -1,0 +1,13 @@
+{
+  "name": "root",
+  "private": true,
+  "devDependencies": {
+    "lerna": "^4.0.0"
+  },
+  "scripts": {
+    "dev": "lerna run dev --parallel",
+    "bootstrap": "lerna bootstrap",
+    "build": "lerna run build --no-private && npm run bootstrap && lerna run build --scope=urchatfm",
+    "publish": "lerna publish --no-private"
+  }
+}

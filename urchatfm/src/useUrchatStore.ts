@@ -166,10 +166,7 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
       const urbit = get().urbit;
       const conn = await UrbitRTCPeerConnection.reconnect({ urbit, uuid });
       const call = { uuid, peer: conn.peer, dap: conn.dap };
-      const ongoingCall = { 
-        call,
-        conn
-      }
+      const ongoingCall = { call, conn };
       
       const { hungup, startIcepond } = get();
       conn.addEventListener('hungupcall', hungup);
