@@ -70,7 +70,8 @@ class Icepond extends EventTarget {
     
     this.state = 'acquiring';
     const evt = new IcepondStateChange(this.state);
-    // Should there be a dispatch here?
+    this.dispatchEvent(evt);
+    this.onstatechange(evt); 
   }
 
   handleError(err: Error) {
