@@ -53,16 +53,21 @@ export function Urchat() {
 
   useEffect(() => {
     if (isSecure && ongoingCall) {
-      const audio = new Audio(call);
-      audio.volume = .3
-      audio.play();
-      push(`/chat/${ongoingCall.conn.uuid}`)
-
       const updateDevices = () => getDevices(ongoingCall);
       navigator.mediaDevices.addEventListener('devicechange', updateDevices);
       return () => navigator.mediaDevices.removeEventListener('devicechange', updateDevices);
     }
   }, [ongoingCall]);
+
+  const startCall = useCallback(() => {
+    const { ongoingCall } = useUrchatStore.getState();
+    if (isSecure && ongoingCall) {
+      const audio = new Audio(call);
+      audio.volume = .3
+      audio.play();
+      push(`/chat/${ongoingCall.conn.uuid}`)
+    }
+  }, []);
 
   const onTrack = useCallback((evt: Event & { track: MediaStreamTrack }) => {
     console.log('Incoming track event', evt);
@@ -86,6 +91,7 @@ export function Urchat() {
     });
 
     getDevices(call)
+    startCall();
   }
   
   useEffect(() => {
@@ -111,10 +117,17 @@ export function Urchat() {
       });
       
       getDevices(call);
+      startCall();
     }
     
     reconnect();
   },[])
+
+  useEffect(() => {
+    if (!ongoingCall) {
+      push('/')
+    }
+  }, [ongoingCall])
 
   const placeCall = async ship => {
     resetStreams();
@@ -126,6 +139,7 @@ export function Urchat() {
       const channel = conn.createDataChannel('urchatfm');
       setupChannel(channel, ship);
       conn.ontrack = onTrack;
+      conn.addEventListener('ringing', startCall);
     });
 
     getDevices(call)

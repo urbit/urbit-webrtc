@@ -18,6 +18,7 @@ interface Reconnect {
 
 type UrbitState =
   | 'dialing'
+  | 'ringing'
   | 'incoming-ringing'
   | 'connected-our-turn'
   | 'connected-their-turn'
@@ -264,6 +265,7 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
         'dap': this.dap
       }
     }).catch(err => this.closeWithError(err));
+    this.dispatchUrbitState('ringing');
     return this.subscribe();
   }
 
@@ -325,6 +327,7 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
     if(this.connectionState != 'closed') {
       super.close();
       super.dispatchEvent(new UrbitRTCHungupCallEvent(this.uuid || ''));
+      console.log('switchboard: caller hungup')
     }
   }
 

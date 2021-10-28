@@ -60,6 +60,9 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
   const urbit = useMock ? { ship: '', subscribe: async () => {} } as any : new Urbit('', '');
   // requires <script> tag for /~landscape/js/session.js
   urbit.ship = (window as any).ship;
+  if (import.meta.env.DEV) {
+    urbit.verbose = true;
+  }
   urbitRtcApp.urbit = urbit;
 
   return {
@@ -190,7 +193,10 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
       return { ...state, ongoingCall: null };
     }),
 
-    hungup: () => set({ ongoingCall: null })
+    hungup: () => {
+      console.log('caller hungup')
+      set({ ongoingCall: null })
+    }
   };
 });
 
