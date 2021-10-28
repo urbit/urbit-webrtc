@@ -1,7 +1,7 @@
 {
-  "name": "icepond",
+  "name": "switchboard",
   "version": "0.0.1",
-  "description": "JS bindings to Urbit 'icepond' ice-server discovery agent",
+  "description": "Browser-side code for Switchboard, a WebRTC signalling channel for Urbit",
   "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
@@ -11,15 +11,15 @@
   ],
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "tsup --watch",
-    "build": "tsup src/index.ts --dts --format esm,cjs --sourcemap"
+    "dev": "tsup src/index.ts --watch --format esm,cjs",
+    "build": "tsup src/index.ts --dts --format esm,cjs --sourcemap",
+    "prepare": "npm run build"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/black-river-software/urbit-webrtc.git"
   },
   "keywords": [
-    "ice",
     "webrtc",
     "urbit"
   ],
