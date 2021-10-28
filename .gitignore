@@ -3,3 +3,4 @@ dev-ships
 node_modules
 *.local
 .DS_Store
+lerna-debug.log

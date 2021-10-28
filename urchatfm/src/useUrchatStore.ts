@@ -161,6 +161,22 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
       return ongoingCall;
     },
 
+    reconnectCall: async (uuid, setHandlers) => {
+      const urbit = get().urbit;
+      const conn = await UrbitRTCPeerConnection.reconnect({ urbit, uuid });
+      const call = { uuid, peer: conn.peer, dap: conn.dap };
+      const ongoingCall = { call, conn };
+      
+      const { hungup, startIcepond } = get();
+      conn.addEventListener('hungupcall', hungup);
+      setHandlers(call.peer, conn);
+      await conn.initialize();
+      startIcepond();
+
+      set({ ongoingCall });
+      return ongoingCall;
+    },
+
     rejectCall: () => set((state) => {
       state.incomingCall.reject();
       return { incomingCall: null };
