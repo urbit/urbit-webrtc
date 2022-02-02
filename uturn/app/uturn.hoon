@@ -4,7 +4,7 @@
 +$  versioned-state
     $%  state-0
     ==
-+$  state-0  [%0 server-config=(unit server-config:uturn) whitelist=user-whitelist:uturn]
++$  state-0  [%0 server-config=(unit server:uturn) threads=(map @ta [=path])]
 +$  card  card:agent:gall
 --
 %-  agent:dbug
@@ -44,28 +44,42 @@
   |=  [=mark =vase]
   ^-  (quip card _this)
   ?+  mark  (on-poke:default mark vase)
+  %test-icepond-thread
+    ~&  >  'test-icepond-thread'
+    =/  id  `@ta`(scot %da now.bowl)
+    :_  this
+    :~  [%pass /test/[id] %agent [our.bowl %icepond] %watch /ice-servers/[id]]
+    ==
   %set-server-config 
     ~&  >  'set-server-config'
-    =/  new-server-config  !<(server-config:uturn vase)
+    =/  new-server-config  !<(server:uturn vase)
     `this(server-config.state (some new-server-config))
-  %whitelist-users 
-    ~&  >  'whitelist-users'
-    =/  users  !<(user-whitelist:uturn vase)
-    `this(whitelist.state (weld users whitelist.state))
-  %remove-user 
-    ~&  >  'remove-user'
-    =/  bad-user  !<(@p vase)
-    =/  new-whitelist  (skip whitelist.state |=(a=@p =(a bad-user)))
-    `this(whitelist.state new-whitelist)  
   %start-turn-session
     ~&  >  'start-turn-session'
-    =/  server  (need server-config.state)
-    =/  blah  (test-arm 5)
+    ?>  (team:title src.bowl our.bowl)
+    ~&  >  'start-turn-session - permission granted'
+    ::=/  server  (need server-config.state)
+    ::=/  blah  (test-arm:helper 5)
     ::=/  =request:http  [%'GET' (need url) ~ ~\]
     `this
   ==
 ::
-++  on-watch  on-watch:default
+++  on-watch  
+  |=  =path 
+  ^-  (quip card _this)
+  ~&  >  'uturn on-watch'
+  ?>  (team:title src.bowl our.bowl)
+  ?+  path  (on-watch:default path)
+  [%start-session * ~]
+    ~&  >  'start-session'
+    ~&  >  path
+    =/  id  i.t.path
+    =/  tid  `@ta`(cat 3 'thread_' id)
+    =/  thread-args  [~ `tid byk.bowl %coturn !>(server-config.state)]
+    :_  this(threads.state (~(put by threads.state) tid [path]))
+    :~  [%pass /thread/[tid] %agent [our.bowl %spider] %poke %spider-start !>(thread-args)]
+    ==
+  ==
 ++  on-leave  on-leave:default
 ++  on-peek   on-peek:default
 ++  on-agent  on-agent:default
