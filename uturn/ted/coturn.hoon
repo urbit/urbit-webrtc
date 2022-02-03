@@ -10,6 +10,10 @@
   ~&  >  'make-url'
   ~&  >  "make-url. url={<url>}"
   url 
+++  json-to-credential
+  |=  =json 
+  ^-  turn-credential:uturn 
+
 --
 ^-  thread:spider
 |=  arg=vase
@@ -17,10 +21,7 @@
 ^-  form:m 
 ~&  >  'coturn thread'
 =/  server-unit  !<((unit server:uturn) arg)
-~&  >  'server-unit found'
 =/  server  (need server-unit)
-~&  >  'server found'
-~&  >  server
 =/  url  (make-url server)
 ;<  our=@p   bind:m  get-our:strandio
 ;<  now=@da  bind:m  get-time:strandio
