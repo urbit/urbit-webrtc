@@ -19,14 +19,11 @@
   |=  [ttl=@ud time=@ud secret=@t user=tape]
   ^-  @t 
   ~&  >  'create-password'
-  =/  timestamp  (skip (scow %ud (add ttl time)) |=(a=@td =(a '.'))) 
+  =/  timestamp  (trip (rsh [3 2] (scot %ui (add ttl time))))
   =/  username  (crip (weld timestamp (weld ":" user)))
-  ~&  >  timestamp 
   ~&  >  username
   ~&  >  secret
   =/  hash  (hmac-sha1t secret username)
-  ::~&  >  'hash' 
-  ::~&  >  hash
   =/  password  (en:base64:mimes:html (as-octs:mimes:html (rev 3 (met 3 hash) hash)))
   ~&  >  password
   password
@@ -40,8 +37,6 @@
 =/  server  (need server-unit)
 ;<  now=@da  bind:m  get-time:strandio
 =/  epoch  (unt:chrono:userlib now)
-~&  >  'calling create-password'
-::=/  epoch  1.644.518.611
 =/  password  (create-password [ttl=86.400 time=epoch secret=secret.server user="philip"])
 =/  url  (make-url server password)
 ;<  our=@p   bind:m  get-our:strandio

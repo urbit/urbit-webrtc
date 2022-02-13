@@ -6,10 +6,21 @@
 =/  m  (strand ,vase)
 ^-  form:m 
 ~&  >  'uturn thread'
-;<  our=@p   bind:m  get-our:strandio
 ;<  now=@da  bind:m  get-time:strandio
-=/  ta-now  `@ta`(scot %da now) 
-::;<  ~        bind:m  (poke:strandio [our %uturn] %start-turn-session !>(~))
-;<  ~        bind:m  (watch-our:strandio /uturn/[ta-now] %uturn /start-session/[ta-now])
-;<  =cage    bind:m  (take-fact:strandio /start-session/[ta-now])
-(pure:m !>(cage))
+;<  eny=@uv  bind:m  get-entropy:strandio
+=/  id  (crip "{(scow %da now)}-{(scow %uv (sham 2 eny))}")
+;<  ~        bind:m  (watch-our:strandio /uturn/[id] %uturn /get-server/[id])
+;<  =cage    bind:m  (take-fact:strandio /uturn/[id])
+=/  credential  !<(credential:uturn q.cage)
+~&  >  'cage'
+~&  >  cage
+~&  >  'credential'
+~&  >  credential
+=/  server 
+:+
+  %server
+  ~[url.credential]
+  `[username.credential password.credential `%turn]
+~&  >  'server'
+~&  >  server 
+(pure:m !>(server))

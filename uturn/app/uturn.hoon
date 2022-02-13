@@ -1,5 +1,6 @@
 /-  uturn
 /+  default-agent, dbug
+=,  hmac:crypto
 |%
 +$  versioned-state
     $%  state-0
@@ -34,12 +35,7 @@
   `this(state old-state)
   ::=/  old-state  !<(versioned-state state)
   ::`this(state old-state)
-:: We take four pokes. 
 :: %set-server-config - set a URL/secret combo for a server
-:: %whitelist-users - list of users allowed to open TURN sessions
-:: %remove-user - remove a user from the whitelist
-:: %start-turn-session - take an @p and return a short-term password
-::                       and URL for the TURN session
 ++  on-poke  
   |=  [=mark =vase]
   ^-  (quip card _this)
@@ -54,14 +50,6 @@
     ~&  >  'set-server-config'
     =/  new-server-config  !<(server:uturn vase)
     `this(server-config.state (some new-server-config))
-  %start-turn-session
-    ~&  >  'start-turn-session'
-    ?>  (team:title src.bowl our.bowl)
-    ~&  >  'start-turn-session - permission granted'
-    ::=/  server  (need server-config.state)
-    ::=/  blah  (test-arm:helper 5)
-    ::=/  =request:http  [%'GET' (need url) ~ ~\]
-    `this
   ==
 ::
 ++  on-watch  
@@ -70,14 +58,19 @@
   ~&  >  'uturn on-watch'
   ?>  (team:title src.bowl our.bowl)
   ?+  path  (on-watch:default path)
-  [%start-session * ~]
-    ~&  >  'start-session'
+  [%get-server * ~]
+    ~&  >  'get-server'
     ~&  >  path
     =/  id  i.t.path
-    =/  tid  `@ta`(cat 3 'thread_' id)
-    =/  thread-args  [~ `tid byk.bowl %coturn !>(server-config.state)]
-    :_  this(threads.state (~(put by threads.state) tid [path]))
-    :~  [%pass /thread/[tid] %agent [our.bowl %spider] %poke %spider-start !>(thread-args)]
+    =/  server-config  (need server-config.state)
+    =/  secret  secret.server-config
+    =/  epoch  (unt:chrono:userlib now.bowl)
+    =/  user  "{<our.bowl>}-{(scow %uv (sham 2 eny.bowl))}" 
+    =/  credential  (make-credential [ttl=86.400 time=epoch secret=secret user=user url=url.server-config])
+    ~&  >  'got credential'
+    :_  this
+    :~  [%give %fact ~ %credential !>(credential)]
+        [%give %kick ~[path] `src.bowl]
     ==
   ==
 ++  on-leave  on-leave:default
@@ -88,8 +81,17 @@
 --
 :: Helper core
 |_  =bowl:gall
-++  test-arm 
-  |=  arg=@ud 
-  ~&  'test-arm'
-  (add arg 1)
+++  make-credential
+  |=  [ttl=@ud time=@ud secret=@t user=tape url=@t]
+  ^-  credential:uturn
+  ~&  >  'make-credential'
+  :: username is "time:user" where time is epoch+ttl and user is any string
+  :: password is base64(hmac(secret, username))
+  =/  timestamp  (trip (rsh [3 2] (scot %ui (add ttl time))))
+  =/  username  (crip (weld timestamp (weld ":" user)))
+  =/  hash  (hmac-sha1t secret username)
+  =/  password  (en:base64:mimes:html (as-octs:mimes:html (rev 3 (met 3 hash) hash)))
+  =/  cred  [username=username password=password url=url]
+  ~&  >  cred
+  cred
 --
