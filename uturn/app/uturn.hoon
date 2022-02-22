@@ -10,7 +10,6 @@
 --
 %-  agent:dbug
 =|  state=state-0
-:: =*  state  -
 ^-  agent:gall
 =<
 |_  =bowl:gall
@@ -33,9 +32,6 @@
   ~&  >  vase 
   =/  old-state  !<(versioned-state vase)
   `this(state old-state)
-  ::=/  old-state  !<(versioned-state state)
-  ::`this(state old-state)
-:: %set-server-config - set a URL/secret combo for a server
 ++  on-poke  
   |=  [=mark =vase]
   ^-  (quip card _this)
@@ -60,14 +56,11 @@
   ?+  path  (on-watch:default path)
   [%get-server * ~]
     ~&  >  'get-server'
-    ~&  >  path
-    =/  id  i.t.path
     =/  server-config  (need server-config.state)
     =/  secret  secret.server-config
     =/  epoch  (unt:chrono:userlib now.bowl)
     =/  user  "{<our.bowl>}-{(scow %uv (sham 2 eny.bowl))}" 
     =/  credential  (make-credential [ttl=86.400 time=epoch secret=secret user=user url=url.server-config])
-    ~&  >  'got credential'
     :_  this
     :~  [%give %fact ~ %credential !>(credential)]
         [%give %kick ~[path] `src.bowl]
@@ -91,7 +84,5 @@
   =/  username  (crip (weld timestamp (weld ":" user)))
   =/  hash  (hmac-sha1t secret username)
   =/  password  (en:base64:mimes:html (as-octs:mimes:html (rev 3 (met 3 hash) hash)))
-  =/  cred  [username=username password=password url=url]
-  ~&  >  cred
-  cred
+  [username=username password=password url=url]
 --
