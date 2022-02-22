@@ -31,19 +31,14 @@
   ~&  >  'on-load. vase='
   ~&  >  vase 
   =/  old-state  !<(versioned-state vase)
-  `this(state old-state)
+  ?-  -.old-state
+    %0  `this(state old-state)
+  ==
 ++  on-poke  
   |=  [=mark =vase]
   ^-  (quip card _this)
   ?+  mark  (on-poke:default mark vase)
-  %test-icepond-thread
-    ~&  >  'test-icepond-thread'
-    =/  id  `@ta`(scot %da now.bowl)
-    :_  this
-    :~  [%pass /test/[id] %agent [our.bowl %icepond] %watch /ice-servers/[id]]
-    ==
   %set-server-config 
-    ~&  >  'set-server-config'
     =/  new-server-config  !<(server:uturn vase)
     `this(server-config.state (some new-server-config))
   ==
@@ -51,7 +46,6 @@
 ++  on-watch  
   |=  =path 
   ^-  (quip card _this)
-  ~&  >  'uturn on-watch'
   ?>  (team:title src.bowl our.bowl)
   ?+  path  (on-watch:default path)
   [%get-server * ~]

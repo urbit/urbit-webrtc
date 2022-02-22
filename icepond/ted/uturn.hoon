@@ -16,5 +16,5 @@
 :+
   %server
   ~[url.credential]
-  `[username.credential password.credential `%turn]
+  `[username.credential password.credential `'password']
 (pure:m !>(server))
