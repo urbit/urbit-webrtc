@@ -101,7 +101,6 @@
 :: Watching the /ice-servers path initiates the acquisition of ice
 :: server settings to return to the subscriber
 ++  on-watch
-  ~&  >  'icepond on-watch'
   |=  watch-path=path
   ^-  (quip card _this)
   ?+  watch-path  (on-watch:default watch-path)
@@ -284,17 +283,11 @@
     [cards=(weld cards.p-cards-and-wires cards.q-cards-and-wires) wires=(weld wires.p-cards-and-wires wires.q-cards-and-wires)]
       ::
       [%from-ted *] :: poke spider with a spider-start and watch the thread result
-      ~&  >  'from-ted'
     =/  args-vase  !>(~)
     =/  tid  (scot %ta (cat 3 (cat 3 'icepond_' ted.fetcher-config) (scot %uv (sham ted.fetcher-config eny.bowl))))
     =/  watch-path  /thread-result/[tid]
     =/  poke-vase  !>([~ `tid byk.bowl ted.fetcher-config args-vase])
     =/  wire  /incoming/[tid]
-    ::~&  >  args-vase
-    ::~&  >  tid 
-    ::~&  >  watch-path 
-    ::~&  >  poke-vase
-    ::~&  >  wire
     [cards=~[[%pass wire %agent [our.bowl %spider] %watch watch-path] [%pass /start-thread/[tid] %agent [our.bowl %spider] %poke %spider-start poke-vase]] wires=~[[wire=wire fetch-kind=%watch-ted ship=our.bowl path=watch-path]]]
       ::
       [%from-sponsor *]

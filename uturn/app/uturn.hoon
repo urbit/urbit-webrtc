@@ -18,38 +18,32 @@
     helper    ~(. +> bowl)
 ::
 ++  on-init
-~&  >  'on-init'
   `this
 ++  on-save
   ^-  vase
-  ~&  >  'on-save. state='
-  ~&  >  state
   !>(state)
 ++  on-load  :: on-load:default
-  |=  =vase 
+  |=  =vase
   ^-  (quip card _this)
-  ~&  >  'on-load. vase='
-  ~&  >  vase 
   =/  old-state  !<(versioned-state vase)
   ?-  -.old-state
     %0  `this(state old-state)
   ==
-++  on-poke  
+++  on-poke
   |=  [=mark =vase]
   ^-  (quip card _this)
   ?+  mark  (on-poke:default mark vase)
-  %set-server-config 
+  %set-server-config
     =/  new-server-config  !<(server:uturn vase)
     `this(server-config.state (some new-server-config))
   ==
 ::
-++  on-watch  
-  |=  =path 
+++  on-watch
+  |=  =path
   ^-  (quip card _this)
   ?>  (team:title src.bowl our.bowl)
   ?+  path  (on-watch:default path)
   [%get-server * ~]
-    ~&  >  'get-server'
     =/  server-config  (need server-config.state)
     =/  secret  secret.server-config
     =/  epoch  (unt:chrono:userlib now.bowl)
@@ -71,7 +65,6 @@
 ++  make-credential
   |=  [ttl=@ud time=@ud secret=@t user=tape url=@t]
   ^-  credential:uturn
-  ~&  >  'make-credential'
   :: username is "time:user" where time is epoch+ttl and user is any string
   :: password is base64(hmac(secret, username))
   =/  timestamp  (trip (rsh [3 2] (scot %ui (add ttl time))))
