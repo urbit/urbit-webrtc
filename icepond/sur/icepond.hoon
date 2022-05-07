@@ -14,7 +14,7 @@
     [%team-only config=fetcher-config]
     :: Try both configs and return servers obtained by both
     [%or p=fetcher-config q=fetcher-config]
-    [%from-ted ted=%tas]
+    [%from-ted ted=@tas]
     [%from-sponsor ~]
     [%default-config ~] 
     [%google-open ~]
