@@ -35,16 +35,16 @@ function App() {
     icepond.addEventListener('iceserver', evt => setIceServers(icepond.iceServers));
     icepond.initialize();
   };
-
+  const ship = '~'+urbit?.ship;
   return (
     <div>
-      <div><span style={{ 'fontWeight': 'bold' }}>ICE state</span>{iceState === null ? '' : iceState}</div>
+      <div><span style={{ 'fontWeight': 'bold' }}>{ship} volunteers these ICE servers</span>{iceState === null ? '' : iceState}</div>
       <div><ul>{iceServers.map((server, i) =>
                 <li key={i}>{JSON.stringify(server)}</li>
               )}
            </ul>
       </div>
-      <button onClick={startIce} disabled={!canStartIce}>Start ICE Acquisition</button>
+      <button onClick={startIce} disabled={!canStartIce}>Start ICE Acquisition from {ship}</button>
     </div>
   );
 }

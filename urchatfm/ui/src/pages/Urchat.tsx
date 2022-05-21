@@ -7,7 +7,7 @@ import { Call } from '../components/Call';
 import { Dialer } from '../components/Dialer';
 import { useMediaStore } from '../useMediaStore';
 import { useMock } from '../util';
-import call from '/src/assets/enter-call.wav';
+import call from '../assets/enter-call.wav';
 import { TurnOnRinger } from '../components/TurnOnRinger';
 import { SecureWarning } from '../components/SecureWarning';
 
@@ -95,8 +95,8 @@ export function Urchat() {
       channel.onopen = () => setDataChannelOpen(true);
       channel.onmessage= (evt) => {
         const data = evt.data;
-        setMessages(messages => [{ speaker: ship, message: data }].concat(messages));
-        console.log('channel message', data);
+        setMessages(messages => [{ speaker: "~"+ship, message: data }].concat(messages));
+        console.log('channel message from ~'+ship+': '+ data);
       };
       setDataChannel(channel);
       conn.ontrack = onTrack;
@@ -142,7 +142,6 @@ export function Urchat() {
           </Route>
         </Switch>
       </aside>
-      
       {incomingCall && (
         <IncomingCall caller={incomingCall.call.peer} answerCall={answerCall} rejectCall={rejectCall} />
       )}

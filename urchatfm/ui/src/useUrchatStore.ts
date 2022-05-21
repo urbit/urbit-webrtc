@@ -55,6 +55,7 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
       incomingCallEvt.reject();
     }
   });
+  console.log("useMock:" + useMock);
 
   const urbit = useMock ? { ship: '', subscribe: async () => {} } as any : new Urbit('', '');
   // requires <script> tag for /~landscape/js/session.js
@@ -79,10 +80,14 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
         set({ icepond: {} as Icepond })
       }
 
+      console.log("YOU HAVE AUTHED WITH: " + state.urbit.ship);
+      console.log("attempting icepond");
       const icepond = new Icepond(state.urbit);
       icepond.oniceserver = (evt) => {
         set((state) => {
           const newConfig = { ...state.configuration, iceServers: evt.iceServers };
+          console.log("icepond config:");
+          console.log(newConfig);
           if(state.urbitRtcApp !== null) {
             state.urbitRtcApp.configuration = newConfig;
           }

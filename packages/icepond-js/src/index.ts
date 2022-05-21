@@ -83,7 +83,9 @@ class Icepond extends EventTarget {
   }
 
   iceServer(server: RTCIceServer) {
-    this.iceServers.push(server);
+    if(this.iceServers.includes(server) == false){
+      this.iceServers.push(server);
+    }
     const evt = new NewIcepondServer(server, this.iceServers);
     this.dispatchEvent(evt);
     this.oniceserver(evt);

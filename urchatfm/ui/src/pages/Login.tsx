@@ -13,6 +13,7 @@ interface UrbitAuth {
 
 // eslint-disable-next-line
 function Login() {
+  console.log("loading login page");
   const { urbit, setUrbit } = useUrchatStore(state => ({ urbit: state.urbit, setUrbit: state.setUrbit}));
   const [urbitErr, setUrbitErr] = useState('');
   const [awaitingUrbit, setAwaitingUrbit] = useState(false);
@@ -28,7 +29,7 @@ function Login() {
 
   const authenticate = (data: UrbitAuth) => {
     setAwaitingUrbit(true);
-    
+    console.log("attempting to auth")
     Urbit.authenticate({ ...data, 'verbose': true })
       .then((ur) => {
         setUrbit(ur);

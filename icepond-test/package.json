@@ -9,7 +9,7 @@
     "@testing-library/user-event": "^12.8.3",
     "@urbit/eslint-config": "^1.0.0",
     "@urbit/http-api": "^1.1.10",
-    "icepond": "file:../icepond-js",
+    "icepond": "file:../packages/icepond-js",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
     "react-scripts": "4.0.3",
