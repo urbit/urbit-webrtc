@@ -20,9 +20,9 @@ function Login() {
 
   const { register, handleSubmit } = useForm({
     defaultValues: {
-      ship: 'zod',
-      url: 'localhost:8081',
-      code: 'lidlut-tabwed-pillex-ridrup'
+      ship: '~mogtuc-ligrec-datryn-ribdun',
+      url: 'http://10.0.0.87',
+      code: 'bannys-patdun-sivrex-marter'
     }
   });
   const [errTimeout, setErrTimeout] = useState<NodeJS.Timeout | null>(null);
