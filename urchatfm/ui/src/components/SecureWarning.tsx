@@ -20,7 +20,14 @@ export const SecureWarning = () => {
             className="button text-pink-900 bg-pink-500 default-ring" 
             href={`https://${location.hostname}${location.port && ':' + location.port}${location.pathname}`}
           >
-            Try with HTTPS
+            Try HTTPS version of this page
+          </a>
+          <br />
+          <a
+            className="button text-pink-900 bg-pink-500 default-ring"
+            href="https://urbit.org/using/os/basics#configuring-ssl"
+          >
+            Configuring SSL certificate
           </a>
         </div>
       </DialogContent>
