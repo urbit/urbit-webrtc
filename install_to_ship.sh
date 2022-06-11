@@ -1,18 +1,19 @@
 echo "What is the path of your ship?"
 read -ep "Enter folder path location: " SHIP_PATH
-read -ep "Enter the location of your urbit repo (the one from tlon): " + URBIT_REPO
+read -ep "Enter the location of your urbit repo (the one from tlon): " URBIT_REPO
 # URBIT_REPO=~/urbit/urbit-git
 
 DIR=`pwd`
 echo $DIR
 echo "Now to build all the React stuff..."
-echo "First the icepond-js and switchboard-js libs"
-cd packages
-cd icepond-js
+echo "First the icepond-js and switchboard-js, pals-js libs"
+cd $DIR/packages/icepond-js
 npm i
 npm run build
-cd ..
-cd switchboard-js
+cd $DIR/packages/switchboard-js
+npm i
+npm run build
+cd $DIR/packages/pals-js
 npm i
 npm run build
 echo "Build the urchatfm interface"

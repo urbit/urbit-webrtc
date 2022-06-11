@@ -1,4 +1,4 @@
-// Using Uqbar's pals interface for reference
+// Used Uqbar's pals interface for reference
 // https://github.com/uqbar-dao/urbit/blob/escape/pkg/interface/src/logic/state/pals.ts
 
 import Urbit from '@urbit/http-api'
@@ -9,18 +9,18 @@ declare global {
   }
 }
 
-export interface Mutuals{
+export interface MutualPals {
+  [key: string]: { lists: string[] };
 }
+
 
 class Pals extends EventTarget {
   urbit: Urbit;
-  
 
   constructor(urbit = window.urbit) {
     super();
     console.log("constructing pals interface")
     this.urbit = urbit;
-    console.log(this.urbit.code);
   }
 
   async getPals() {
