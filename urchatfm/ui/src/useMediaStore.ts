@@ -6,6 +6,12 @@ type Track = MediaStreamTrack & {
   sender: RTCRtpSender;
 }
 
+interface ScreenMedia {
+  enabled: boolean;
+  tracks: Track[];
+  toggle: () => void;
+}
+
 interface Media {
   enabled: boolean;
   device: MediaDeviceInfo | null;
@@ -19,7 +25,9 @@ interface MediaStore {
   remote: MediaStream;
   video: Media;
   audio: Media;
+  sharedScreen: ScreenMedia;
   devices: MediaDeviceInfo[];
+  call: OngoingCall;
   getDevices: (call: OngoingCall) => Promise<void>;
   resetStreams: () => void;
 }
@@ -33,7 +41,6 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     tracks: [],
     changeDevice: (device: MediaDeviceInfo, call: OngoingCall) => changeDevice(device, 'video', get(), call),
     toggle: () => {
-      ;
       set({ video: toggleMedia(get().video) })
     }
   },
@@ -43,8 +50,19 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     tracks: [],
     changeDevice: (device: MediaDeviceInfo, call: OngoingCall) => changeDevice(device, 'audio', get(), call),
     toggle: () => {
-      ;
       set({ audio: toggleMedia(get().audio) })
+    }
+  },
+  sharedScreen: {
+    enabled: false,
+    tracks: [],
+    toggle: async () => {
+      var screenShareState = get().sharedScreen;
+      if(screenShareState.enabled){
+        set({sharedScreen: await stopShareScreen(get())})
+      } else{
+        set({sharedScreen: await startShareScreen(get())})
+      }
     }
   },
   devices: [],
@@ -54,6 +72,7 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
       remote: new MediaStream()
     })
   },
+  call: null,
   getDevices: async (call: OngoingCall) => {
     const devices = await navigator.mediaDevices?.enumerateDevices();
     const videoDevs = devices.filter(dev => dev.kind === 'videoinput');
@@ -64,12 +83,12 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     // via getUserMedia in effects below
     const video = await changeDevice(videoDevs[0], 'video', get(), call);
     const audio = useMock ? get().audio :  await changeDevice(audioDevs[0], 'audio', get(), call);
-    set({ devices, video, audio })
+    set({ devices, video, audio });
+    set({call: call});
   }
 }))
 
 function toggleMedia(media: Media): Media {
-  ;
   media.enabled = !media.enabled;
 
   media.tracks.forEach(track => {
@@ -86,6 +105,54 @@ const prefs = {
     height: 719
   },
   audio: null
+}
+
+async function startShareScreen(state: MediaStore): Promise<ScreenMedia>{
+  console.log("start share screen");
+  const media = state.sharedScreen;
+  const call = state.call;
+
+  const addTrack = (track: MediaStreamTrack) => {
+    track.onended = (event: Event) => {
+      //TODO: this event is triggered when someone clicks the browser "stop sharing button"
+      // currently very buggy for stop sharing screen.
+      console.log(`${event} ON ENDED`);
+      // stopShareScreen(state);
+    };
+    console.log('Adding screenshare track to call', track);
+    track.contentHint = "screenshare";
+    state.local.addTrack(track);
+    const sender = call.conn?.addTrack(track);
+    (track as Track).sender = sender;
+    return track as Track;
+  }
+
+  media.tracks = (await navigator.mediaDevices.getDisplayMedia()).getTracks().map(addTrack);
+  media.enabled = true;
+    
+  return media;
+}
+
+async function stopShareScreen(state: MediaStore): Promise<ScreenMedia>{
+  console.log("stop share screen");
+  const media = state.sharedScreen;
+  const call = state.call;
+
+  const removeTrack = (track: Track) => {
+    console.log('Removing screenshare track from call', track);
+    state.local.removeTrack(track);
+    try {
+      call.conn?.removeTrack(track.sender);
+    } catch (err) {
+      console.log(err);
+    }
+    track.stop();
+  }
+
+  media.tracks.forEach(removeTrack);
+  media.enabled = false;
+    
+  return media;
 }
 
 async function changeDevice(device: MediaDeviceInfo, type: 'audio' | 'video', state: MediaStore, call: OngoingCall): Promise<Media> {
@@ -112,11 +179,13 @@ async function changeDevice(device: MediaDeviceInfo, type: 'audio' | 'video', st
   const constraints = { [type]: { deviceId: device.deviceId, ...prefs[type] } };
   const stream = await navigator.mediaDevices?.getUserMedia(constraints);
   
-  ;
   media.tracks.forEach(removeTrack);
-  media.tracks = type === 'audio' 
-    ? stream.getAudioTracks().map(addTrack)
-    : stream.getVideoTracks().map(addTrack); 
+    
+  if(type==="audio"){
+    media.tracks = stream.getAudioTracks().map(addTrack);
+  } else if(type === "video"){
+    media.tracks = stream.getVideoTracks().map(addTrack);
+  }
 
   media.device = device;
 

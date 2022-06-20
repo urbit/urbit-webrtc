@@ -313,7 +313,9 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
     });
     Promise.all([closeP, pokeP]).then(() => {
       if( this.subscriptionId !== null) {
-        this.subscriptionId.then((subId) => this.urbit.unsubscribe(subId));}});
+        this.subscriptionId.then((subId) => this.urbit.unsubscribe(subId));
+      }
+    });
   }
 
   /**

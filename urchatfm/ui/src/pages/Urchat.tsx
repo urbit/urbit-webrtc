@@ -58,6 +58,9 @@ export function Urchat() {
     console.log('Incoming track event', evt);
     const { remote } = useMediaStore.getState();
     remote.addTrack(evt.track);
+    // TODO: shouldn't need to set state on this
+    // only doing it because it forces a rerender which I need to display shared screens that come in
+    useMediaStore.setState({remote: remote});
   }, []);
 
   // state-changing methods
