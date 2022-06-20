@@ -1,5 +1,5 @@
-:: - coturn interface
 :: TODO
+:: - coturn interface
 ::
 :: Architecture
 :: Icepond is an agent for advertising and discovering ICE servers.
@@ -286,7 +286,7 @@
     =/  args-vase  !>(~)
     =/  tid  (scot %ta (cat 3 (cat 3 'icepond_' ted.fetcher-config) (scot %uv (sham ted.fetcher-config eny.bowl))))
     =/  watch-path  /thread-result/[tid]
-    =/  poke-vase  !>([~ `tid byk.bowl ted.fetcher-config args-vase])
+    =/  poke-vase  !>([~ `tid ted.fetcher-config args-vase])
     =/  wire  /incoming/[tid]
     [cards=~[[%pass wire %agent [our.bowl %spider] %watch watch-path] [%pass /start-thread/[tid] %agent [our.bowl %spider] %poke %spider-start poke-vase]] wires=~[[wire=wire fetch-kind=%watch-ted ship=our.bowl path=watch-path]]]
       ::
