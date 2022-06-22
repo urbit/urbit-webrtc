@@ -7,12 +7,10 @@ DIR=`pwd`
 echo $DIR
 echo "Now to build all the React stuff..."
 echo "First the icepond-js and switchboard-js libs"
-cd packages
-cd icepond-js
+cd $DIR/packages/icepond-js
 npm i
 npm run build
-cd ..
-cd switchboard-js
+cd $DIR/packages/switchboard-js
 npm i
 npm run build
 echo "Build the urchatfm interface"
