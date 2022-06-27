@@ -187,7 +187,7 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
       return ongoingCall;
     },
 
-    reconnectCall: async (uuid, setHandlers) => {
+    reconnectCall: async (uuid: string, setHandlers) => {
       const urbit = get().urbit;
       const conn = await UrbitRTCPeerConnection.reconnect({ urbit, uuid });
       const call = { uuid, peer: conn.peer, dap: conn.dap };

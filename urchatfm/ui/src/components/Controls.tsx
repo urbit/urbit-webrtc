@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogTrigger } from './Dialog';
 import { Camera } from '../icons/Camera';
 import { Exit } from '../icons/Exit';
 import { Mic } from '../icons/Mic';
+import { Screenshare } from '../icons/Screenshare';
 import { SettingsIcon } from '../icons/Settings';
 import { useMediaStore } from '../useMediaStore';
 import useUrchatStore from '../useUrchatStore';
@@ -15,7 +16,7 @@ type ControlsProps = HTMLAttributes<HTMLDivElement>;
 
 export const Controls = ({ className }: ControlsProps) => {
   const { push } = useHistory();
-  const { audio, video } = useMediaStore(s => ({ audio: s.audio, video: s.video }));
+  const { audio, video, sharedScreen } = useMediaStore(s => ({ audio: s.audio, video: s.video, sharedScreen: s.sharedScreen }));
   const hangup = useUrchatStore(s => s.hangup);
 
   const leaveCall = useCallback(() => {
@@ -42,6 +43,15 @@ export const Controls = ({ className }: ControlsProps) => {
       >
         <Mic className="w-6 h-6" primary="fill-current opacity-80" secondary="fill-current" />
         <span className="sr-only">Audio</span>
+      </IconToggle>
+      <IconToggle 
+        className="w-10 h-10" 
+        pressed={!sharedScreen.enabled} 
+        onPressedChange={sharedScreen.toggle}
+        toggleClass="text-blue-900 bg-blue-500"
+      >
+        <Screenshare className="w-6 h-6" primary="fill-current opacity-80" secondary="fill-current" />
+        <span className="sr-only">Screenshare</span>
       </IconToggle>
       <Dialog>
         <DialogTrigger className="flex justify-center items-center w-10 h-10 text-gray-200 bg-gray-700 rounded-full default-ring">

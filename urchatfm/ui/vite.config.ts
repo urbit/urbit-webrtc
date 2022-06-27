@@ -21,7 +21,7 @@ export default ({ mode }) => {
   const SHIP_URL =
     process.env.SHIP_URL ||
     process.env.VITE_SHIP_URL ||
-    "http://localhost:8081";
+    "http://localhost:8080";
   console.log(SHIP_URL);
 
   return defineConfig({

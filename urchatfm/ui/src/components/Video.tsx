@@ -6,11 +6,13 @@ export type VideoSize = 'xs-mini' | 'mini' | 'large';
 interface VideoProps extends VideoFromStreamProps {
   size: VideoSize;
   className?: string;
+  isScreenshare: boolean;
   muted: boolean;
 }
 
 type VideoFromStreamProps = {
-  srcObject: any;
+  srcObject: MediaStream;
+  controls?: boolean;
 } & HTMLAttributes<HTMLVideoElement>;
 
 function VideoFromStream(attrs: VideoFromStreamProps) {
@@ -30,19 +32,20 @@ function VideoFromStream(attrs: VideoFromStreamProps) {
   return React.createElement('video', childAttrs, null);
 }
 
-export const Video = ({ size, className, ...props }: VideoProps) => {
+export const Video = ({ size, className, isScreenshare, ...props }: VideoProps) => {
+  const flipAmt = isScreenshare ? 'rotateY(0deg)' : 'rotateY(180deg)';
+
 
   return (
     <div className={
       classNames(
-        'relative bg-gray-500 overflow-hidden', 
         size === 'xs-mini' && 'w-20 sm:w-28 shadow-md rounded-xl',
         size === 'mini' && 'w-32 sm:w-64',
-        size === 'large' && 'w-full lg:rounded-xl',
+        size === 'large' && 'h-1',
         className
       )}
     >
-      <VideoFromStream {...props} className={classNames('absolute w-full h-full object-cover md:object-contain transform')} style={{ transform: 'rotateY(180deg)' }} />
+      <VideoFromStream {...props} className={classNames('h-full w-full object-cover md:object-contain')} style={{ transform: flipAmt }} />
     </div>
   )
 }

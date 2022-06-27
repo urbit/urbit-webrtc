@@ -2,9 +2,10 @@
   title+'Campfire'
   info+'Video and voice chat'
   color+0xff.e4e6
-  version+[0 1 1]
-  website+'https://github.com/datryn-ribdun/urbit-webrtchttps://tlon.io'
+  version+[0 1 2]
+  image+'https://www.svgrepo.com/show/286196/video-call.svg'
+  website+'https://github.com/datryn-ribdun/urbit-webrtc'
   license+'MIT'
-  base+'campfire'
-  glob-ames+[~zod 0v0]
+  base+'urchatfm'
+  glob-ames+[~dister-dister-datryn-ribdun 0v0]
 ==
