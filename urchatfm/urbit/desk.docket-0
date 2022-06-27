@@ -1,10 +1,10 @@
 :~
-  title+'urChatFM'
-  info+'2-Way Video Calling'
+  title+'Campfire'
+  info+'Video and voice chat'
   color+0xff.e4e6
   version+[0 1 1]
   website+'https://github.com/datryn-ribdun/urbit-webrtchttps://tlon.io'
   license+'MIT'
-  base+'urchatfm'
+  base+'campfire'
   glob-ames+[~zod 0v0]
 ==

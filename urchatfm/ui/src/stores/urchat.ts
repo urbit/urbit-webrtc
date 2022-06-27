@@ -6,7 +6,8 @@ import {
 } from "switchboard";
 import Icepond from "icepond";
 import Urbit from "@urbit/http-api";
-import { useMock } from "./util";
+import { useMock } from "../util";
+import { action, makeObservable } from "mobx";
 
 const dap = "urchatfm";
 
@@ -32,7 +33,7 @@ export interface OngoingCall {
   call: Call;
 }
 
-interface UrchatStore {
+interface IUrchatStore {
   urbit: Urbit | null;
   urbitRtcApp: UrbitRTCApp;
   icepond: Icepond;
@@ -41,6 +42,38 @@ interface UrchatStore {
   ongoingCall: OngoingCall;
   isCaller: boolean;
   setUrbit: (ur: Urbit) => void;
+  startIcepond: () => void;
+  placeCall: (
+    ship: string,
+    setHandlers: (conn: UrbitRTCPeerConnection) => void
+  ) => Promise<any>;
+  answerCall: (
+    setHandlers: (ship: string, conn: UrbitRTCPeerConnection) => void
+  ) => Promise<any>;
+  rejectCall: () => void;
+  hangup: () => void;
+  hungup: () => void;
+}
+
+export class UrchatStore implements IUrchatStore {
+  urbit: Urbit | null;
+  urbitRtcApp: UrbitRTCApp;
+  icepond: Icepond;
+  configuration: RTCConfiguration;
+  incomingCall: UrbitRTCIncomingCallEvent;
+  ongoingCall: OngoingCall;
+  isCaller: boolean;
+
+  constructor() {
+    makeObservable(this);
+  }
+
+  @action
+  setUrbit(urbit: Urbit) {
+    const instance = useMock ? ({} as Urbit) : urbit;
+    this.urbitRtcApp.urbit = instance;
+    this.urbit = instance;
+  }
   startIcepond: () => void;
   placeCall: (
     ship: string,
