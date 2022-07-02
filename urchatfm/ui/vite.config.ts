@@ -1,3 +1,4 @@
+import path from "path";
 import { loadEnv, defineConfig } from "vite";
 import analyze from "rollup-plugin-analyzer";
 import { visualizer } from "rollup-plugin-visualizer";
@@ -25,6 +26,14 @@ export default ({ mode }) => {
   console.log(SHIP_URL);
 
   return defineConfig({
+    resolve: {
+      alias: {
+        react: path.resolve("./node_modules/react"),
+        "react-dom": path.resolve("./node_modules/react-dom"),
+        "styled-components": path.resolve("./node_modules/styled-components"),
+        "styled-system": path.resolve("./node_modules/styled-system"),
+      },
+    },
     build:
       mode !== "profile"
         ? undefined

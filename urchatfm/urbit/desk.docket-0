@@ -6,6 +6,6 @@
   image+'https://www.svgrepo.com/show/286196/video-call.svg'
   website+'https://github.com/datryn-ribdun/urbit-webrtc'
   license+'MIT'
-  base+'urchatfm'
+  base+'campfire'
   glob-ames+[~dister-dister-datryn-ribdun 0v0]
 ==

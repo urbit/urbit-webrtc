@@ -12,6 +12,7 @@ import { useMock } from "../util";
 import call from "../assets/enter-call.wav";
 import { TurnOnRinger } from "../components/TurnOnRinger";
 import { SecureWarning } from "../components/SecureWarning";
+import { UrchatStore } from "../stores/urchat";
 
 export interface Message {
   speaker: string;
@@ -28,6 +29,7 @@ export const Urchat = observer(() => {
     hangup,
   } = useUrchatStore();
   const mediaStore = new MediaStore();
+  const urchatStore = new UrchatStore();
 
   // const { resetStreams, getDevices } = useMediaStore(s => ({ getDevices: s.getDevices, resetStreams: s.resetStreams }));
   const { push } = useHistory();
@@ -69,7 +71,7 @@ export const Urchat = observer(() => {
     remote.addTrack(evt.track);
     // TODO: shouldn't need to set state on this
     // only doing it because it forces a rerender which I need to display shared screens that come in
-    useMediaStore.setState({remote: remote});
+    mediaStore.remote = remote;
   }, []);
 
   // state-changing methods
