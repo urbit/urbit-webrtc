@@ -10,6 +10,7 @@ import { useMock } from '../util';
 import call from '../assets/enter-call.wav';
 import { TurnOnRinger } from '../components/TurnOnRinger';
 import { SecureWarning } from '../components/SecureWarning';
+import { PalsList } from '../components/PalsList';
 
 export interface Message {
   speaker: string;

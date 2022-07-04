@@ -6,11 +6,14 @@ read -ep "Enter the location of your urbit repo (the one from tlon): " URBIT_REP
 DIR=`pwd`
 echo $DIR
 echo "Now to build all the React stuff..."
-echo "First the icepond-js and switchboard-js libs"
+echo "First the icepond-js and switchboard-js, pals-js libs"
 cd $DIR/packages/icepond-js
 npm i
 npm run build
 cd $DIR/packages/switchboard-js
+npm i
+npm run build
+cd $DIR/packages/pals-js
 npm i
 npm run build
 echo "Build the urchatfm interface"

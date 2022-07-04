@@ -1,6 +1,7 @@
 import create from 'zustand';
 import { UrbitRTCApp, UrbitRTCIncomingCallEvent, UrbitRTCPeerConnection } from 'switchboard';
 import Icepond from 'icepond';
+import Pals from 'pals'
 import Urbit from '@urbit/http-api';
 import { useMock } from './util';
 
@@ -38,6 +39,7 @@ interface UrchatStore {
   isCaller: boolean;
   setUrbit: (ur: Urbit) => void;
   startIcepond: () => void;
+  fetchPals: () => void;
   placeCall: (ship: string, setHandlers: (conn: UrbitRTCPeerConnection) => void) => Promise<any>;
   answerCall: (setHandlers: (ship: string, conn: UrbitRTCPeerConnection) => void) => Promise<any>;
   rejectCall: () => void;
@@ -80,7 +82,6 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
         set({ icepond: {} as Icepond })
       }
 
-      console.log("YOU HAVE AUTHED WITH: " + state.urbit.ship);
       console.log("attempting icepond");
       const icepond = new Icepond(state.urbit);
       icepond.oniceserver = (evt) => {
@@ -103,9 +104,16 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
       icepond.initialize();
       set({ icepond: icepond });
     }),
+    fetchPals: () => set((state) => {
+      console.log("urchat store fetch pals");
+      const p = new Pals(state.urbit);
+      p.getPals();
+    }),
     placeCall: async (ship, setHandlers) => {
-      const { urbitRtcApp, hungup, startIcepond } = get();
+      const { urbitRtcApp, hungup, startIcepond, fetchPals } = get();
+      fetchPals();
       console.log('placeCall');
+
       const conn = urbitRtcApp.call(ship, dap);
       setHandlers(conn);
       conn.addEventListener('hungupcall', hungup);
@@ -165,7 +173,6 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
 
       return ongoingCall;
     },
-
     reconnectCall: async (uuid: string, setHandlers) => {
       const urbit = get().urbit;
       const conn = await UrbitRTCPeerConnection.reconnect({ urbit, uuid });
