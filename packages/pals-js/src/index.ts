@@ -9,24 +9,17 @@ declare global {
   }
 }
 
-export interface MutualPals {
-  [key: string]: { lists: string[] };
-}
-
-
 class Pals extends EventTarget {
   urbit: Urbit;
 
   constructor(urbit = window.urbit) {
     super();
-    console.log("constructing pals interface")
     this.urbit = urbit;
   }
 
   async getPals() {
-    console.log("attempting to fetch pals")
     const pals = await this.urbit.scry<string>({app: 'pals', path: '/json'});
-    console.log(pals);
+    return pals;
   }
   
   addPal(ship: string, tags: string[] = []) {

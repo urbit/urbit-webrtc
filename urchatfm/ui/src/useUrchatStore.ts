@@ -33,13 +33,14 @@ interface UrchatStore {
   urbit: Urbit | null;
   urbitRtcApp: UrbitRTCApp;
   icepond: Icepond;
+  pals: Pals;
   configuration: RTCConfiguration;
   incomingCall: UrbitRTCIncomingCallEvent;
   ongoingCall: OngoingCall;
   isCaller: boolean;
   setUrbit: (ur: Urbit) => void;
   startIcepond: () => void;
-  fetchPals: () => void;
+  startPals: () => void;
   placeCall: (ship: string, setHandlers: (conn: UrbitRTCPeerConnection) => void) => Promise<any>;
   answerCall: (setHandlers: (ship: string, conn: UrbitRTCPeerConnection) => void) => Promise<any>;
   rejectCall: () => void;
@@ -67,6 +68,7 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
   return {
     urbit,
     icepond: null,
+    pals: null,
     configuration: { iceServers: [] },
     urbitRtcApp,
     incomingCall: null,
@@ -104,14 +106,13 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
       icepond.initialize();
       set({ icepond: icepond });
     }),
-    fetchPals: () => set((state) => {
-      console.log("urchat store fetch pals");
+    startPals: () => set((state) => {
+      console.log("initializing Pals");
       const p = new Pals(state.urbit);
-      p.getPals();
+      set({pals: p});
     }),
     placeCall: async (ship, setHandlers) => {
-      const { urbitRtcApp, hungup, startIcepond, fetchPals } = get();
-      fetchPals();
+      const { urbitRtcApp, hungup, startIcepond, } = get();
       console.log('placeCall');
 
       const conn = urbitRtcApp.call(ship, dap);

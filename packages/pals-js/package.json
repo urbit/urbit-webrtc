@@ -1,7 +1,7 @@
 {
   "name": "pals",
   "version": "0.0.1",
-  "description": "JS bindings to Urbit 'pals' app by ~palfun-folsup",
+  "description": "JS bindings to Urbit ~paldev's '%pals' app by ~palfun-folsup",
   "type": "module",
   "main": "dist/index.cjs",
   "module": "dist/index.js",
@@ -21,7 +21,8 @@
   },
   "keywords": [
     "pals",
-    "urbit"
+    "urbit",
+    "paldev"
   ],
   "author": "datryn-ribdun",
   "license": "MIT",
