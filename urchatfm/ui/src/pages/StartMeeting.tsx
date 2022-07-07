@@ -5,6 +5,7 @@ import { Route, Switch, useHistory } from "react-router";
 import { MediaStore } from "../stores/media";
 
 import {
+  Box,
   Button,
   Flex,
   Icons,
@@ -16,6 +17,7 @@ import {
 import { Campfire } from "../icons/Campfire";
 import { VideoPlus } from "../icons/VideoPlus";
 import { UrchatStore } from "../stores/urchat";
+import { useStore } from "../stores/root";
 
 export interface Message {
   speaker: string;
@@ -24,8 +26,7 @@ export interface Message {
 
 export const StartMeetingPage: FC<any> = observer(() => {
   const [meetingCode, setMeetingCode] = useState("");
-  const mediaStore = new MediaStore();
-  const urchatStore = new UrchatStore();
+  const { mediaStore, urchatStore } = useStore();
   const [dataChannel, setDataChannel] = useState<RTCDataChannel>(null);
   const [dataChannelOpen, setDataChannelOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -60,7 +61,10 @@ export const StartMeetingPage: FC<any> = observer(() => {
       setDataChannelOpen(false);
       setMessages([]);
       const channel = conn.createDataChannel("urchatfm");
-      channel.onopen = () => setDataChannelOpen(true);
+      channel.onopen = () => {
+        setDataChannelOpen(true);
+        push(`/chat/${conn.uuid}`);
+      };
       channel.onmessage = (evt) => {
         const data = evt.data;
         const speakerId = ship.replace("~", "");
@@ -134,8 +138,11 @@ export const StartMeetingPage: FC<any> = observer(() => {
               variant="custom"
               bg="#F8E390"
               color="#333333"
-              leftIcon={<VideoPlus />}
+              onClick={() => push("/chat")}
             >
+              <Box mr={2}>
+                <VideoPlus />
+              </Box>
               New video call
             </Button>
           </Flex>
