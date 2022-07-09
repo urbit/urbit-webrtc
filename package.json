@@ -7,7 +7,7 @@
   "scripts": {
     "dev": "lerna run dev --parallel",
     "bootstrap": "lerna bootstrap",
-    "build": "lerna run build --no-private && npm run bootstrap && lerna run build --scope=urchatfm",
+    "build": "lerna run build --no-private && npm run bootstrap && lerna run build --scope=campfire",
     "publish": "lerna publish --no-private"
   },
   "dependencies": {

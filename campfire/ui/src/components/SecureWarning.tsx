@@ -14,7 +14,7 @@ export const SecureWarning = () => {
         className="max-w-lg p-8 text-gray-700"
       >
         <p>
-          urChatFM is built on top of WebRTC which requires HTTPS to function.
+          Campfire is built on top of WebRTC which requires HTTPS to function.
           You may need to provision a certificate for your Urbit, or you just
           need to visit the HTTPS version of your site.
         </p>

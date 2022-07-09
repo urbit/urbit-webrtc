@@ -51,7 +51,7 @@ interface PalsListProps {
 export const PalsList = ({ placeCall }: PalsListProps) => {
 
   const { startPals, pals } = useUrchatStore();
-  const [palsList, setPals] = useState<string[]>(["~bus", "~zod"]);
+  const [palsList, setPals] = useState<string[]>([]);
 
   const onSubmitCall = (ship: string) => {
     placeCall(deSig(ship));

@@ -48,7 +48,7 @@ On zod, run `+cor-registry` to see what's an approved request.
 ## How to test a simple video call
 * Setup the fake ships
 * install the applications on both ships
-* in `urchatfm` run `npm start dev`
+* in `campfire` run `npm start dev`
 
 
 ### Running your own coturn server

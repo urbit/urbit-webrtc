@@ -60,7 +60,7 @@ export const StartMeetingPage: FC<any> = observer(() => {
       console.log("placing call");
       setDataChannelOpen(false);
       setMessages([]);
-      const channel = conn.createDataChannel("urchatfm");
+      const channel = conn.createDataChannel("campfire");
       channel.onopen = () => {
         setDataChannelOpen(true);
         push(`/chat/${conn.uuid}`);

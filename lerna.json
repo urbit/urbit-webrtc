@@ -1,7 +1,7 @@
 {
   "packages": [
     "packages/*",
-    "urchatfm"
+    "campfire"
   ],
   "version": "0.0.0"
 }

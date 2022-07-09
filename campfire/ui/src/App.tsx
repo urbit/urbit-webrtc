@@ -23,6 +23,9 @@ function App() {
             <Route path="/chat">
               <MeetingSpace />
             </Route>
+            <Route path="/old">
+              <Urchat />
+            </Route>
           </Switch>
         </BrowserRouter>
       </ThemeProvider>

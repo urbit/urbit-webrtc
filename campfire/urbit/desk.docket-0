@@ -1,0 +1,11 @@
+:~
+  title+'Campfire'
+  info+'Hang out with your friends. Voice and video chat by Holium.'
+  color+0xff.c179
+  version+[0 1 3]
+  image+'https://raw.githubusercontent.com/datryn-ribdun/urbit-webrtc/master/campfire/icon.svg'
+  website+'https://github.com/datryn-ribdun/urbit-webrtc'
+  license+'MIT'
+  base+'campfire'
+  glob-ames+[~dister-dister-datryn-ribdun 0v0]
+==

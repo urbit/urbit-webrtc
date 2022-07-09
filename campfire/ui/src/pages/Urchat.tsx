@@ -57,7 +57,7 @@ export const Urchat = observer(() => {
       const audio = new Audio(call);
       audio.volume = 0.3;
       audio.play();
-      push(`/chat/${ongoingCall.conn.uuid}`);
+      push(`/old/chat/${ongoingCall.conn.uuid}`);
 
       const updateDevices = () => mediaStore.getDevices(ongoingCall);
       navigator.mediaDevices.addEventListener("devicechange", updateDevices);
@@ -111,7 +111,7 @@ export const Urchat = observer(() => {
       console.log("placing call");
       setDataChannelOpen(false);
       setMessages([]);
-      const channel = conn.createDataChannel("urchatfm");
+      const channel = conn.createDataChannel("campfire");
       channel.onopen = () => setDataChannelOpen(true);
       channel.onmessage = (evt) => {
         const data = evt.data;
@@ -144,14 +144,14 @@ export const Urchat = observer(() => {
     <main className="relative flex flex-col lg:flex-row lg:gap-6 w-full h-full lg:p-8 text-gray-700">
       <section className="flex-auto lg:flex-1 flex flex-col justify-center h-[50%] lg:h-auto">
         <Switch>
-          <Route path="/chat/:id">
+          <Route path="/old/chat/:id">
             <Call connected={dataChannelOpen} />
           </Route>
-          <Route path="/">
+          <Route path="/old/">
             <div className="flex justify-center items-center w-full h-full bg-pink-100 rounded-xl">
               <div>
                 <h1 className="mb-6 mx-12 text-3xl font-semibold font-mono">
-                  urChatFM
+                  Campfire
                 </h1>
                 <Dialer placeCall={placeCall} />
               </div>
@@ -161,7 +161,7 @@ export const Urchat = observer(() => {
       </section>
       <aside className="flex-auto lg:flex-none lg:w-[33vw] lg:max-w-sm h-[50%] lg:h-auto">
         <Switch>
-          <Route path="/chat/:id">
+          <Route path="/old/chat/:id">
             <Chat
               sendMessage={sendMessage}
               messages={messages}
