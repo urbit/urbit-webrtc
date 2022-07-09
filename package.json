@@ -9,5 +9,10 @@
     "bootstrap": "lerna bootstrap",
     "build": "lerna run build --no-private && npm run bootstrap && lerna run build --scope=urchatfm",
     "publish": "lerna publish --no-private"
+  },
+  "dependencies": {
+    "mobx": "^6.6.1",
+    "mobx-react": "^7.5.2",
+    "polished": "^4.2.2"
   }
 }

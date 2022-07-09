@@ -1,11 +1,11 @@
 :~
-  title+'urChatFM'
-  info+'2-Way Video Calling'
+  title+'Campfire'
+  info+'Video and voice chat'
   color+0xff.e4e6
   version+[0 1 2]
   image+'https://www.svgrepo.com/show/286196/video-call.svg'
   website+'https://github.com/datryn-ribdun/urbit-webrtc'
   license+'MIT'
-  base+'urchatfm'
+  base+'campfire'
   glob-ames+[~dister-dister-datryn-ribdun 0v0]
 ==

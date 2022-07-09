@@ -6,6 +6,8 @@
     "skipLibCheck": false,
     "esModuleInterop": false,
     "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "useDefineForClassFields": true,
     //"strict": true,
     "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
