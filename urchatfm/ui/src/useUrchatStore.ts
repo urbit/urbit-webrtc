@@ -44,19 +44,9 @@ interface UrchatStore {
   isCaller: boolean;
   setUrbit: (ur: Urbit) => void;
   startIcepond: () => void;
-<<<<<<< HEAD
   startPals: () => void;
   placeCall: (ship: string, setHandlers: (conn: UrbitRTCPeerConnection) => void) => Promise<any>;
   answerCall: (setHandlers: (ship: string, conn: UrbitRTCPeerConnection) => void) => Promise<any>;
-=======
-  placeCall: (
-    ship: string,
-    setHandlers: (conn: UrbitRTCPeerConnection) => void
-  ) => Promise<any>;
-  answerCall: (
-    setHandlers: (ship: string, conn: UrbitRTCPeerConnection) => void
-  ) => Promise<any>;
->>>>>>> 593158237808d7aab62a3c0a1d519290148ab756
   rejectCall: () => void;
   hangup: () => void;
   hungup: () => void;
@@ -104,7 +94,6 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
           set({ icepond: {} as Icepond });
         }
 
-<<<<<<< HEAD
       console.log("attempting icepond");
       const icepond = new Icepond(state.urbit);
       icepond.oniceserver = (evt) => {
@@ -136,37 +125,6 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
       const { urbitRtcApp, hungup, startIcepond, } = get();
       console.log('placeCall');
 
-=======
-        console.log("YOU HAVE AUTHED WITH: " + state.urbit.ship);
-        console.log("attempting icepond");
-        const icepond = new Icepond(state.urbit);
-        icepond.oniceserver = (evt) => {
-          set((state) => {
-            const newConfig = {
-              ...state.configuration,
-              iceServers: evt.iceServers,
-            };
-            console.log("icepond config:");
-            console.log(newConfig);
-            if (state.urbitRtcApp !== null) {
-              state.urbitRtcApp.configuration = newConfig;
-            }
-            if (state.incomingCall !== null) {
-              state.incomingCall.configuration = newConfig;
-            }
-            if (state.ongoingCall !== null) {
-              state.ongoingCall.conn.setConfiguration(newConfig);
-            }
-            return { ...state, configuration: newConfig };
-          }, true);
-        };
-        icepond.initialize();
-        set({ icepond: icepond });
-      }),
-    placeCall: async (ship, setHandlers) => {
-      const { urbitRtcApp, hungup, startIcepond } = get();
-      console.log("placeCall");
->>>>>>> 593158237808d7aab62a3c0a1d519290148ab756
       const conn = urbitRtcApp.call(ship, dap);
       setHandlers(conn);
       conn.addEventListener("hungupcall", hungup);
