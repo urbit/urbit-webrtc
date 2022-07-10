@@ -140,6 +140,7 @@ export const Urchat = observer(() => {
     [messages, dataChannel]
   );
 
+
   return (
     <main className="relative flex flex-col lg:flex-row lg:gap-6 w-full h-full lg:p-8 text-gray-700">
       <section className="flex-auto lg:flex-1 flex flex-col justify-center h-[50%] lg:h-auto">
@@ -168,7 +169,7 @@ export const Urchat = observer(() => {
               ready={dataChannelOpen}
             />
           </Route>
-          <Route path="/">
+          <Route path="/old/">
             <div className="h-full bg-gray-300 lg:rounded-xl">
               <PalsList placeCall={placeCall}/>
             </div>

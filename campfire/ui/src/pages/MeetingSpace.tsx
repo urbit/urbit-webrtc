@@ -22,6 +22,7 @@ export const MeetingSpace: FC<any> = observer(() => {
   const [showSidebar, setShowSidebar] = useState(false);
   return (
     <Main>
+      <p>Meeting space</p>
       <section>{/* <Call connected={dataChannelOpen} /> */}</section>
       <aside></aside>
       {/* {incomingCall && (

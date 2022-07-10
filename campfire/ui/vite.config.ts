@@ -26,6 +26,11 @@ export default ({ mode }) => {
   console.log(SHIP_URL);
 
   return defineConfig({
+    server: {
+      fs: {
+        allow: ['/']
+      }
+    },
     resolve: {
       alias: {
         react: path.resolve("./node_modules/react"),
