@@ -68,13 +68,9 @@ class UrbitRTCApp extends EventTarget {
     this.onhungupcall = () => {};
     this.onerror = () => {};
     this.subscriptionId = null;
-    console.log("switchboard-js: constructor");
-    console.log(this);
   }
 
   initialize() {
-    console.log("switchboard-js: initalizing");
-    console.log("switchboard-js: dap of"+this.dap);
     this.subscriptionId = 
       this._urbit.subscribe({ 
         app: 'switchboard', 
@@ -241,7 +237,6 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
    * @return {Promise} a promise which resolves when the call is ringing
    */
   async dial() {
-    console.log("switchboard-js: dialing")
     await this.urbit.subscribe({
       app: 'switchboard',
       path: '/uuid',
@@ -256,7 +251,6 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
    * @returns {Promise} a promise which resolves when we have successfuly subscribed to the call.
    */
   async ring(uuid: string) {
-    console.log("switchboard-js")
     this.uuid = uuid;
     if(this.urbit.verbose) {
       console.log('Call UUID:', this.uuid);

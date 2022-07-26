@@ -182,7 +182,13 @@ export const StartMeetingPage: FC<any> = observer(() => {
               </Box>
               New video call
             </Button>
-            <PalsList mutuals={palsStore.mutuals} callPal={callPal} />
+            <div style={{
+              width: "100%",
+              height: "100px",
+              overflowY: "auto"
+            }}>
+              <PalsList mutuals={palsStore.mutuals} callPal={callPal} />
+            </div>
           </Flex>
         </section>
         <section>
