@@ -68,9 +68,13 @@ class UrbitRTCApp extends EventTarget {
     this.onhungupcall = () => {};
     this.onerror = () => {};
     this.subscriptionId = null;
+    console.log("switchboard-js: constructor");
+    console.log(this);
   }
 
   initialize() {
+    console.log("switchboard-js: initalizing");
+    console.log("switchboard-js: dap of"+this.dap);
     this.subscriptionId = 
       this._urbit.subscribe({ 
         app: 'switchboard', 
@@ -126,6 +130,7 @@ class UrbitRTCApp extends EventTarget {
    * @returns {UrbitRTCPeerConnection} connection which is awaiting pick-up by the remote
    */
   call(peer: string, dap: string) {
+    console.log("attempting to call")
     return new UrbitRTCPeerConnection(peer, dap, undefined, this._urbit, this.configuration);
   }
 }
@@ -186,7 +191,7 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
       if((evt.candidate !== null) && this.canTrickleIceCandidates) {
         this.signallingReadyPromise.then(() => { 
           if(this.urbit.verbose) {
-            console.log("Sending ICE candidate for address ${evt.candidate.address}:${evt.candidate.port}");
+            console.log(`Sending ICE candidate for address ${evt.candidate?.address}:${evt.candidate?.port}`);
           };
           this.urbit.poke({ app: 'switchboard', mark: 'switchboard-from-client', json: { 'uuid': this.uuid, 'tag': 'icecandidate', ...evt.candidate?.toJSON() } }) }).catch(err => this.closeWithError(err));
         };
@@ -236,6 +241,7 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
    * @return {Promise} a promise which resolves when the call is ringing
    */
   async dial() {
+    console.log("switchboard-js: dialing")
     await this.urbit.subscribe({
       app: 'switchboard',
       path: '/uuid',
@@ -250,6 +256,7 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
    * @returns {Promise} a promise which resolves when we have successfuly subscribed to the call.
    */
   async ring(uuid: string) {
+    console.log("switchboard-js")
     this.uuid = uuid;
     if(this.urbit.verbose) {
       console.log('Call UUID:', this.uuid);

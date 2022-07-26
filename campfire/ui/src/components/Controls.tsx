@@ -7,22 +7,22 @@ import { Exit } from '../icons/Exit';
 import { Mic } from '../icons/Mic';
 import { Screenshare } from '../icons/Screenshare';
 import { SettingsIcon } from '../icons/Settings';
-import { useMediaStore } from '../useMediaStore';
-import useUrchatStore from '../useUrchatStore';
 import { IconToggle } from './IconToggle';
 import { MediaInput } from './MediaInput';
+import { useStore } from '../stores/root';
+import { observer } from "mobx-react";
 
 type ControlsProps = HTMLAttributes<HTMLDivElement>;
 
-export const Controls = ({ className }: ControlsProps) => {
+// export const Controls = observer(({ className }: ControlsProps) yyp=> {
+export const Controls = observer(({ className }: ControlsProps )=> {
   const { push } = useHistory();
-  const { audio, video, sharedScreen } = useMediaStore(s => ({ audio: s.audio, video: s.video, sharedScreen: s.sharedScreen }));
-  const hangup = useUrchatStore(s => s.hangup);
+  const { mediaStore, urchatStore } = useStore();
+
 
   const leaveCall = useCallback(() => {
-    hangup();
-    audio.tracks.forEach(track => track.stop());
-    video.tracks.forEach(track => track.stop());
+    urchatStore.hangup();
+    // disconnectMedia()
     push('/');
   }, [])
 
@@ -30,24 +30,24 @@ export const Controls = ({ className }: ControlsProps) => {
     <div className={classNames('flex justify-center p-3 space-x-3', className)}>
       <IconToggle 
         className="w-10 h-10" 
-        pressed={video.enabled} 
-        onPressedChange={video.toggle}
+        pressed={mediaStore.video.enabled} 
+        onPressedChange={mediaStore.video.toggle}
       >
         <Camera className="w-6 h-6" primary="fill-current opacity-80" secondary="fill-current" />
         <span className="sr-only">Video</span>
       </IconToggle>
       <IconToggle 
         className="w-10 h-10" 
-        pressed={audio.enabled} 
-        onPressedChange={audio.toggle}
+        pressed={mediaStore.audio.enabled} 
+        onPressedChange={mediaStore.audio.toggle}
       >
         <Mic className="w-6 h-6" primary="fill-current opacity-80" secondary="fill-current" />
         <span className="sr-only">Audio</span>
       </IconToggle>
       <IconToggle 
         className="w-10 h-10" 
-        pressed={!sharedScreen.enabled} 
-        onPressedChange={sharedScreen.toggle}
+        pressed={!mediaStore.sharedScreen.enabled} 
+        onPressedChange={() => mediaStore.toggleScreenShare(urchatStore.ongoingCall)}
         toggleClass="text-blue-900 bg-blue-500"
       >
         <Screenshare className="w-6 h-6" primary="fill-current opacity-80" secondary="fill-current" />
@@ -67,6 +67,5 @@ export const Controls = ({ className }: ControlsProps) => {
         <span className="sr-only">Hang up</span>
       </button>
     </div>
-    
   )
-}
+})

@@ -1,10 +1,12 @@
 import React from "react";
 import { MediaStore } from "./media";
 import { UrchatStore } from "./urchat";
+import { PalsStore } from "./pals";
 
 export const rootStore = {
   mediaStore: new MediaStore(),
   urchatStore: new UrchatStore(),
+  palsStore: new PalsStore(),
 };
 
 /* Store helpers */

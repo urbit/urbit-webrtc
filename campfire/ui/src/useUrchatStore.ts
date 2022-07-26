@@ -72,6 +72,7 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
     : new Urbit("", "");
   // requires <script> tag for /~landscape/js/session.js
   urbit.ship = (window as any).ship;
+  urbit.verbose = true;
   urbitRtcApp.urbit = urbit;
 
   return {
@@ -141,35 +142,6 @@ const useUrchatStore = create<UrchatStore>((set, get) => {
       return ongoingCall;
     },
     answerCall: async (setHandlers) => {
-      if (useMock) {
-        const call = {
-          peer: "~lassul-nocsyx",
-          uuid: "000",
-        };
-        setHandlers("~lassul-nocsyx", {
-          ...call,
-          addEventListener: () => {},
-        } as any);
-        const ongoingCall = {
-          conn: {
-            ...call,
-            ontrack: () => {},
-            addTrack: () => {},
-            removeTrack: () => {},
-            close: () => {},
-          },
-          call,
-        } as any;
-
-        set({
-          isCaller: false,
-          ongoingCall,
-          incomingCall: null,
-        });
-
-        return ongoingCall;
-      }
-
       const { incomingCall, hungup, startIcepond } = get();
       const call = incomingCall.call;
       const conn = incomingCall.answer();

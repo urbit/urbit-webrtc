@@ -1,4 +1,5 @@
 *.md.backup
+helper-script.sh
 dev-ships
 node_modules
 *.local

@@ -4,6 +4,7 @@ import React from 'react';
 import { useForm } from 'react-hook-form';
 import useUrchatStore from '../useUrchatStore';
 import { Redirect } from 'react-router';
+import {useStore} from '../stores/root';
 
 interface UrbitAuth {
   ship: string;
@@ -15,6 +16,7 @@ interface UrbitAuth {
 function Login() {
   console.log("loading login page");
   const { urbit, setUrbit } = useUrchatStore(state => ({ urbit: state.urbit, setUrbit: state.setUrbit}));
+  const { mediaStore, urchatStore } = useStore();
   const [urbitErr, setUrbitErr] = useState('');
   const [awaitingUrbit, setAwaitingUrbit] = useState(false);
 
@@ -33,6 +35,7 @@ function Login() {
     Urbit.authenticate({ ...data, 'verbose': true })
       .then((ur) => {
         setUrbit(ur);
+        urchatStore.setUrbit(ur);
         setAwaitingUrbit(false);
       })
       .catch((err) => {

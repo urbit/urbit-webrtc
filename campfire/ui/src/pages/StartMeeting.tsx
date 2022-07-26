@@ -1,9 +1,8 @@
-import React, { FC, useEffect, useState, useCallback } from "react";
+import React, { FC, useEffect, useState, } from "react";
 import { observer } from "mobx-react";
-import { Route, Switch, useHistory } from "react-router";
-
-import { MediaStore } from "../stores/media";
-
+import { useHistory } from "react-router";
+import { deSig } from '@urbit/api';
+import { isValidPatp } from 'urbit-ob';
 import {
   Box,
   Button,
@@ -13,25 +12,42 @@ import {
   Text,
   TextButton,
   theme,
+  Ship,
+  Search
 } from "@holium/design-system";
 import { Campfire } from "../icons/Campfire";
 import { VideoPlus } from "../icons/VideoPlus";
-import { UrchatStore } from "../stores/urchat";
 import { useStore } from "../stores/root";
+import { PalsList } from "../components/PalsList";
+import { SecureWarning } from "../components/SecureWarning";
+import { IncomingCall } from "../components/IncomingCall";
+import call from "../assets/enter-call.wav";
 
-export interface Message {
-  speaker: string;
-  message: string;
-}
 
 export const StartMeetingPage: FC<any> = observer(() => {
+  console.log("RERENDER START PAGE");
   const [meetingCode, setMeetingCode] = useState("");
-  const { mediaStore, urchatStore } = useStore();
-  const [dataChannel, setDataChannel] = useState<RTCDataChannel>(null);
-  const [dataChannelOpen, setDataChannelOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const { mediaStore, urchatStore, palsStore } = useStore();
   const { push } = useHistory();
-  console.log(messages);
+
+
+  useEffect(() => {
+    if (isSecure && urchatStore.ongoingCall) {
+      const audio = new Audio(call);
+      audio.volume = 0.3;
+      audio.play();
+      push(`/chat/${urchatStore.ongoingCall.conn.uuid}`);
+
+      const updateDevices = () => mediaStore.getDevices(urchatStore.ongoingCall);
+      navigator.mediaDevices.addEventListener("devicechange", updateDevices);
+      return () =>
+        navigator.mediaDevices.removeEventListener(
+          "devicechange",
+          updateDevices
+        );
+    }
+  }, [urchatStore.ongoingCall]);
+
 
   const isSecure =
     location.protocol.startsWith("https") || location.hostname === "localhost";
@@ -44,42 +60,63 @@ export const StartMeetingPage: FC<any> = observer(() => {
   // ---------------------------------------------------------------
   // ---------------------------------------------------------------
 
-  const onTrack = useCallback((evt: Event & { track: MediaStreamTrack }) => {
+  const onTrack = (evt: Event & { track: MediaStreamTrack }) => {
     console.log("Incoming track event", evt);
-    const { remote } = mediaStore;
-    remote.addTrack(evt.track);
-    // TODO: shouldn't need to set state on this
-    // only doing it because it forces a rerender which I need to display shared screens that come in
-    mediaStore.remote = remote;
-  }, []);
+    mediaStore.addTrackToRemote(evt.track);
+  };
 
   const placeCall = async (ship: string) => {
     mediaStore.resetStreams();
     console.log("placing call start");
     const call = await urchatStore.placeCall(ship, (conn) => {
-      console.log("placing call");
-      setDataChannelOpen(false);
-      setMessages([]);
+      urchatStore.setDataChannelOpen(false);
+      urchatStore.setMessages([]);
       const channel = conn.createDataChannel("campfire");
       channel.onopen = () => {
-        setDataChannelOpen(true);
+        // called when we the connection to the peer is open - aka the call has started
+        console.log("channel opened");
+        urchatStore.setDataChannelOpen(true);
         push(`/chat/${conn.uuid}`);
       };
       channel.onmessage = (evt) => {
         const data = evt.data;
         const speakerId = ship.replace("~", "");
-        setMessages((messages) =>
-          [{ speaker: speakerId, message: data }].concat(messages)
-        );
+        const new_messages = [{ speaker: speakerId, message: data }].concat(urchatStore.messages);
+        urchatStore.setMessages(new_messages);
         console.log("channel message from " + speakerId + ": " + data);
       };
-      setDataChannel(channel);
+      urchatStore.setDataChannel(channel);
       conn.ontrack = onTrack;
     });
-
     mediaStore.getDevices(call);
   };
 
+  const callPal = (ship: string) => {
+    placeCall(deSig(ship));
+  }
+
+  const answerCall = async () => {
+    mediaStore.resetStreams();
+
+    const call = await urchatStore.answerCall((peer, conn) => {
+      urchatStore.setDataChannelOpen(false);
+      urchatStore.setMessages([]);
+      conn.addEventListener("datachannel", (evt) => {
+        const channel = evt.channel;
+        channel.onopen = () => urchatStore.setDataChannelOpen(true);
+        channel.onmessage = (evt) => {
+          const data = evt.data;
+          const new_messages = [{ speaker: peer, message: data }].concat(urchatStore.messages);
+          urchatStore.setMessages(new_messages);
+          console.log("channel message", data);
+        };
+        urchatStore.setDataChannel(channel);
+      });
+
+      conn.ontrack = onTrack;
+    });
+    mediaStore.getDevices(call);
+  }
   // ---------------------------------------------------------------
   // ---------------------------------------------------------------
   // ---------------------------------------------------------------
@@ -125,8 +162,8 @@ export const StartMeetingPage: FC<any> = observer(() => {
               rightInteractive
               rightIcon={
                 <TextButton
-                  disabled={meetingCode.length < 4}
-                  onClick={() => placeCall(meetingCode)}
+                  disabled={!isValidPatp(`~${deSig(meetingCode)}` || '') && meetingCode.length > 0}
+                  onClick={() => placeCall(deSig(meetingCode))}
                 >
                   <b>Join</b>
                 </TextButton>
@@ -145,6 +182,7 @@ export const StartMeetingPage: FC<any> = observer(() => {
               </Box>
               New video call
             </Button>
+            <PalsList mutuals={palsStore.mutuals} callPal={callPal} />
           </Flex>
         </section>
         <section>
@@ -153,6 +191,14 @@ export const StartMeetingPage: FC<any> = observer(() => {
           </Flex>
         </section>
       </Flex>
+      {!isSecure && <SecureWarning />}
+      {urchatStore.incomingCall && (
+        <IncomingCall
+          caller={urchatStore.incomingCall?.call.peer}
+          answerCall={answerCall}
+          rejectCall={() => urchatStore.rejectCall}
+        />
+      )}
     </Flex>
   );
 });

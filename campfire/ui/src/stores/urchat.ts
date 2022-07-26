@@ -1,4 +1,3 @@
-import create from "zustand";
 import {
   UrbitRTCApp,
   UrbitRTCIncomingCallEvent,
@@ -6,21 +5,10 @@ import {
 } from "switchboard";
 import Icepond from "icepond";
 import Urbit from "@urbit/http-api";
-import { useMock } from "../util";
-import { action, makeObservable } from "mobx";
+import { action, makeObservable, observable, runInAction, makeAutoObservable, ObservableSet } from "mobx";
 
 const dap = "campfire";
 
-const mockCall = { peer: "~nocsyx-lassul", dap: "123", uuid: "123" };
-export const mockIncomingCall = {
-  ...mockCall,
-  call: mockCall,
-  urbit: {},
-  configuration: {},
-  answer: () => {},
-  dial: () => {},
-  reject: () => {},
-};
 
 export type Call = {
   peer: string;
@@ -32,6 +20,10 @@ export interface OngoingCall {
   conn: UrbitRTCPeerConnection;
   call: Call;
 }
+export interface Message {
+  speaker: string;
+  message: string;
+}
 
 interface IUrchatStore {
   urbit: Urbit | null;
@@ -40,8 +32,13 @@ interface IUrchatStore {
   configuration: RTCConfiguration;
   incomingCall: UrbitRTCIncomingCallEvent;
   ongoingCall: OngoingCall;
+  dataChannel: RTCDataChannel;
+  dataChannelOpen: boolean;
   isCaller: boolean;
+  messages: Message[];
+  wasHungUp: boolean;
   setUrbit: (ur: Urbit) => void;
+  setDataChannelOpen: (value: boolean) => void;
   startIcepond: () => void;
   placeCall: (
     ship: string,
@@ -53,6 +50,7 @@ interface IUrchatStore {
   rejectCall: () => void;
   hangup: () => void;
   hungup: () => void;
+  setMessages: (new_mesages: Message[]) => void;
 }
 
 export class UrchatStore implements IUrchatStore {
@@ -62,54 +60,96 @@ export class UrchatStore implements IUrchatStore {
   configuration: RTCConfiguration;
   incomingCall: UrbitRTCIncomingCallEvent;
   ongoingCall: OngoingCall;
+  dataChannel: RTCDataChannel;
+  dataChannelOpen: boolean;
   isCaller: boolean;
+  messages: Message[];
+  wasHungUp: boolean;
 
   constructor() {
-    makeObservable(this);
     this.configuration = { iceServers: [] };
+    console.log("make constructor");
+    this.urbit = new Urbit("", "");
+    // requires <script> tag for /~landscape/js/session.js
+    this.urbit.ship = (window as any).ship;
     this.urbitRtcApp = new UrbitRTCApp(dap, this.configuration);
     this.urbitRtcApp.addEventListener(
       "incomingcall",
-      (incomingCallEvt: UrbitRTCIncomingCallEvent) => {
-        if (this.incomingCall === null) {
-          this.incomingCall = incomingCallEvt;
-        } else {
-          incomingCallEvt.reject();
-        }
+      (evt: UrbitRTCIncomingCallEvent) => {
+        this.handleIncomingCall(evt);
       }
     );
-
-    this.urbit = useMock
-      ? ({ ship: "", subscribe: async () => {} } as any)
-      : new Urbit("", "");
-    // requires <script> tag for /~landscape/js/session.js
-    this.urbit.ship = (window as any).ship;
     this.urbitRtcApp.urbit = this.urbit;
+    console.log(this.urbit);
+    console.log(this.urbit.ship);
+    this.icepond = null;
+    this.ongoingCall = null;
+    this.incomingCall = null;
+    this.isCaller = false;
+    this.dataChannel = null;
+    this.dataChannelOpen = false;
+    this.messages = [];
+    this.wasHungUp = false;
+
+    makeObservable(this, {
+      configuration: observable,
+      urbitRtcApp: observable,
+      urbit: observable,
+      icepond: observable,
+      ongoingCall: observable,
+      incomingCall: observable,
+      isCaller: observable,
+      dataChannelOpen: observable,
+      messages: observable,
+      setUrbit: action.bound,
+      handleIncomingCall: action.bound,
+      setDataChannel: action.bound,
+      setDataChannelOpen: action.bound,
+      startIcepond: action.bound,
+      placeCall: action.bound,
+      answerCall: action.bound,
+      reconnectCall: action.bound,
+      rejectCall: action.bound,
+      hangup: action.bound,
+      hungup: action.bound,
+      setMessages: action.bound,
+    });
   }
 
-  @action
   setUrbit(urbit: Urbit) {
-    const instance = useMock ? ({} as Urbit) : urbit;
+    console.log("setting urbit state variable");
+    const instance = urbit;
     this.urbitRtcApp.urbit = instance;
     this.urbit = instance;
   }
 
-  @action
-  startIcepond() {
-    if (useMock) {
-      this.icepond = {} as Icepond;
+  handleIncomingCall(incomingCallEvt: UrbitRTCIncomingCallEvent) {
+    if (this.incomingCall === null) {
+      this.incomingCall = incomingCallEvt;
+    } else {
+      incomingCallEvt.reject();
     }
-    console.log("YOU HAVE AUTHED WITH: " + this.urbit.ship);
-    console.log("attempting icepond");
+  }
+
+  setDataChannel(value: RTCDataChannel) {
+    console.log("setting data channel");
+    console.log(value);
+    this.dataChannel = value;
+  }
+  setDataChannelOpen(value: boolean) {
+    this.dataChannelOpen = value;
+  }
+
+  startIcepond() {
+    console.log("trying to icepond");
     const icepond = new Icepond(this.urbit);
     // on start
     icepond.oniceserver = (evt) => {
+      console.log("just got a server");
       const newConfig = {
         ...this.configuration,
         iceServers: evt.iceServers,
       };
-      console.log("icepond config:");
-      console.log(newConfig);
       if (this.urbitRtcApp !== null) {
         this.urbitRtcApp.configuration = newConfig;
       }
@@ -119,61 +159,37 @@ export class UrchatStore implements IUrchatStore {
       if (this.ongoingCall !== null) {
         this.ongoingCall.conn.setConfiguration(newConfig);
       }
-
-      return { ...this, configuration: newConfig };
+      this.configuration = newConfig;
     };
+    console.log("about to init");
     icepond.initialize();
     this.icepond = icepond;
   }
 
-  @action
   async placeCall(
     ship: string,
     setHandlers: (conn: UrbitRTCPeerConnection) => void
   ) {
     const { urbitRtcApp, hungup, startIcepond } = this;
-    console.log("placeCall");
     const conn = urbitRtcApp.call(ship, dap);
     setHandlers(conn);
     conn.addEventListener("hungupcall", hungup);
     await conn.initialize();
     const call = { peer: ship, dap: dap, uuid: conn.uuid };
     startIcepond();
-
     const ongoingCall = { conn, call };
-    (this.isCaller = true), (this.ongoingCall = ongoingCall);
-
+    runInAction(() => {
+      this.wasHungUp = false;
+      this.isCaller = true
+      this.ongoingCall = ongoingCall;
+    })
     return ongoingCall;
   }
+
   async answerCall(
     setHandlers: (ship: string, conn: UrbitRTCPeerConnection) => void
   ) {
-    if (useMock) {
-      const call = {
-        peer: "~lassul-nocsyx",
-        uuid: "000",
-      };
-      setHandlers("~lassul-nocsyx", {
-        ...call,
-        addEventListener: () => {},
-      } as any);
-      const ongoingCall = {
-        conn: {
-          ...call,
-          ontrack: () => {},
-          addTrack: () => {},
-          removeTrack: () => {},
-          close: () => {},
-        },
-        call,
-      } as any;
-
-      this.isCaller = false;
-      this.ongoingCall = ongoingCall;
-      this.incomingCall = null;
-
-      return ongoingCall;
-    }
+    console.log("trying to answer call");
     const { incomingCall, hungup, startIcepond } = this;
     const call = incomingCall.call;
     const conn = incomingCall.answer();
@@ -183,9 +199,12 @@ export class UrchatStore implements IUrchatStore {
     startIcepond();
 
     const ongoingCall = { conn, call };
-    this.isCaller = false;
-    this.ongoingCall = ongoingCall;
-    this.incomingCall = null;
+    runInAction(() => {
+      this.wasHungUp = false;
+      this.isCaller = false;
+      this.ongoingCall = ongoingCall;
+      this.incomingCall = null;
+    })
 
     return ongoingCall;
   }
@@ -205,17 +224,26 @@ export class UrchatStore implements IUrchatStore {
     this.ongoingCall = ongoingCall;
     return ongoingCall;
   }
+
   rejectCall() {
     this.incomingCall.reject();
-    return { incomingCall: null };
+    this.incomingCall = null;
   }
   hangup() {
-    if (!useMock && this.ongoingCall) {
+    if (this.ongoingCall) {
       this.ongoingCall.conn.close();
     }
-    return { ...this, ongoingCall: null };
+    this.ongoingCall = null;
   }
   hungup() {
+    console.log("someone hung up on us");
     this.ongoingCall = null;
+    this.dataChannelOpen = false;
+    this.wasHungUp = true;
+  }
+
+  setMessages(new_messages: Message[]) {
+    console.log("setting messages to: "+new_messages);
+    this.messages = new_messages;
   }
 }

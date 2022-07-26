@@ -1,45 +1,50 @@
+
+import { Ship, Button, Flex, Text, Dialog, Sigil } from "@holium/design-system";
+import { observer } from "mobx-react";
 import React, { useEffect } from 'react';
-import { sigil, reactRenderer } from '@tlon/sigil-js'
+import { deSig } from '@urbit/api';
 import ring from '/src/assets/ring.wav';
 
 interface IncomingCallProps {
-  caller: string;
-  answerCall: () => void;
-  rejectCall: () => void;
+    caller: string;
+    answerCall: () => void;
+    rejectCall: () => void;
 }
 
-const Sigil = props => {
-  return (
-    <>{
-      sigil({
-        patp: props.patp,
-        renderer: reactRenderer,
-        size: 64,
-        colors: ['black', 'white'],
-      })
-    }</>
-  )
-}
+export const IncomingCall = observer(({ caller, answerCall, rejectCall }: IncomingCallProps) => {
+    useEffect(() => {
+        const audio = new Audio(ring);
+        audio.play();
+    }, []);
 
-export const IncomingCall = ({ caller, answerCall, rejectCall }: IncomingCallProps) => {
-  useEffect(() => {
-    const audio = new Audio(ring);
-    audio.play();
-  }, []);
-
-  return (
-
-    <div className="fixed top-4 right-4 gap-x-3 flex inline-block px-8 py-4 bg-gray-100 rounded-xl shadow-lg" >
-      <div className="flex-1">
-        <Sigil patp={caller} />
-      </div>
-      <div className="flex-1">
-        <h2>Call from ~<span className="font-mono font-semibold">{caller}</span></h2>
-        <div className="flex space-x-3">
-          <button className="flex-1 button text-green-900 bg-green-500" onClick={answerCall} >Answer</button>
-          <button className="flex-1 button text-red-900 bg-red-500" onClick={rejectCall} >Reject</button>
+    return (
+        <div className="fixed top-4 right-4 gap-x-3 flex inline-block px-8 py-4 bg-gray-100 rounded-xl shadow-lg" >
+            <Flex gap={7} flexDirection="row" justifyContent="space-between">
+                <Sigil patp={caller} size={80} color={["black", "white"]} simple={false} />
+                <Flex flexDirection="column" justifyContent="space-between">
+                    <Text
+                        fontSize={5} fontWeight={400} opacity={0.8}>
+                        Call from ~{deSig(caller)}
+                    </Text>
+                    <Flex gap={7} flexDirection="row" justifyContent="space-between">
+                        <Button
+                            style={{ fontSize: 20, borderRadius: 6 }}
+                            bg="rgb(34 197 94)"
+                            color="#333333"
+                            onClick={answerCall}>
+                            Answer
+                        </Button>
+                        <Button
+                            style={{ fontSize: 20, borderRadius: 6 }}
+                            bg="rgb(220 38 38)"
+                            color="#333333"
+                            onClick={rejectCall}>
+                            Reject
+                        </Button>
+                    </Flex>
+                </Flex>
+            </Flex>
         </div>
-      </div>
-    </div>
-  )
-}
+    );
+
+})

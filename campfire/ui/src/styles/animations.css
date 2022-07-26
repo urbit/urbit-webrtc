@@ -1,0 +1,17 @@
+.animate #fire {
+    animation: fade 3s infinite ease-in-out;
+}
+.animate #inner-flame {
+    animation: fade 2s infinite ease-in-out;
+}
+
+@keyframes fade {
+    0%,
+    100% {
+        opacity: 0.3
+    }
+
+    50% {
+        opacity: 1
+    }
+}

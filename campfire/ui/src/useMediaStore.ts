@@ -30,6 +30,7 @@ interface MediaStore {
   call: OngoingCall;
   getDevices: (call: OngoingCall) => Promise<void>;
   resetStreams: () => void;
+  disconnectMedia: () => void;
 }
 
 export const useMediaStore = create<MediaStore>((set, get) => ({
@@ -85,6 +86,26 @@ export const useMediaStore = create<MediaStore>((set, get) => ({
     const audio = useMock ? get().audio :  await changeDevice(audioDevs[0], 'audio', get(), call);
     set({ devices, video, audio });
     set({call: call});
+  },
+  disconnectMedia: () => {
+      var video = get().video;
+      var audio = get().audio;
+      var call = get().call;
+      var local = get().local;
+
+      const removeTrack = (track: Track) => {
+        local.removeTrack(track);
+        try {
+          call.conn?.removeTrack(track.sender);
+        } catch (err) {
+          console.log(err);
+        }
+        track.stop();
+      }
+    
+
+      video.tracks.map(removeTrack);
+      audio.tracks.map(removeTrack);
   }
 }))
 
