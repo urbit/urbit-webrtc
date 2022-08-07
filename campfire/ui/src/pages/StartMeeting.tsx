@@ -76,7 +76,10 @@ export const StartMeetingPage: FC<any> = observer(() => {
         // called when we the connection to the peer is open - aka the call has started
         console.log("channel opened");
         urchatStore.setDataChannelOpen(true);
-        push(`/chat/${conn.uuid}`);
+        //add this because sometimes we get redirected to /chat/undefined
+        if(conn.uuid){
+          push(`/chat/${conn.uuid}`);
+        }
       };
       channel.onmessage = (evt) => {
         const data = evt.data;
