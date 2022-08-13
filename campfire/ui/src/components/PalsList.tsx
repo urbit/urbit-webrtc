@@ -11,19 +11,19 @@ export const PalsList = observer(({ mutuals, callPal }: PalsListProps) => {
     if (mutuals?.length > 0) {
         return (
             <>
-            <Text title="list of mutuals from %pals" fontSize={4} fontWeight={600} opacity={0.5}>
-                Speed Dial
-            </Text>
+                <Text title="list of mutuals from %pals" fontSize={4} fontWeight={600} opacity={0.5}>
+                    Speed Dial
+                </Text>
                 <Flex alignItems="flex-start" gap={6} flexDirection="column">
-                {
-                    mutuals.map((shipName) => {
-                        return (
-                            <Button key={shipName} onClick={() => callPal(shipName)}>
-                                <Ship patp={`~${deSig(shipName)}`} />
-                            </Button>
-                        )
-                    })
-                }
+                    {
+                        mutuals.map((shipName) => {
+                            return (
+                                <Button key={shipName} onClick={() => callPal(shipName)}>
+                                    <Ship patp={`~${deSig(shipName)}`} />
+                                </Button>
+                            )
+                        })
+                    }
                 </Flex>
             </>)
     } else {

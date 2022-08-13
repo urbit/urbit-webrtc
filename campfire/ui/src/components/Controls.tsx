@@ -14,39 +14,38 @@ import { observer } from "mobx-react";
 
 type ControlsProps = HTMLAttributes<HTMLDivElement>;
 
-// export const Controls = observer(({ className }: ControlsProps) yyp=> {
-export const Controls = observer(({ className }: ControlsProps )=> {
+export const Controls = observer(({ className }: ControlsProps) => {
   const { push } = useHistory();
   const { mediaStore, urchatStore } = useStore();
 
 
   const leaveCall = useCallback(() => {
     urchatStore.hangup();
-    // disconnectMedia()
+    mediaStore.stopAllTracks();
     push('/');
   }, [])
 
   return (
     <div className={classNames('flex justify-center p-3 space-x-3', className)}>
-      <IconToggle 
-        className="w-10 h-10" 
-        pressed={mediaStore.video.enabled} 
+      <IconToggle
+        className="w-10 h-10"
+        pressed={mediaStore.video.enabled}
         onPressedChange={mediaStore.video.toggle}
       >
         <Camera className="w-6 h-6" primary="fill-current opacity-80" secondary="fill-current" />
         <span className="sr-only">Video</span>
       </IconToggle>
-      <IconToggle 
-        className="w-10 h-10" 
-        pressed={mediaStore.audio.enabled} 
+      <IconToggle
+        className="w-10 h-10"
+        pressed={mediaStore.audio.enabled}
         onPressedChange={mediaStore.audio.toggle}
       >
         <Mic className="w-6 h-6" primary="fill-current opacity-80" secondary="fill-current" />
         <span className="sr-only">Audio</span>
       </IconToggle>
-      <IconToggle 
-        className="w-10 h-10" 
-        pressed={!mediaStore.sharedScreen.enabled} 
+      <IconToggle
+        className="w-10 h-10"
+        pressed={!mediaStore.sharedScreen.enabled}
         onPressedChange={() => mediaStore.toggleScreenShare(urchatStore.ongoingCall)}
         toggleClass="text-blue-900 bg-blue-500"
       >

@@ -97,6 +97,7 @@ export class MediaStore implements IMediaStore {
       toggleScreenShare: action.bound,
       resetStreams: action.bound,
       addTrackToRemote: action.bound,
+      stopAllTracks: action.bound,
     }
     );
   }
@@ -156,6 +157,11 @@ export class MediaStore implements IMediaStore {
   resetStreams() {
     this.local = new MediaStream();
     this.remote = new MediaStream();
+  }
+
+  stopAllTracks() {
+    this.video.tracks.forEach((track: Track) => {track.stop()});
+    this.audio.tracks.forEach((track: Track) => {track.stop()});
   }
 
   addTrackToRemote(track: MediaStreamTrack) {

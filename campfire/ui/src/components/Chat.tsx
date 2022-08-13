@@ -24,12 +24,6 @@ export const Chat = ({ sendMessage, messages, ready }: ChatProps) => {
     reset();
   }, [sendMessage]);
 
-  const test_messages = [
-    { speaker: "zod", message: "test of the chat app" },
-    { speaker: "bus", message: "love this bro" },
-    { speaker: "zod", message: "excellent time hanging out" },
-  ]
-
   return (
     <div className={`flex flex-col h-full p-1 sm:p-2 text-sm bg-gray-300 lg:rounded-xl overflow-hidden ${disabled ? 'opacity-50' : ''}`}>
       <div className="flex-1 h-full px-2 py-1 bg-white rounded-md overflow-y-auto">

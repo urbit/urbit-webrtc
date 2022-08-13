@@ -4,19 +4,14 @@ import { useHistory } from "react-router";
 import { deSig } from '@urbit/api';
 import { isValidPatp } from 'urbit-ob';
 import {
-  Box,
   Button,
   Flex,
-  Icons,
   Input,
   Text,
-  TextButton,
+  Icons,
   theme,
-  Ship,
-  Search
 } from "@holium/design-system";
 import { Campfire } from "../icons/Campfire";
-import { VideoPlus } from "../icons/VideoPlus";
 import { useStore } from "../stores/root";
 import { PalsList } from "../components/PalsList";
 import { SecureWarning } from "../components/SecureWarning";
@@ -32,7 +27,7 @@ export const StartMeetingPage: FC<any> = observer(() => {
 
 
   useEffect(() => {
-    if (isSecure && urchatStore.ongoingCall) {
+    if (isSecure && urchatStore.ongoingCall?.conn?.uuid) {
       const audio = new Audio(call);
       audio.volume = 0.3;
       audio.play();
@@ -77,7 +72,7 @@ export const StartMeetingPage: FC<any> = observer(() => {
         console.log("channel opened");
         urchatStore.setDataChannelOpen(true);
         //add this because sometimes we get redirected to /chat/undefined
-        if(conn.uuid){
+        if (conn.uuid) {
           push(`/chat/${conn.uuid}`);
         }
       };
@@ -146,7 +141,7 @@ export const StartMeetingPage: FC<any> = observer(() => {
               Gather around
             </Text>
             <Text fontSize={5} fontWeight={400} opacity={0.5}>
-              Join a chat or create a new one.
+              Iniate a call with your friend
             </Text>
           </Flex>
           <Flex alignItems="flex-start" flexDirection="column">
@@ -160,31 +155,21 @@ export const StartMeetingPage: FC<any> = observer(() => {
                 background: theme.light.colors.bg.secondary,
               }}
               mb={4}
-              placeholder="Enter a code or @p"
+              placeholder="Enter a @p (~sampel-palnet)"
               value={meetingCode}
               rightInteractive
               rightIcon={
-                <TextButton
+                <Button
                   disabled={!isValidPatp(`~${deSig(meetingCode)}` || '') && meetingCode.length > 0}
                   onClick={() => placeCall(deSig(meetingCode))}
+                  bg="#F8E390"
+                  color="#333333"
                 >
-                  <b>Join</b>
-                </TextButton>
+                  <b>Call</b>
+                </Button>
               }
               onChange={(evt: any) => setMeetingCode(evt.target.value)}
             />
-            <Button
-              style={{ fontSize: 14, borderRadius: 6 }}
-              variant="custom"
-              bg="#F8E390"
-              color="#333333"
-              onClick={() => push("/chat")}
-            >
-              <Box mr={2}>
-                <VideoPlus />
-              </Box>
-              New video call
-            </Button>
             <div style={{
               width: "100%",
               height: "100px",
@@ -208,6 +193,23 @@ export const StartMeetingPage: FC<any> = observer(() => {
           rejectCall={() => urchatStore.rejectCall}
         />
       )}
+      <div
+        style={{
+          bottom: "0px", left: "0px", position: "absolute", margin: "10px"
+        }}>
+        <Flex
+          alignItems="flex-start" flexDirection="row"
+        >
+          <a href="/docs/campfire/overview">
+            <Text fontSize={4} fontWeight={200} opacity={0.9} title="on %docs">
+              Documentation
+            </Text>
+          </a>
+            <Text ml={5} fontSize={4} fontWeight={200} opacity={0.9} onClick={() => console.log("open settings")}>
+              Settings
+            </Text>
+        </Flex>
+      </div>
     </Flex>
   );
 });

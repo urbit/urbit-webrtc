@@ -22,9 +22,8 @@ export const SecureWarning = () => {
           {/* <button className="button bg-gray-400 default-ring" onClick={() => window.close()}>Close urChatFM</button> */}
           <a
             className="button text-pink-900 bg-pink-500 default-ring"
-            href={`https://${location.hostname}${
-              location.port && ":" + location.port
-            }${location.pathname}`}
+            href={`https://${location.hostname}${location.port && ":" + location.port
+              }${location.pathname}`}
           >
             Try HTTPS version of this page
           </a>

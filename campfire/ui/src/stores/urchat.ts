@@ -64,6 +64,7 @@ export class UrchatStore implements IUrchatStore {
   dataChannelOpen: boolean;
   isCaller: boolean;
   messages: Message[];
+  connectionState : string;
   wasHungUp: boolean;
 
   constructor() {
@@ -72,6 +73,7 @@ export class UrchatStore implements IUrchatStore {
     this.urbit = new Urbit("", "");
     // requires <script> tag for /~landscape/js/session.js
     this.urbit.ship = (window as any).ship;
+    this.urbit.verbose = true;
     this.urbitRtcApp = new UrbitRTCApp(dap, this.configuration);
     this.urbitRtcApp.addEventListener(
       "incomingcall",
@@ -89,6 +91,7 @@ export class UrchatStore implements IUrchatStore {
     this.dataChannel = null;
     this.dataChannelOpen = false;
     this.messages = [];
+    this.connectionState = null;
     this.wasHungUp = false;
 
     makeObservable(this, {
@@ -101,6 +104,8 @@ export class UrchatStore implements IUrchatStore {
       isCaller: observable,
       dataChannelOpen: observable,
       messages: observable,
+      connectionState: observable,
+      wasHungUp: observable,
       setUrbit: action.bound,
       handleIncomingCall: action.bound,
       setDataChannel: action.bound,
@@ -174,6 +179,11 @@ export class UrchatStore implements IUrchatStore {
     const conn = urbitRtcApp.call(ship, dap);
     setHandlers(conn);
     conn.addEventListener("hungupcall", hungup);
+    conn.onurbitstatechanged = (ev: Event) => {
+      runInAction(() => {
+        this.connectionState = conn?.urbitState;
+      })
+    }
     await conn.initialize();
     const call = { peer: ship, dap: dap, uuid: conn.uuid };
     startIcepond();
@@ -194,6 +204,11 @@ export class UrchatStore implements IUrchatStore {
     const call = incomingCall.call;
     const conn = incomingCall.answer();
     conn.addEventListener("hungupcall", hungup);
+    conn.onurbitstatechanged = (ev: Event) => {
+      runInAction(() => {
+        this.connectionState = conn?.urbitState;
+      })
+    }
     setHandlers(call.peer, conn);
     await conn.initialize();
     startIcepond();
@@ -243,7 +258,7 @@ export class UrchatStore implements IUrchatStore {
   }
 
   setMessages(new_messages: Message[]) {
-    console.log("setting messages to: "+new_messages);
+    console.log("setting messages to: " + new_messages);
     this.messages = new_messages;
   }
 }

@@ -5,7 +5,7 @@ import { Close } from '../icons/Close'
 export const Dialog: FC<RadixDialog.DialogOwnProps> = ({ children, ...props }) => (
     <RadixDialog.Root {...props}>
         <RadixDialog.Overlay className="fixed z-10 top-0 left-0 right-0 bottom-0 dark:bg-white bg-black opacity-30" />
-        { children }
+        {children}
     </RadixDialog.Root>
 )
 
@@ -14,7 +14,7 @@ type DialogContentProps = {
     className?: string;
 } & React.PropsWithChildren<RadixDialog.DialogContentOwnProps>;
 export const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(({ children, showCloseIcon = true, className = 'p-6', ...props }, ref) => (
-    <RadixDialog.Content 
+    <RadixDialog.Content
         className="fixed z-40 top-1/2 left-1/2 bg-gray-100 rounded-xl default-ring transform -translate-y-1/2 -translate-x-1/2"
         {...props}
         ref={ref}

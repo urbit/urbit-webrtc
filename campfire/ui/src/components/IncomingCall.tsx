@@ -1,5 +1,4 @@
-
-import { Ship, Button, Flex, Text, Dialog, Sigil } from "@holium/design-system";
+import { Button, Flex, Text, Sigil } from "@holium/design-system";
 import { observer } from "mobx-react";
 import React, { useEffect } from 'react';
 import { deSig } from '@urbit/api';

@@ -7,7 +7,7 @@ import { observer } from "mobx-react";
 
 
 export const Call = observer(() => {
-  const { mediaStore, urchatStore } = useStore();
+  const { mediaStore } = useStore();
   const landscape = (mediaStore.video.tracks[0]?.getSettings()?.aspectRatio > 1) || true;
   console.log("rerender call");
   const hasRemoteScreenshare = mediaStore.remoteVideoTrackCounter > 1;

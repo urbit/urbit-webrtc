@@ -2,7 +2,6 @@ import Urbit from '@urbit/http-api';
 import { useState } from 'react';
 import React from 'react';
 import { useForm } from 'react-hook-form';
-import useUrchatStore from '../useUrchatStore';
 import { Redirect } from 'react-router';
 import {useStore} from '../stores/root';
 
@@ -15,8 +14,7 @@ interface UrbitAuth {
 // eslint-disable-next-line
 function Login() {
   console.log("loading login page");
-  const { urbit, setUrbit } = useUrchatStore(state => ({ urbit: state.urbit, setUrbit: state.setUrbit}));
-  const { mediaStore, urchatStore } = useStore();
+  const { urchatStore } = useStore();
   const [urbitErr, setUrbitErr] = useState('');
   const [awaitingUrbit, setAwaitingUrbit] = useState(false);
 
@@ -34,7 +32,6 @@ function Login() {
     console.log("attempting to auth")
     Urbit.authenticate({ ...data, 'verbose': true })
       .then((ur) => {
-        setUrbit(ur);
         urchatStore.setUrbit(ur);
         setAwaitingUrbit(false);
       })
@@ -52,7 +49,7 @@ function Login() {
       });
   };
 
-  if (urbit || import.meta.env.DEV) {
+  if (urchatStore.urbit || import.meta.env.DEV) {
     return <Redirect to="/chat" />
   }
 
