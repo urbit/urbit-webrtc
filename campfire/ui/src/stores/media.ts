@@ -1,6 +1,4 @@
-import { actOnNotification } from "@urbit/api/dist";
-import { makeObservable, observable, computed, action, runInAction } from "mobx";
-import { useMock } from "../util";
+import { makeObservable, observable, action, runInAction } from "mobx";
 import { OngoingCall } from "./urchat";
 
 // Types and interfaces
@@ -160,8 +158,8 @@ export class MediaStore implements IMediaStore {
   }
 
   stopAllTracks() {
-    this.video.tracks.forEach((track: Track) => {track.stop()});
-    this.audio.tracks.forEach((track: Track) => {track.stop()});
+    this.video.tracks.forEach((track: Track) => { track.stop() });
+    this.audio.tracks.forEach((track: Track) => { track.stop() });
   }
 
   addTrackToRemote(track: MediaStreamTrack) {

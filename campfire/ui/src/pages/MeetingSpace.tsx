@@ -1,6 +1,6 @@
 import React, { FC, useEffect, } from "react";
 import styled from "styled-components";
-import { Flex, Spinner, Ship, Text, Dialog, Button } from "@holium/design-system";
+import { Flex, Ship, Text, Dialog, Button } from "@holium/design-system";
 import { useStore } from "../stores/root";
 import { observer } from "mobx-react";
 import { Chat } from "../components/Chat";
@@ -40,14 +40,15 @@ export const MeetingSpace: FC<any> = observer(() => {
       );
   })
 
-
   const sendMessage = (msg: string) => {
     urchatStore.dataChannel?.send(msg);
     const newMessages = [{ speaker: "me", message: msg }].concat(urchatStore.messages);
     console.log(urchatStore.messages, newMessages);
     urchatStore.setMessages(newMessages);
   }
-
+  // ---------------------------------------------------------------
+  // ---------------------------------------------------------------
+  // ---------------------------------------------------------------
   return (
     <Flex
       style={{ background: "#FBFBFB" }}

@@ -8,7 +8,6 @@ import {
   Flex,
   Input,
   Text,
-  Icons,
   theme,
 } from "@holium/design-system";
 import { Campfire } from "../icons/Campfire";
@@ -21,7 +20,7 @@ import call from "../assets/enter-call.wav";
 
 
 export const StartMeetingPage: FC<any> = observer(() => {
-  console.log("RERENDER StartMeetingPage");
+  console.log("Rerender StartMeetingPage");
   const [meetingCode, setMeetingCode] = useState("");
   const { mediaStore, urchatStore, palsStore } = useStore();
   const { push } = useHistory();
@@ -39,7 +38,6 @@ export const StartMeetingPage: FC<any> = observer(() => {
     }
   }, [urchatStore.incomingCall]);
 
-
   // update devices if chrome devices change (like a USB microphone gets plugged in)
   useEffect(() => {
     const updateDevices = () => mediaStore.getDevices(urchatStore.ongoingCall);
@@ -50,7 +48,6 @@ export const StartMeetingPage: FC<any> = observer(() => {
         updateDevices
       );
   })
-
 
   const onTrack = (evt: Event & { track: MediaStreamTrack }) => {
     console.log("Incoming track event", evt);
@@ -70,7 +67,7 @@ export const StartMeetingPage: FC<any> = observer(() => {
       };
       channel.onmessage = (evt) => {
         const data = evt.data;
-        const speakerId = ship.replace("~", "");
+        const speakerId = deSig(ship);
         const new_messages = [{ speaker: speakerId, message: data }].concat(urchatStore.messages);
         urchatStore.setMessages(new_messages);
         console.log("channel message from " + speakerId + ": " + data);
@@ -99,7 +96,7 @@ export const StartMeetingPage: FC<any> = observer(() => {
           const data = evt.data;
           const new_messages = [{ speaker: peer, message: data }].concat(urchatStore.messages);
           urchatStore.setMessages(new_messages);
-          console.log("channel message", data);
+          console.log("channel message from me to: " + data);
         };
         urchatStore.setDataChannel(channel);
       });

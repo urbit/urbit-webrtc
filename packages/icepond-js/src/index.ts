@@ -6,7 +6,7 @@ declare global {
   }
 }
 
-export type IcepondState = 
+export type IcepondState =
   | 'uninitialized'
   | 'acquiring'
   | 'done'
@@ -50,15 +50,18 @@ class Icepond extends EventTarget {
     this.urbit = urbit;
     this.iceServers = [];
     this.state = 'uninitialized';
-    this.oniceserver = () => {};
-    this.onstatechange = () => {};
+    this.oniceserver = () => { };
+    this.onstatechange = () => { };
     this.uid = '';
-    for(let i = 0; i < 32; i++) {
+    for (let i = 0; i < 32; i++) {
       this.uid += Math.floor(Math.random() * 16).toString(16);
     };
   }
 
   async initialize() {
+    if (this.urbit.verbose) {
+      console.log("initializing icepond");
+    }
     await this.urbit.subscribe({
       app: 'icepond',
       path: `/ice-servers/${this.uid}`,
@@ -67,15 +70,15 @@ class Icepond extends EventTarget {
       quit: () => this.done()
     });
     this.iceServers = [];
-    
+
     this.state = 'acquiring';
     const evt = new IcepondStateChange(this.state);
     this.dispatchEvent(evt);
-    this.onstatechange(evt); 
+    this.onstatechange(evt);
   }
 
   handleError(err: Error) {
-    console.log('icepond error: ', err);
+    console.error('icepond error: ', err);
     this.state = 'error';
     const evt = new IcepondStateChange(this.state);
     this.dispatchEvent(evt);
@@ -83,7 +86,7 @@ class Icepond extends EventTarget {
   }
 
   iceServer(server: RTCIceServer) {
-    if(this.iceServers.includes(server) == false){
+    if (this.iceServers.includes(server) == false) {
       this.iceServers.push(server);
     }
     const evt = new NewIcepondServer(server, this.iceServers);

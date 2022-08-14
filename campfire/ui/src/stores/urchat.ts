@@ -5,10 +5,9 @@ import {
 } from "switchboard";
 import Icepond from "icepond";
 import Urbit from "@urbit/http-api";
-import { action, makeObservable, observable, runInAction, makeAutoObservable, ObservableSet } from "mobx";
+import { action, makeObservable, observable, runInAction } from "mobx";
 
 const dap = "campfire";
-
 
 export type Call = {
   peer: string;
@@ -82,8 +81,6 @@ export class UrchatStore implements IUrchatStore {
       }
     );
     this.urbitRtcApp.urbit = this.urbit;
-    console.log(this.urbit);
-    console.log(this.urbit.ship);
     this.icepond = null;
     this.ongoingCall = null;
     this.incomingCall = null;
@@ -137,8 +134,10 @@ export class UrchatStore implements IUrchatStore {
   }
 
   setDataChannel(value: RTCDataChannel) {
-    console.log("setting data channel");
-    console.log(value);
+    if (this.urbit.verbose) {
+      console.log("setting data channel");
+      console.log(value);
+    }
     this.dataChannel = value;
   }
   setDataChannelOpen(value: boolean) {
@@ -146,7 +145,6 @@ export class UrchatStore implements IUrchatStore {
   }
 
   startIcepond() {
-    console.log("trying to icepond");
     const icepond = new Icepond(this.urbit);
     // on start
     icepond.oniceserver = (evt) => {
@@ -166,7 +164,6 @@ export class UrchatStore implements IUrchatStore {
       }
       this.configuration = newConfig;
     };
-    console.log("about to init");
     icepond.initialize();
     this.icepond = icepond;
   }

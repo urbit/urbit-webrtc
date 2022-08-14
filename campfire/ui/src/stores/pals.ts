@@ -23,6 +23,9 @@ export class PalsStore {
     @action.bound
     async loadPals() {
         const p = await this.palsInterface.getPals();
+        if (this.urbit.verbose) {
+            console.log("palsStore loaded these pals: " + p);
+        }
         const incoming = p["incoming"];
         const outgoing = p["outgoing"];
         const mutuals = Object.keys(outgoing).filter(k => k in incoming)
@@ -36,5 +39,6 @@ export class PalsStore {
             this.justOutgoing = outgoingPals;
         })
     }
+
 
 }

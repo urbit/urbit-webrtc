@@ -17,11 +17,14 @@ class Pals extends EventTarget {
     this.urbit = urbit;
   }
 
-  async getPals() {
-    const pals = await this.urbit.scry<string>({app: 'pals', path: '/json'});
+  async getPals(): Promise<string> {
+    const pals = await this.urbit.scry<string>({ app: 'pals', path: '/json' });
+    if (this.urbit.verbose) {
+      console.log("Just fetched pals list: " + pals)
+    }
     return pals;
   }
-  
+
   addPal(ship: string, tags: string[] = []) {
     this.urbit.poke({
       app: 'pals',
