@@ -152,6 +152,7 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
 
   onerror: (err: Error) => Promise<void> | void;
   onurbitstatechanged: (evt: UrbitRTCStateChangedEvent) => Promise<void> | void;
+  onring: (uuid: string) => Promise<void> | void;
 
   constructor(peer: string, dap: string, uuid: string | undefined, urbit: Urbit, configuration?: RTCConfiguration) {
     super(configuration);
@@ -172,6 +173,8 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
     this.onerror = () => {};
     // State-change callback
     this.onurbitstatechanged = () => {};
+    // on-ring callback to to give UUID
+    this.onring = () => {};
     // Signal readiness to send SDP messages
     this.signallingReady = null;
     // Urbit ready signalling state
@@ -252,6 +255,7 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
    */
   async ring(uuid: string) {
     this.uuid = uuid;
+    this.onring(uuid);
     if(this.urbit.verbose) {
       console.log('Call UUID:', this.uuid);
     }

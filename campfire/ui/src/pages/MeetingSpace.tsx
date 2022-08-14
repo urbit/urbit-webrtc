@@ -1,4 +1,4 @@
-import React, { FC, useState } from "react";
+import React, { FC, useEffect, } from "react";
 import styled from "styled-components";
 import { Flex, Spinner, Ship, Text, Dialog, Button } from "@holium/design-system";
 import { useStore } from "../stores/root";
@@ -22,7 +22,24 @@ const Main = styled.main`
 export const MeetingSpace: FC<any> = observer(() => {
   const { mediaStore, urchatStore } = useStore();
   const { push } = useHistory();
-  // const [showSidebar, setShowSidebar] = useState(false);
+
+  // hangup call (properly) if exiting page
+  useEffect(() => {
+    window.addEventListener("beforeunload", urchatStore.hangup);
+    return () => window.removeEventListener("beforeunload", urchatStore.hangup);
+  }, []);
+
+  // update devices if chrome devices change (like a USB microphone gets plugged in)
+  useEffect(() => {
+    const updateDevices = () => mediaStore.getDevices(urchatStore.ongoingCall);
+    navigator.mediaDevices.addEventListener("devicechange", updateDevices);
+    return () =>
+      navigator.mediaDevices.removeEventListener(
+        "devicechange",
+        updateDevices
+      );
+  })
+
 
   const sendMessage = (msg: string) => {
     urchatStore.dataChannel?.send(msg);

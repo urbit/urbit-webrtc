@@ -16,44 +16,41 @@ import { useStore } from "../stores/root";
 import { PalsList } from "../components/PalsList";
 import { SecureWarning } from "../components/SecureWarning";
 import { IncomingCall } from "../components/IncomingCall";
+import packageJson from '../../package.json';
 import call from "../assets/enter-call.wav";
 
 
 export const StartMeetingPage: FC<any> = observer(() => {
-  console.log("RERENDER START PAGE");
+  console.log("RERENDER StartMeetingPage");
   const [meetingCode, setMeetingCode] = useState("");
   const { mediaStore, urchatStore, palsStore } = useStore();
   const { push } = useHistory();
 
-
-  useEffect(() => {
-    if (isSecure && urchatStore.ongoingCall?.conn?.uuid) {
-      const audio = new Audio(call);
-      audio.volume = 0.3;
-      audio.play();
-      push(`/chat/${urchatStore.ongoingCall.conn.uuid}`);
-
-      const updateDevices = () => mediaStore.getDevices(urchatStore.ongoingCall);
-      navigator.mediaDevices.addEventListener("devicechange", updateDevices);
-      return () =>
-        navigator.mediaDevices.removeEventListener(
-          "devicechange",
-          updateDevices
-        );
-    }
-  }, [urchatStore.ongoingCall]);
-
-
   const isSecure =
     location.protocol.startsWith("https") || location.hostname === "localhost";
 
+  // play ringing call when incoming call
   useEffect(() => {
-    window.addEventListener("beforeunload", urchatStore.hangup);
-    return () => window.removeEventListener("beforeunload", urchatStore.hangup);
-  }, []);
-  // ---------------------------------------------------------------
-  // ---------------------------------------------------------------
-  // ---------------------------------------------------------------
+    if (isSecure && urchatStore.incomingCall) {
+      console.log("incoming call");
+      const audio = new Audio(call);
+      audio.volume = 0.3;
+      audio.play();
+    }
+  }, [urchatStore.incomingCall]);
+
+
+  // update devices if chrome devices change (like a USB microphone gets plugged in)
+  useEffect(() => {
+    const updateDevices = () => mediaStore.getDevices(urchatStore.ongoingCall);
+    navigator.mediaDevices.addEventListener("devicechange", updateDevices);
+    return () =>
+      navigator.mediaDevices.removeEventListener(
+        "devicechange",
+        updateDevices
+      );
+  })
+
 
   const onTrack = (evt: Event & { track: MediaStreamTrack }) => {
     console.log("Incoming track event", evt);
@@ -62,19 +59,14 @@ export const StartMeetingPage: FC<any> = observer(() => {
 
   const placeCall = async (ship: string) => {
     mediaStore.resetStreams();
-    console.log("placing call start");
     const call = await urchatStore.placeCall(ship, (conn) => {
       urchatStore.setDataChannelOpen(false);
       urchatStore.setMessages([]);
       const channel = conn.createDataChannel("campfire");
       channel.onopen = () => {
         // called when we the connection to the peer is open - aka the call has started
-        console.log("channel opened");
+        console.log("data channel opened");
         urchatStore.setDataChannelOpen(true);
-        //add this because sometimes we get redirected to /chat/undefined
-        if (conn.uuid) {
-          push(`/chat/${conn.uuid}`);
-        }
       };
       channel.onmessage = (evt) => {
         const data = evt.data;
@@ -97,6 +89,7 @@ export const StartMeetingPage: FC<any> = observer(() => {
     mediaStore.resetStreams();
 
     const call = await urchatStore.answerCall((peer, conn) => {
+      push(`/chat/${conn.uuid}`);
       urchatStore.setDataChannelOpen(false);
       urchatStore.setMessages([]);
       conn.addEventListener("datachannel", (evt) => {
@@ -110,7 +103,6 @@ export const StartMeetingPage: FC<any> = observer(() => {
         };
         urchatStore.setDataChannel(channel);
       });
-
       conn.ontrack = onTrack;
     });
     mediaStore.getDevices(call);
@@ -200,14 +192,17 @@ export const StartMeetingPage: FC<any> = observer(() => {
         <Flex
           alignItems="flex-start" flexDirection="row"
         >
+          <Text fontSize={4} fontWeight={200} opacity={0.9}>
+            v{packageJson.version}
+          </Text>
           <a href="/docs/campfire/overview">
-            <Text fontSize={4} fontWeight={200} opacity={0.9} title="on %docs">
+            <Text ml={5} fontSize={4} fontWeight={200} opacity={0.9} title="on %docs">
               Documentation
             </Text>
           </a>
-            <Text ml={5} fontSize={4} fontWeight={200} opacity={0.9} onClick={() => console.log("open settings")}>
-              Settings
-            </Text>
+          <Text ml={5} fontSize={4} fontWeight={200} opacity={0.9} onClick={() => console.log("open settings")}>
+            Settings
+          </Text>
         </Flex>
       </div>
     </Flex>

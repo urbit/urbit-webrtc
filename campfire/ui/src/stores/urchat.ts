@@ -64,7 +64,7 @@ export class UrchatStore implements IUrchatStore {
   dataChannelOpen: boolean;
   isCaller: boolean;
   messages: Message[];
-  connectionState : string;
+  connectionState: string;
   wasHungUp: boolean;
 
   constructor() {
@@ -177,12 +177,17 @@ export class UrchatStore implements IUrchatStore {
   ) {
     const { urbitRtcApp, hungup, startIcepond } = this;
     const conn = urbitRtcApp.call(ship, dap);
-    setHandlers(conn);
     conn.addEventListener("hungupcall", hungup);
     conn.onurbitstatechanged = (ev: Event) => {
       runInAction(() => {
-        this.connectionState = conn?.urbitState;
+        this.connectionState = conn.urbitState;
       })
+    }
+    conn.onring = (uuid: string) => {
+      runInAction(() => {
+        this.ongoingCall.conn.uuid = uuid;
+      })
+      setHandlers(this.ongoingCall.conn);
     }
     await conn.initialize();
     const call = { peer: ship, dap: dap, uuid: conn.uuid };
@@ -206,7 +211,7 @@ export class UrchatStore implements IUrchatStore {
     conn.addEventListener("hungupcall", hungup);
     conn.onurbitstatechanged = (ev: Event) => {
       runInAction(() => {
-        this.connectionState = conn?.urbitState;
+        this.connectionState = conn.urbitState;
       })
     }
     setHandlers(call.peer, conn);
