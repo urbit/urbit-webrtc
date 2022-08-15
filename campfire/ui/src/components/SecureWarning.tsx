@@ -15,7 +15,7 @@ export const SecureWarning = () => {
       >
         <p>
           Campfire is built on top of WebRTC which requires HTTPS to function.
-          You may need to provision a certificate for your Urbit, or you just
+          You either need to provision a certificate for your Urbit, or you might just
           need to visit the HTTPS version of your site.
         </p>
         <div className="flex items-center mt-4 space-x-4">

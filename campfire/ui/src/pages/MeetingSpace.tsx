@@ -40,6 +40,12 @@ export const MeetingSpace: FC<any> = observer(() => {
       );
   })
 
+  useEffect(() => {
+    if(urchatStore.ongoingCall?.call?.peer){
+      document.title = "Call with ~" + urchatStore.ongoingCall.call.peer;
+    }
+  }, [urchatStore.ongoingCall])
+
   const sendMessage = (msg: string) => {
     urchatStore.dataChannel?.send(msg);
     const newMessages = [{ speaker: "me", message: msg }].concat(urchatStore.messages);

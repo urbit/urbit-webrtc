@@ -16,11 +16,12 @@ import { PalsList } from "../components/PalsList";
 import { SecureWarning } from "../components/SecureWarning";
 import { IncomingCall } from "../components/IncomingCall";
 import packageJson from '../../package.json';
-import call from "../assets/enter-call.wav";
+import callwav from "../assets/enter-call.wav";
 
 
 export const StartMeetingPage: FC<any> = observer(() => {
   console.log("Rerender StartMeetingPage");
+  document.title = "Campfire";
   const [meetingCode, setMeetingCode] = useState("");
   const { mediaStore, urchatStore, palsStore } = useStore();
   const { push } = useHistory();
@@ -28,13 +29,11 @@ export const StartMeetingPage: FC<any> = observer(() => {
   const isSecure =
     location.protocol.startsWith("https") || location.hostname === "localhost";
 
-  // play ringing call when incoming call
+  // change title when there's an incoming call
   useEffect(() => {
     if (isSecure && urchatStore.incomingCall) {
       console.log("incoming call");
-      const audio = new Audio(call);
-      audio.volume = 0.3;
-      audio.play();
+      document.title = "Call from ~"+urchatStore.incomingCall.peer;
     }
   }, [urchatStore.incomingCall]);
 
@@ -55,6 +54,9 @@ export const StartMeetingPage: FC<any> = observer(() => {
   };
 
   const placeCall = async (ship: string) => {
+    const audio = new Audio(callwav);
+    audio.volume = 0.3;
+    audio.play();
     mediaStore.resetStreams();
     const call = await urchatStore.placeCall(ship, (call) => {
       push(`/chat/${call.conn.uuid}`);
@@ -131,7 +133,7 @@ export const StartMeetingPage: FC<any> = observer(() => {
               Gather around
             </Text>
             <Text fontSize={5} fontWeight={400} opacity={0.5}>
-              Iniate a call with your friend
+              Start a call with your friend
             </Text>
           </Flex>
           <Flex alignItems="flex-start" flexDirection="column">
@@ -165,7 +167,12 @@ export const StartMeetingPage: FC<any> = observer(() => {
               height: "100px",
               overflowY: "auto"
             }}>
-              <PalsList mutuals={palsStore.mutuals} callPal={callPal} />
+              <PalsList mutuals={palsStore.mutuals?.filter(p =>
+              (p.includes(deSig(meetingCode)) ||
+                (deSig(meetingCode)) === "") || 
+                !meetingCode)
+              }
+                callPal={callPal} />
             </div>
           </Flex>
         </section>
@@ -176,7 +183,7 @@ export const StartMeetingPage: FC<any> = observer(() => {
         </section>
       </Flex>
       {!isSecure && <SecureWarning />}
-      {urchatStore.incomingCall && (
+      {isSecure && urchatStore.incomingCall && (
         <IncomingCall
           caller={urchatStore.incomingCall?.call.peer}
           answerCall={answerCall}
