@@ -57,6 +57,7 @@ export const StartMeetingPage: FC<any> = observer(() => {
   const placeCall = async (ship: string) => {
     mediaStore.resetStreams();
     const call = await urchatStore.placeCall(ship, (conn) => {
+      push(`/chat/${conn.uuid}`);
       urchatStore.setDataChannelOpen(false);
       urchatStore.setMessages([]);
       const channel = conn.createDataChannel("campfire");
