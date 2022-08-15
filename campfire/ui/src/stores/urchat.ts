@@ -41,7 +41,7 @@ interface IUrchatStore {
   startIcepond: () => void;
   placeCall: (
     ship: string,
-    setHandlers: (conn: UrbitRTCPeerConnection) => void
+    setHandlers: (call: OngoingCall) => void
   ) => Promise<any>;
   answerCall: (
     setHandlers: (ship: string, conn: UrbitRTCPeerConnection) => void
@@ -170,7 +170,7 @@ export class UrchatStore implements IUrchatStore {
 
   async placeCall(
     ship: string,
-    setHandlers: (conn: UrbitRTCPeerConnection) => void
+    setHandlers: (call: OngoingCall) => void
   ) {
     const { urbitRtcApp, hungup, startIcepond } = this;
     const conn = urbitRtcApp.call(ship, dap);
@@ -182,20 +182,18 @@ export class UrchatStore implements IUrchatStore {
     }
     conn.onring = (uuid: string) => {
       runInAction(() => {
-        this.ongoingCall.conn.uuid = uuid;
+        const call = { peer: ship, dap: dap, uuid: conn.uuid };
+        const ongoingCall = { conn, call };
+        this.ongoingCall = ongoingCall;
       })
-      setHandlers(this.ongoingCall.conn);
+      setHandlers(this.ongoingCall);
     }
     await conn.initialize();
-    const call = { peer: ship, dap: dap, uuid: conn.uuid };
     startIcepond();
-    const ongoingCall = { conn, call };
     runInAction(() => {
       this.wasHungUp = false;
       this.isCaller = true
-      this.ongoingCall = ongoingCall;
     })
-    return ongoingCall;
   }
 
   async answerCall(

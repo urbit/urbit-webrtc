@@ -56,11 +56,12 @@ export const StartMeetingPage: FC<any> = observer(() => {
 
   const placeCall = async (ship: string) => {
     mediaStore.resetStreams();
-    const call = await urchatStore.placeCall(ship, (conn) => {
-      push(`/chat/${conn.uuid}`);
+    const call = await urchatStore.placeCall(ship, (call) => {
+      push(`/chat/${call.conn.uuid}`);
+      mediaStore.getDevices(call);
       urchatStore.setDataChannelOpen(false);
       urchatStore.setMessages([]);
-      const channel = conn.createDataChannel("campfire");
+      const channel = call.conn.createDataChannel("campfire");
       channel.onopen = () => {
         // called when we the connection to the peer is open - aka the call has started
         console.log("data channel opened");
@@ -74,9 +75,8 @@ export const StartMeetingPage: FC<any> = observer(() => {
         console.log("channel message from " + speakerId + ": " + data);
       };
       urchatStore.setDataChannel(channel);
-      conn.ontrack = onTrack;
+      call.conn.ontrack = onTrack;
     });
-    mediaStore.getDevices(call);
   };
 
   const callPal = (ship: string) => {
