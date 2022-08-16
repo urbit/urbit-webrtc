@@ -1,7 +1,14 @@
-import React, { useCallback } from 'react';
-import { useForm } from 'react-hook-form';
-import { Ship, Button, Flex, Text, Dialog, Sigil } from "@holium/design-system";
-import { readSync } from 'fs';
+import React, { useCallback, useMemo, useRef } from "react";
+import {
+  Flex,
+  Card,
+  Input,
+  IconButton,
+  Icons,
+  Text,
+} from "@holium/design-system";
+import { createForm, createField } from "mobx-easy-form";
+import { observer } from "mobx-react";
 
 export interface Message {
   speaker: string;
@@ -9,50 +16,122 @@ export interface Message {
 }
 interface ChatProps {
   sendMessage: (msg: string) => void;
-  messages: Message[]
+  messages: Message[];
   ready: boolean;
 }
 
-export const Chat = ({ sendMessage, messages, ready }: ChatProps) => {
-  const { register, handleSubmit, reset } = useForm({
-    defaultValues: { message: '' }
-  });
+export const Chat = observer(({ sendMessage, messages, ready }: ChatProps) => {
+  const { form, message } = useMemo(chatInputForm, []);
+  const chatInputRef = useRef(null);
   const disabled = !ready;
-  const onSubmitMessage = useCallback(({ message }) => {
-    console.log(message)
-    sendMessage(message);
-    reset();
-  }, [sendMessage]);
+  const onSubmitMessage = () => {
+    const formData = form.actions.submit();
+
+    sendMessage(formData.message);
+    message.actions.onChange("");
+    message.actions.onFocus();
+    chatInputRef.current.value = "";
+  };
 
   return (
-    <div className={`flex flex-col h-full p-1 sm:p-2 text-sm bg-gray-300 lg:rounded-xl overflow-hidden ${disabled ? 'opacity-50' : ''}`}>
-      <div className="flex-1 h-full px-2 py-1 bg-white rounded-md overflow-y-auto">
-        <div className="flex flex-col-reverse justify-start">
+    <Card
+      borderRadius={9}
+      height="100%"
+      style={{
+        padding: 8,
+        display: "flex",
+        flexDirection: "column",
+        opacity: disabled ? 0.5 : 1,
+      }}
+    >
+      <Flex flexDirection="column" flexGrow={1}>
+        <Flex mx={1} flexDirection="column-reverse" justifyContent="flex-start">
           {messages.map((msg, idx) => (
-            <div className="mt-4" key={idx}>
-              <span className="font-bold mr-3">{msg.speaker}:</span>
-              {msg.message}
-            </div>
-          ))
+            <Flex key={idx}>
+              <Text fontSize={3} className="font-bold mr-3">
+                {msg.speaker}:
+              </Text>
+              <Text fontSize={3}>{msg.message}</Text>
+            </Flex>
+          ))}
+        </Flex>
+        {messages.length === 0 && (
+          <Flex flexGrow={1} alignItems="center" justifyContent="center">
+            <Text opacity={0.7} fontSize={3}>
+              No messages yet
+            </Text>
+          </Flex>
+        )}
+      </Flex>
+      <Flex>
+        <Input
+          ref={chatInputRef}
+          disabled={disabled}
+          style={{
+            fontSize: 18,
+            height: 40,
+            borderRadius: 6,
+            width: "100%",
+          }}
+          placeholder="Send a message..."
+          spellCheck={false}
+          rightInteractive
+          rightIcon={
+            <IconButton
+              color="brand.primary"
+              disabled={
+                !message.computed.isDirty ||
+                message.computed.ifWasEverBlurredThenError !== undefined ||
+                message.computed.error !== undefined
+              }
+              onClick={() => {
+                onSubmitMessage();
+              }}
+            >
+              <Icons.ArrowRight opacity={0.8} />
+            </IconButton>
           }
-        </div>
-      </div>
-      <form className="flex-none flex mt-2 sm:mt-6 relative rounded-md focus-within:ring-2 ring-yellow-300 focus-within:outline-none" onSubmit={handleSubmit(onSubmitMessage)}>
-        <label htmlFor="message" className="sr-only">Send a Message:</label>
-        <input
-          id="message"
-          type="text"
-          className="flex-1 input rounded-r-none focus:outline-none"
-          {...register('message')}
-          disabled={disabled}
+          onKeyDown={(event: any) => {
+            if (event.keyCode === 13 && !event.shiftKey) {
+              onSubmitMessage();
+            }
+          }}
+          onFocus={() => message.actions.onFocus()}
+          onBlur={() => message.actions.onBlur()}
+          onChange={(evt: any) => {
+            message.actions.onChange(evt.target.value);
+          }}
         />
-        <Button
-          type="submit"
-          disabled={disabled}
-        >
-          Send
-        </Button>
-      </form>
-    </div>
-  )
-}
+      </Flex>
+    </Card>
+  );
+});
+
+export const chatInputForm = (
+  defaults: any = {
+    chat: "",
+  }
+) => {
+  const form = createForm({
+    onSubmit({ values }) {
+      return values;
+    },
+  });
+
+  const message = createField({
+    id: "message",
+    form: form,
+    initialValue: defaults.message || "",
+    validate: (msg: string) => {
+      if (msg.length > 0) {
+        return { error: undefined, parsed: msg };
+      }
+      return { error: "Message required to send", parsed: undefined };
+    },
+  });
+
+  return {
+    form,
+    message,
+  };
+};

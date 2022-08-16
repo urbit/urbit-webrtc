@@ -1,23 +1,25 @@
-import React, { FC, useEffect, } from "react";
+import React, { FC, useEffect } from "react";
 import styled from "styled-components";
-import { Flex, Ship, Text, Dialog, Button } from "@holium/design-system";
+import {
+  Flex,
+  Ship,
+  Text,
+  Dialog,
+  Button,
+  Icons,
+  Card,
+} from "@holium/design-system";
 import { useStore } from "../stores/root";
 import { observer } from "mobx-react";
 import { Chat } from "../components/Chat";
 import { Call } from "../components/Call";
 import { Campfire } from "../icons/Campfire";
-import { deSig } from '@urbit/api';
+import { deSig } from "@urbit/api";
 import { useHistory } from "react-router";
-import "../styles/animations.css"
-
-const Main = styled.main`
-  position: relative;
-  height: 100vh;
-  width: 100%;
-  display: flex;
-  flex-direction: row;
-  background: #fbfbfb;
-`;
+import "../styles/animations.css";
+import { SectionHeader } from "../components/SectionHeader";
+import hangup from "../assets/hangup.wav";
+import { rgba } from "polished";
 
 export const MeetingSpace: FC<any> = observer(() => {
   const { mediaStore, urchatStore } = useStore();
@@ -34,24 +36,23 @@ export const MeetingSpace: FC<any> = observer(() => {
     const updateDevices = () => mediaStore.getDevices(urchatStore.ongoingCall);
     navigator.mediaDevices.addEventListener("devicechange", updateDevices);
     return () =>
-      navigator.mediaDevices.removeEventListener(
-        "devicechange",
-        updateDevices
-      );
-  })
+      navigator.mediaDevices.removeEventListener("devicechange", updateDevices);
+  });
 
   useEffect(() => {
-    if(urchatStore.ongoingCall?.call?.peer){
+    if (urchatStore.ongoingCall?.call?.peer) {
       document.title = "Call with ~" + urchatStore.ongoingCall.call.peer;
     }
-  }, [urchatStore.ongoingCall])
+  }, [urchatStore.ongoingCall]);
 
   const sendMessage = (msg: string) => {
     urchatStore.dataChannel?.send(msg);
-    const newMessages = [{ speaker: "me", message: msg }].concat(urchatStore.messages);
+    const newMessages = [{ speaker: "me", message: msg }].concat(
+      urchatStore.messages
+    );
     console.log(urchatStore.messages, newMessages);
     urchatStore.setMessages(newMessages);
-  }
+  };
   // ---------------------------------------------------------------
   // ---------------------------------------------------------------
   // ---------------------------------------------------------------
@@ -67,13 +68,14 @@ export const MeetingSpace: FC<any> = observer(() => {
     >
       <Flex
         style={{ background: "#EBEBEB" }}
+        borderRadius={20}
         width="75%"
         height="90%"
         m={10}
         justifyContent="center"
         alignItems="center"
       >
-        {(!urchatStore.dataChannelOpen && urchatStore.ongoingCall) && (
+        {!urchatStore.dataChannelOpen && urchatStore.ongoingCall && (
           <Flex
             flexDirection="column"
             width="100%"
@@ -81,47 +83,126 @@ export const MeetingSpace: FC<any> = observer(() => {
             alignItems="center"
           >
             <Campfire className="animate" />
-            {
-              (urchatStore.connectionState == "dialing") &&
-              <Text fontSize={5} fontWeight={400} opacity={0.9}>Dialing <b>{"~" + deSig(urchatStore.ongoingCall.call.peer)}</b>...</Text>
-            }
-            {
-              (urchatStore.connectionState == "ringing") &&
-              <Text fontSize={5} fontWeight={400} opacity={0.9}>Waiting for <b>{"~" + deSig(urchatStore.ongoingCall.call.peer)}</b> to answer the call...</Text>
-
-            }
-            {
-              (urchatStore.connectionState == "answering") &&
-              <Text fontSize={5} fontWeight={400} opacity={0.9}>Answering <b>{"~" + deSig(urchatStore.ongoingCall.call.peer)}'s</b> call...</Text>
-            }
-            {
-              urchatStore.connectionState.includes("connected") && (
-                <>
-                  <Text fontSize={5} fontWeight={400} opacity={0.9}>Please wait while you connect to <b>{"~" + deSig(urchatStore.ongoingCall.call.peer)}</b>...</Text>
-                  <Text fontSize={2} fontWeight={200} opacity={0.9}>may take a minute to start this p2p connection</Text>
-                </>
-              )
-            }
+            {urchatStore.connectionState == "dialing" && (
+              <Flex mt={2}>
+                <Text mr={1} fontSize={5} fontWeight={400} opacity={0.9}>
+                  Dialing{" "}
+                </Text>
+                <Text fontSize={5} fontWeight={500} opacity={0.9}>
+                  {"~" + deSig(urchatStore.ongoingCall.call.peer)}
+                </Text>
+                <Text fontSize={5} fontWeight={400} opacity={0.9}>
+                  ...
+                </Text>
+              </Flex>
+            )}
+            {urchatStore.connectionState == "ringing" && (
+              <Flex mt={2}>
+                <Text mr={1} fontSize={5} fontWeight={400} opacity={0.9}>
+                  Waiting for{" "}
+                </Text>
+                <Text fontSize={5} fontWeight={500} opacity={0.9}>
+                  {"~" + deSig(urchatStore.ongoingCall.call.peer)} to answer the
+                  call
+                </Text>
+                <Text fontSize={5} fontWeight={400} opacity={0.9}>
+                  ...
+                </Text>
+              </Flex>
+            )}
+            {urchatStore.connectionState == "answering" && (
+              <Flex mt={2}>
+                <Text mr={1} fontSize={5} fontWeight={400} opacity={0.9}>
+                  Answering{" "}
+                </Text>
+                <Text fontSize={5} fontWeight={500} opacity={0.9}>
+                  {"~" + deSig(urchatStore.ongoingCall.call.peer)}'s call
+                </Text>
+                <Text fontSize={5} fontWeight={400} opacity={0.9}>
+                  ...
+                </Text>
+              </Flex>
+            )}
+            {urchatStore.connectionState.includes("connected") && (
+              <>
+                <Flex mt={2}>
+                  <Text fontSize={5} fontWeight={400} opacity={0.9}>
+                    Please wait while you connect to{" "}
+                  </Text>
+                  <Text fontSize={5} fontWeight={500} opacity={0.9}>
+                    {"~" + deSig(urchatStore.ongoingCall.call.peer)}
+                  </Text>
+                  <Text fontSize={5} fontWeight={400} opacity={0.9}>
+                    ...
+                  </Text>
+                </Flex>
+                <Text fontSize={2} fontWeight={200} opacity={0.9}>
+                  may take a minute to start this p2p connection
+                </Text>
+              </>
+            )}
+            <Flex mt={3}>
+              <Button
+                style={{
+                  fontSize: 20,
+                  borderRadius: 24,
+                  height: 40,
+                  width: 40,
+                  paddingLeft: 0,
+                  paddingRight: 0,
+                }}
+                variant="custom"
+                bg={rgba("#CF3535", 0.12)}
+                onClick={() => {
+                  const audio = new Audio(hangup);
+                  audio.volume = 0.3;
+                  audio.play();
+                  mediaStore.stopAllTracks();
+                  push("/");
+                }}
+              >
+                <Icons.Leave size={24} color="#CF3535" />
+              </Button>
+            </Flex>
           </Flex>
         )}
-        {urchatStore.dataChannelOpen && (
-          <Call />
-        )}
+        {urchatStore.dataChannelOpen && <Call />}
       </Flex>
-      <Flex
-        width="25%"
-        flexDirection="column"
-        gap={6}
-        m={10}
-        height="90%"
-      >
-        <Text fontSize={5} fontWeight={400} opacity={0.9}>Participants</Text>
-        <Ship patp={"~" + deSig(urchatStore.urbit.ship)} />
-        {urchatStore.dataChannelOpen && (
-          <Ship patp={"~" + deSig(urchatStore.ongoingCall.call.peer)} />
-        )}
-        <Text fontSize={5} fontWeight={400} opacity={0.9} size={20} title="Messages sent over WebRTC">Chat</Text>
-        <Chat ready={urchatStore.dataChannelOpen} messages={urchatStore.messages} sendMessage={sendMessage} />
+      <Flex width="25%" flexDirection="column" gap={6} m={10} height="90%">
+        <SectionHeader
+          header="Participants"
+          icon={
+            <Icons.Participants
+              opacity={0.5}
+              fontSize="20px"
+              color="text.primary"
+              aria-hidden
+            />
+          }
+        />
+        <Card borderRadius={9} mt={1} mb={3} style={{ padding: 8 }}>
+          {/* TODO load contact store into local storage and lookup sigil metadata */}
+          <Ship patp={"~" + deSig(urchatStore.urbit.ship)} color="#000000" />
+          {urchatStore.dataChannelOpen && (
+            <Ship patp={"~" + deSig(urchatStore.ongoingCall.call.peer)} />
+          )}
+        </Card>
+        <SectionHeader
+          header="Chat"
+          icon={
+            <Icons.ChatLine
+              opacity={0.5}
+              fontSize="20px"
+              color="text.primary"
+              aria-hidden
+            />
+          }
+        />
+        <Chat
+          ready={urchatStore.dataChannelOpen}
+          messages={urchatStore.messages}
+          sendMessage={sendMessage}
+        />
       </Flex>
       <Dialog
         title="Remote Hangup"
@@ -134,14 +215,22 @@ export const MeetingSpace: FC<any> = observer(() => {
             bg="#F8E390"
             color="#333333"
             onClick={() => {
+              const audio = new Audio(hangup);
+              audio.volume = 0.3;
+              audio.play();
               mediaStore.stopAllTracks();
-              push("/")
+              push("/");
             }}
-          >Go to Campfire home</Button>
+          >
+            Go to Campfire home
+          </Button>
         }
         backdropOpacity={0.3}
         closeOnBackdropClick={false}
         isShowing={urchatStore.wasHungUp}
+        onHide={() => {
+          console.log("hiding");
+        }}
       >
         The peer has hungup the call with you. Sad!
       </Dialog>

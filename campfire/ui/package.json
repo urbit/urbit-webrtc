@@ -15,7 +15,9 @@
     "classnames": "^2.3.1",
     "icepond": "file:../../packages/icepond-js",
     "mobx": "^6.6.0",
+    "mobx-easy-form": "^1.2.2",
     "mobx-react": "^7.5.0",
+    "pals": "file:../../packages/pals-js",
     "polished": "^4.2.2",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
@@ -25,7 +27,6 @@
     "styled-components": "^5.3.5",
     "styled-system": "^5.1.5",
     "switchboard": "file:../../packages/switchboard-js",
-    "pals": "file:../../packages/pals-js",
     "urbit-ob": "^5.0.1",
     "zustand": "^3.5.7"
   },
@@ -63,6 +64,7 @@
   },
   "scripts": {
     "dev": "vite",
+    "dev:env": "vite --mode ",
     "mock": "vite --mode mock",
     "build:mock": "tsc && vite build --mode mock",
     "build:profile": "tsc && vite build --mode profile",
