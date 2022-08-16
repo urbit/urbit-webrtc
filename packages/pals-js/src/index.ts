@@ -20,7 +20,7 @@ class Pals extends EventTarget {
   async getPals(): Promise<string> {
     const pals = await this.urbit.scry<string>({ app: 'pals', path: '/json' });
     if (this.urbit.verbose) {
-      console.log("Just fetched pals list: " + pals)
+      console.log("Just fetched pals list: ", pals)
     }
     return pals;
   }

@@ -205,9 +205,9 @@ export const StartMeetingPage: FC<any> = observer(() => {
               Documentation
             </Text>
           </a>
-          <Text ml={5} fontSize={4} fontWeight={200} opacity={0.9} onClick={() => console.log("open settings")}>
+          {/* <Text ml={5} fontSize={4} fontWeight={200} opacity={0.9} onClick={() => setShowSettings(true)}>
             Settings
-          </Text>
+          </Text> */}
         </Flex>
       </div>
     </Flex>
