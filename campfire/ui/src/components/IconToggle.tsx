@@ -1,32 +1,43 @@
-import classNames from 'classnames';
-import React, { PropsWithChildren, useState } from 'react';
-import * as RadixToggle from '@radix-ui/react-toggle';
-import type * as Polymorphic from '@radix-ui/react-polymorphic';
+import classNames from "classnames";
+import React, { PropsWithChildren, useState } from "react";
+import * as RadixToggle from "@radix-ui/react-toggle";
+import type * as Polymorphic from "@radix-ui/react-polymorphic";
 
 type ToggleComponent = Polymorphic.ForwardRefComponent<
   Polymorphic.IntrinsicElement<typeof RadixToggle.Root>,
-  Polymorphic.OwnProps<typeof RadixToggle.Root> & PropsWithChildren<{
-    toggleClass?: string;
-  }>
+  Polymorphic.OwnProps<typeof RadixToggle.Root> &
+    PropsWithChildren<{
+      toggleClass?: string;
+    }>
 >;
 
 export const IconToggle = React.forwardRef(
   (
-    { defaultPressed, pressed, onPressedChange, disabled, children, className, toggleClass },
+    {
+      defaultPressed,
+      pressed,
+      onPressedChange,
+      disabled,
+      children,
+      className,
+      toggleClass,
+    },
     ref
   ) => {
     const [on, setOn] = useState(defaultPressed);
     const isControlled = !!onPressedChange;
     const proxyPressed = isControlled ? pressed : on;
     const proxyOnPressedChange = isControlled ? onPressedChange : setOn;
-    const depressedColor = toggleClass ?? 'text-pink-900 bg-pink-500';
+    const depressedColor = toggleClass ?? "text-white bg-pink-500";
 
     return (
       <RadixToggle.Root
         className={classNames(
-          'flex items-center justify-center default-ring rounded-full',
-          disabled && proxyPressed && 'text-gray-400 bg-gray-700',
-          proxyPressed && 'text-gray-200 bg-gray-700',
+          "flex items-center justify-center default-ring rounded-full",
+          // disabled && proxyPressed && "text-gray-300 bg-gray-50",
+          disabled
+            ? "text-gray-300 bg-gray-50"
+            : proxyPressed && "text-gray-600 bg-gray-100",
           !proxyPressed && depressedColor,
           className
         )}
@@ -35,7 +46,7 @@ export const IconToggle = React.forwardRef(
         disabled={disabled}
         ref={ref}
       >
-        { children }
+        {children}
       </RadixToggle.Root>
     );
   }

@@ -1,4 +1,5 @@
 import { makeObservable, observable, action, runInAction } from "mobx";
+import ring from "../assets/ring.wav";
 import { OngoingCall } from "./urchat";
 
 // Types and interfaces
@@ -33,6 +34,10 @@ interface IMediaStore {
   resetStreams: () => void;
   addTrackToRemote: (track: MediaStreamTrack) => void;
 }
+export let ringing: HTMLAudioElement = new Audio(ring);
+export const resetRing = () => {
+  ringing = new Audio(ring);
+};
 
 /**
  * A class that is observable
@@ -80,7 +85,7 @@ export class MediaStore implements IMediaStore {
         } else {
           this.sharedScreen = await startShareScreen(this, call);
         }
-      }
+      },
     };
     this.devices = [];
     makeObservable(this, {
@@ -96,8 +101,7 @@ export class MediaStore implements IMediaStore {
       resetStreams: action.bound,
       addTrackToRemote: action.bound,
       stopAllTracks: action.bound,
-    }
-    );
+    });
   }
 
   async getDevices(call: OngoingCall) {
@@ -114,22 +118,22 @@ export class MediaStore implements IMediaStore {
       this.devices = devices;
       this.video = video;
       this.audio = audio;
-    })
+    });
   }
 
   async toggleScreenShare(call: OngoingCall) {
     if (this.sharedScreen.enabled) {
       console.log("stop share screen");
       const removeTrack = (track: Track) => {
-        console.log('Removing screenshare track from call', track);
+        console.log("Removing screenshare track from call", track);
         this.local.removeTrack(track);
         call.conn?.removeTrack(track.sender);
         track.stop();
-      }
+      };
       runInAction(() => {
         this.sharedScreen.tracks.forEach(removeTrack);
         this.sharedScreen.enabled = false;
-      })
+      });
     } else {
       const addTrack = (track: MediaStreamTrack) => {
         track.onended = (event: Event) => {
@@ -137,18 +141,20 @@ export class MediaStore implements IMediaStore {
           console.log(`${event} ON ENDED`);
           this.toggleScreenShare(call);
         };
-        console.log('Adding screenshare track to call', track);
+        console.log("Adding screenshare track to call", track);
         track.contentHint = "screenshare";
         this.local.addTrack(track);
         const sender = call.conn?.addTrack(track);
         (track as Track).sender = sender;
         return track as Track;
-      }
-      const t = (await navigator.mediaDevices.getDisplayMedia()).getTracks().map(addTrack);
+      };
+      const t = (await navigator.mediaDevices.getDisplayMedia())
+        .getTracks()
+        .map(addTrack);
       runInAction(() => {
         this.sharedScreen.tracks = t;
         this.sharedScreen.enabled = true;
-      })
+      });
     }
   }
 
@@ -158,8 +164,12 @@ export class MediaStore implements IMediaStore {
   }
 
   stopAllTracks() {
-    this.video.tracks.forEach((track: Track) => { track.stop() });
-    this.audio.tracks.forEach((track: Track) => { track.stop() });
+    this.video.tracks.forEach((track: Track) => {
+      track.stop();
+    });
+    this.audio.tracks.forEach((track: Track) => {
+      track.stop();
+    });
   }
 
   addTrackToRemote(track: MediaStreamTrack) {
@@ -167,7 +177,6 @@ export class MediaStore implements IMediaStore {
     // this is a hack so that state refreshes
     this.remoteVideoTrackCounter = this.remote.getVideoTracks().length;
   }
-
 }
 
 function toggleMedia(media: Media): Media {
@@ -229,7 +238,10 @@ async function changeDevice(
   return media;
 }
 
-async function startShareScreen(state: MediaStore, call: OngoingCall): Promise<ScreenMedia> {
+async function startShareScreen(
+  state: MediaStore,
+  call: OngoingCall
+): Promise<ScreenMedia> {
   console.log("start share screen");
   const media = state.sharedScreen;
 
@@ -240,26 +252,31 @@ async function startShareScreen(state: MediaStore, call: OngoingCall): Promise<S
       console.log(`${event} ON ENDED`);
       // stopShareScreen(state);
     };
-    console.log('Adding screenshare track to call', track);
+    console.log("Adding screenshare track to call", track);
     track.contentHint = "screenshare";
     state.local.addTrack(track);
     const sender = call.conn?.addTrack(track);
     (track as Track).sender = sender;
     return track as Track;
-  }
+  };
 
-  media.tracks = (await navigator.mediaDevices.getDisplayMedia()).getTracks().map(addTrack);
+  media.tracks = (await navigator.mediaDevices.getDisplayMedia())
+    .getTracks()
+    .map(addTrack);
   media.enabled = true;
 
   return media;
 }
 
-async function stopShareScreen(state: MediaStore, call: OngoingCall): Promise<ScreenMedia> {
+async function stopShareScreen(
+  state: MediaStore,
+  call: OngoingCall
+): Promise<ScreenMedia> {
   console.log("stop share screen");
   const media = state.sharedScreen;
 
   const removeTrack = (track: Track) => {
-    console.log('Removing screenshare track from call', track);
+    console.log("Removing screenshare track from call", track);
     state.local.removeTrack(track);
     try {
       call.conn?.removeTrack(track.sender);
@@ -267,7 +284,7 @@ async function stopShareScreen(state: MediaStore, call: OngoingCall): Promise<Sc
       console.log(err);
     }
     track.stop();
-  }
+  };
 
   media.tracks.forEach(removeTrack);
   media.enabled = false;

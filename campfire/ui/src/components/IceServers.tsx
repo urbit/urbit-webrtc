@@ -8,9 +8,9 @@ export const IceServers = () => {
 
   return (
     <div className="iceServers">
-      <h4>Ice servers</h4>
+      <h4>ICE servers</h4>
       {servers.map((server, idx) => (
-        <pre key={idx}>{server}</pre>
+        <pre key={idx}>{server.urls}</pre>
       ))}
     </div>
   );

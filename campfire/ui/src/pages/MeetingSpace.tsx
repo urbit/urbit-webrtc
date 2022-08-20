@@ -20,6 +20,8 @@ import "../styles/animations.css";
 import { SectionHeader } from "../components/SectionHeader";
 import hangup from "../assets/hangup.wav";
 import { rgba } from "polished";
+import { ringing } from "../stores/media";
+import { Controls } from "../components/Controls";
 
 export const MeetingSpace: FC<any> = observer(() => {
   const { mediaStore, urchatStore } = useStore();
@@ -67,7 +69,7 @@ export const MeetingSpace: FC<any> = observer(() => {
       flexDirection="row"
     >
       <Flex
-        style={{ background: "#EBEBEB" }}
+        style={{ background: "#EBEBEB", position: "relative" }}
         borderRadius={20}
         width="75%"
         height="90%"
@@ -154,8 +156,9 @@ export const MeetingSpace: FC<any> = observer(() => {
                 variant="custom"
                 bg={rgba("#CF3535", 0.12)}
                 onClick={() => {
+                  ringing.pause();
                   const audio = new Audio(hangup);
-                  audio.volume = 0.3;
+                  audio.volume = 0.8;
                   audio.play();
                   urchatStore.hangup();
                   mediaStore.stopAllTracks();
@@ -181,12 +184,23 @@ export const MeetingSpace: FC<any> = observer(() => {
             />
           }
         />
-        <Card borderRadius={9} mt={1} mb={3} style={{ padding: 8 }}>
-          {/* TODO load contact store into local storage and lookup sigil metadata */}
-          <Ship patp={"~" + deSig(urchatStore.urbit.ship)} color="#000000" />
-          {urchatStore.dataChannelOpen && (
-            <Ship patp={"~" + deSig(urchatStore.ongoingCall.call.peer)} color="#000000" />
-          )}
+        <Card
+          elevation="none"
+          borderRadius={9}
+          mt={1}
+          mb={3}
+          style={{ padding: 8, gap: 4 }}
+        >
+          <Flex gap={4} flexDirection="column">
+            {/* TODO load contact store into local storage and lookup sigil metadata */}
+            <Ship patp={"~" + deSig(urchatStore.urbit.ship)} color="#000000" />
+            {urchatStore.dataChannelOpen && (
+              <Ship
+                patp={"~" + deSig(urchatStore.ongoingCall.call.peer)}
+                color="#000000"
+              />
+            )}
+          </Flex>
         </Card>
         <SectionHeader
           header="Chat"
@@ -216,8 +230,9 @@ export const MeetingSpace: FC<any> = observer(() => {
             bg="#F8E390"
             color="#333333"
             onClick={() => {
+              ringing.pause();
               const audio = new Audio(hangup);
-              audio.volume = 0.3;
+              audio.volume = 0.8;
               audio.play();
               mediaStore.stopAllTracks();
               push("/");

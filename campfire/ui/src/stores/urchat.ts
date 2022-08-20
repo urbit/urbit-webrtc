@@ -168,32 +168,29 @@ export class UrchatStore implements IUrchatStore {
     this.icepond = icepond;
   }
 
-  async placeCall(
-    ship: string,
-    setHandlers: (call: OngoingCall) => void
-  ) {
+  async placeCall(ship: string, setHandlers: (call: OngoingCall) => void) {
     const { urbitRtcApp, hungup, startIcepond } = this;
     const conn = urbitRtcApp.call(ship, dap);
     conn.addEventListener("hungupcall", hungup);
     conn.onurbitstatechanged = (ev: Event) => {
       runInAction(() => {
         this.connectionState = conn.urbitState;
-      })
-    }
+      });
+    };
     conn.onring = (uuid: string) => {
       runInAction(() => {
         const call = { peer: ship, dap: dap, uuid: conn.uuid };
         const ongoingCall = { conn, call };
         this.ongoingCall = ongoingCall;
-      })
+      });
       setHandlers(this.ongoingCall);
-    }
+    };
     await conn.initialize();
     startIcepond();
     runInAction(() => {
       this.wasHungUp = false;
-      this.isCaller = true
-    })
+      this.isCaller = true;
+    });
   }
 
   async answerCall(
@@ -207,8 +204,8 @@ export class UrchatStore implements IUrchatStore {
     conn.onurbitstatechanged = (ev: Event) => {
       runInAction(() => {
         this.connectionState = conn.urbitState;
-      })
-    }
+      });
+    };
     setHandlers(call.peer, conn);
     await conn.initialize();
     startIcepond();
@@ -219,7 +216,7 @@ export class UrchatStore implements IUrchatStore {
       this.isCaller = false;
       this.ongoingCall = ongoingCall;
       this.incomingCall = null;
-    })
+    });
 
     return ongoingCall;
   }

@@ -35,6 +35,7 @@ export const Chat = observer(({ sendMessage, messages, ready }: ChatProps) => {
 
   return (
     <Card
+      elevation="none"
       borderRadius={9}
       height="100%"
       style={{
