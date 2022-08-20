@@ -1,8 +1,24 @@
 ;>
-- Developer: [Holium](https://holium.com/)
+- Developer: [Holium](https://holium.com/) + ~datryn-ribdun
 - License: MIT
 - App link: [~dister-dister-datryn-ribdun/campfire](web+urbitgraph://~dister-dister-datryn-ribdun/campfire)
 - Source repo: [https://github.com/datryn-ribdun/urbit-webrtc](https://github.com/datryn-ribdun/urbit-webrtc)
 - Bug reports: [https://github.com/datryn-ribdun/urbit-webrtc/issues](https://github.com/datryn-ribdun/urbit-webrtc/issues)
 
-Campfire is a p2p video chat application made by Holium.
+Campfire is a p2p video chat application made by Holium. It works by establishing a WebRTC connection with Urbit as a signaling channel.
+
+# Credits
+
+This work was only possible because of the original [urbit-webrtc](https://github.com/urbit/urbit-webrtc) project that built out the gall agents (`switchboard` and `icepond`) as well as the prototype urchatfm application.
+
+Thank you to:
+- ~ritpub-sipsyl
+- ~martyr-binbex
+- Hunter Miller
+- lukestiles
+- ~hocdep-labtel
+
+Worked on Campfire directly:
+- ~datryn-ribdun
+- ~lomder-librun
+- Holium
