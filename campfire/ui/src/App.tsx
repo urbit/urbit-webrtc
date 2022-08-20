@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Route, Switch } from "react-router-dom";
+import { BrowserRouter, Redirect, Route, Switch } from "react-router-dom";
 import { ThemeProvider } from "styled-components";
 import { theme } from "@holium/design-system";
 import { StartMeetingPage } from "./pages/StartMeeting";
@@ -16,8 +16,11 @@ function App() {
             <Route path="/" exact>
               <StartMeetingPage />
             </Route>
-            <Route path="/chat">
+            <Route path="/chat/:uuid">
               <MeetingSpace />
+            </Route>
+            <Route path="*">
+              <Redirect to="/" />
             </Route>
           </Switch>
         </BrowserRouter>

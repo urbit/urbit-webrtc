@@ -1,28 +1,23 @@
-import React, { FC, useEffect, useState, } from "react";
+import React, { FC, useEffect, useMemo, useState } from "react";
 import { observer } from "mobx-react";
 import { useHistory } from "react-router";
-import { deSig } from '@urbit/api';
-import { isValidPatp } from 'urbit-ob';
-import {
-  Button,
-  Flex,
-  Input,
-  Text,
-  theme,
-} from "@holium/design-system";
+import { deSig } from "@urbit/api";
+import { isValidPatp } from "urbit-ob";
+import { Button, Flex, Input, Text, theme } from "@holium/design-system";
 import { Campfire } from "../icons/Campfire";
 import { useStore } from "../stores/root";
 import { PalsList } from "../components/PalsList";
 import { SecureWarning } from "../components/SecureWarning";
 import { IncomingCall } from "../components/IncomingCall";
-import packageJson from '../../package.json';
+import packageJson from "../../package.json";
 import callwav from "../assets/enter-call.wav";
-
+import ring from "../assets/ring.wav";
+import { createField, createForm } from "mobx-easy-form";
 
 export const StartMeetingPage: FC<any> = observer(() => {
   console.log("Rerender StartMeetingPage");
   document.title = "Campfire";
-  const [meetingCode, setMeetingCode] = useState("");
+  const { form, meetingCode } = useMemo(meetingCodeForm, []);
   const { mediaStore, urchatStore, palsStore } = useStore();
   const { push } = useHistory();
 
@@ -33,7 +28,7 @@ export const StartMeetingPage: FC<any> = observer(() => {
   useEffect(() => {
     if (isSecure && urchatStore.incomingCall) {
       console.log("incoming call");
-      document.title = "Call from ~"+urchatStore.incomingCall.peer;
+      document.title = "Call from ~" + urchatStore.incomingCall.peer;
     }
   }, [urchatStore.incomingCall]);
 
@@ -42,11 +37,8 @@ export const StartMeetingPage: FC<any> = observer(() => {
     const updateDevices = () => mediaStore.getDevices(urchatStore.ongoingCall);
     navigator.mediaDevices.addEventListener("devicechange", updateDevices);
     return () =>
-      navigator.mediaDevices.removeEventListener(
-        "devicechange",
-        updateDevices
-      );
-  })
+      navigator.mediaDevices.removeEventListener("devicechange", updateDevices);
+  });
 
   const onTrack = (evt: Event & { track: MediaStreamTrack }) => {
     console.log("Incoming track event", evt);
@@ -54,7 +46,8 @@ export const StartMeetingPage: FC<any> = observer(() => {
   };
 
   const placeCall = async (ship: string) => {
-    const audio = new Audio(callwav);
+    // TODO make "ring" loop until the call is fully connected, then play "enter-call"
+    const audio = new Audio(ring);
     audio.volume = 0.3;
     audio.play();
     mediaStore.resetStreams();
@@ -72,7 +65,9 @@ export const StartMeetingPage: FC<any> = observer(() => {
       channel.onmessage = (evt) => {
         const data = evt.data;
         const speakerId = deSig(ship);
-        const new_messages = [{ speaker: speakerId, message: data }].concat(urchatStore.messages);
+        const new_messages = [{ speaker: speakerId, message: data }].concat(
+          urchatStore.messages
+        );
         urchatStore.setMessages(new_messages);
         console.log("channel message from " + speakerId + ": " + data);
       };
@@ -83,7 +78,7 @@ export const StartMeetingPage: FC<any> = observer(() => {
 
   const callPal = (ship: string) => {
     placeCall(deSig(ship));
-  }
+  };
 
   const answerCall = async () => {
     mediaStore.resetStreams();
@@ -97,7 +92,9 @@ export const StartMeetingPage: FC<any> = observer(() => {
         channel.onopen = () => urchatStore.setDataChannelOpen(true);
         channel.onmessage = (evt) => {
           const data = evt.data;
-          const new_messages = [{ speaker: peer, message: data }].concat(urchatStore.messages);
+          const new_messages = [{ speaker: peer, message: data }].concat(
+            urchatStore.messages
+          );
           urchatStore.setMessages(new_messages);
           console.log("channel message from me to: " + data);
         };
@@ -106,7 +103,19 @@ export const StartMeetingPage: FC<any> = observer(() => {
       conn.ontrack = onTrack;
     });
     mediaStore.getDevices(call);
-  }
+  };
+
+  const pals =
+    useMemo(
+      () =>
+        palsStore.mutuals?.filter(
+          (p) =>
+            p.includes(deSig(meetingCode.state.value)) ||
+            deSig(meetingCode.state.value) === "" ||
+            !meetingCode.state.value
+        ),
+      [palsStore.mutuals, meetingCode.state.value]
+    ) || [];
   // ---------------------------------------------------------------
   // ---------------------------------------------------------------
   // ---------------------------------------------------------------
@@ -129,11 +138,11 @@ export const StartMeetingPage: FC<any> = observer(() => {
       >
         <section>
           <Flex mb={6} flexDirection="column">
-            <Text mb={1} fontSize={9} fontWeight={600}>
+            <Text fontSize={9} fontWeight={500}>
               Gather around
             </Text>
-            <Text fontSize={5} fontWeight={400} opacity={0.5}>
-              Start a call with your friend
+            <Text fontSize={4} fontWeight={400} opacity={0.5}>
+              Start a call with your friend.
             </Text>
           </Flex>
           <Flex alignItems="flex-start" flexDirection="column">
@@ -148,31 +157,41 @@ export const StartMeetingPage: FC<any> = observer(() => {
               }}
               mb={4}
               placeholder="Enter a @p (~sampel-palnet)"
-              value={meetingCode}
+              spellCheck={false}
               rightInteractive
               rightIcon={
                 <Button
-                  disabled={!isValidPatp(`~${deSig(meetingCode)}` || '') && meetingCode.length > 0}
-                  onClick={() => placeCall(deSig(meetingCode))}
+                  size="sm"
+                  variant="custom"
+                  height={26}
+                  disabled={
+                    !meetingCode.computed.isDirty ||
+                    meetingCode.computed.error !== undefined
+                  }
+                  onClick={() => {
+                    const formData = form.actions.submit();
+                    placeCall(deSig(formData.meetingCode));
+                  }}
                   bg="#F8E390"
                   color="#333333"
                 >
-                  <b>Call</b>
+                  Call
                 </Button>
               }
-              onChange={(evt: any) => setMeetingCode(evt.target.value)}
+              onFocus={() => meetingCode.actions.onFocus()}
+              onBlur={() => meetingCode.actions.onBlur()}
+              onChange={(evt: any) => {
+                meetingCode.actions.onChange(evt.target.value);
+              }}
             />
-            <div style={{
-              width: "100%",
-              height: "100px",
-              overflowY: "auto"
-            }}>
-              <PalsList mutuals={palsStore.mutuals?.filter(p =>
-              (p.includes(deSig(meetingCode)) ||
-                (deSig(meetingCode)) === "") || 
-                !meetingCode)
-              }
-                callPal={callPal} />
+            <div
+              style={{
+                width: "100%",
+                height: pals.length ? "100px" : 0, // if there are no pals, don't show element
+                overflowY: "auto",
+              }}
+            >
+              <PalsList mutuals={pals} callPal={callPal} />
             </div>
           </Flex>
         </section>
@@ -187,21 +206,29 @@ export const StartMeetingPage: FC<any> = observer(() => {
         <IncomingCall
           caller={urchatStore.incomingCall?.call.peer}
           answerCall={answerCall}
-          rejectCall={() => urchatStore.rejectCall}
+          rejectCall={() => urchatStore.rejectCall()}
         />
       )}
       <div
         style={{
-          bottom: "0px", left: "0px", position: "absolute", margin: "10px"
-        }}>
-        <Flex
-          alignItems="flex-start" flexDirection="row"
-        >
+          bottom: "0px",
+          left: "0px",
+          position: "absolute",
+          margin: "10px",
+        }}
+      >
+        <Flex alignItems="flex-start" flexDirection="row">
           <Text fontSize={4} fontWeight={200} opacity={0.9}>
             v{packageJson.version}
           </Text>
           <a href="/docs/campfire/overview">
-            <Text ml={5} fontSize={4} fontWeight={200} opacity={0.9} title="on %docs">
+            <Text
+              ml={5}
+              fontSize={4}
+              fontWeight={200}
+              opacity={0.9}
+              title="on %docs"
+            >
               Documentation
             </Text>
           </a>
@@ -213,3 +240,33 @@ export const StartMeetingPage: FC<any> = observer(() => {
     </Flex>
   );
 });
+
+export const meetingCodeForm = (
+  defaults: any = {
+    meetingCode: "",
+  }
+) => {
+  const form = createForm({
+    onSubmit({ values }) {
+      return values;
+    },
+  });
+
+  const meetingCode = createField({
+    id: "meetingCode",
+    form: form,
+    initialValue: defaults.meetingCode || "",
+    validate: (patp: string) => {
+      if (patp.length > 1 && isValidPatp("~" + deSig(patp))) {
+        return { error: undefined, parsed: patp };
+      }
+
+      return { error: "Invalid patp", parsed: undefined };
+    },
+  });
+
+  return {
+    form,
+    meetingCode,
+  };
+};

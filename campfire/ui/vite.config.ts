@@ -27,9 +27,10 @@ export default ({ mode }) => {
 
   return defineConfig({
     server: {
+      port: process.env.VITE_PORT ? parseInt(process.env.VITE_PORT) : 3000,
       fs: {
-        allow: ['/']
-      }
+        allow: ["/"],
+      },
     },
     resolve: {
       alias: {
