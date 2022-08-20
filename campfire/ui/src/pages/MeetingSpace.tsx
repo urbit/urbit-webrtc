@@ -185,7 +185,7 @@ export const MeetingSpace: FC<any> = observer(() => {
           {/* TODO load contact store into local storage and lookup sigil metadata */}
           <Ship patp={"~" + deSig(urchatStore.urbit.ship)} color="#000000" />
           {urchatStore.dataChannelOpen && (
-            <Ship patp={"~" + deSig(urchatStore.ongoingCall.call.peer)} color="#FFFFFF" />
+            <Ship patp={"~" + deSig(urchatStore.ongoingCall.call.peer)} color="#000000" />
           )}
         </Card>
         <SectionHeader
