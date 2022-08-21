@@ -6,7 +6,8 @@ export type VideoSize = "xs-mini" | "mini" | "large";
 interface VideoProps extends VideoFromStreamProps {
   size: VideoSize;
   className?: string;
-  isScreenshare: boolean;
+  isScreenshare?: boolean;
+  isOur?: boolean;
   muted: boolean;
 }
 
@@ -36,15 +37,17 @@ export const Video = ({
   size,
   className,
   isScreenshare,
+  isOur,
   ...props
 }: VideoProps) => {
-  const flipAmt = isScreenshare ? "rotateY(0deg)" : "rotateY(180deg)";
+  const flipAmt = isOur ? "rotateY(180deg)" : "rotateY(0deg)";
 
   return (
     <div
+      style={{ overflow: "hidden" }}
       className={classNames(
         size === "xs-mini" && "w-20 sm:w-28 shadow-md rounded-xl",
-        size === "mini" && "w-32 sm:w-64",
+        size === "mini" && "w-32 sm:w-64 rounded-lg",
         size === "large" && "h-1",
         className
       )}
@@ -52,7 +55,7 @@ export const Video = ({
       <VideoFromStream
         {...props}
         className={classNames("h-full w-full object-cover md:object-contain")}
-        style={{ transform: flipAmt }}
+        style={{ transform: flipAmt, objectFit: "cover" }}
       />
     </div>
   );

@@ -32,7 +32,7 @@ export const Controls = observer(({ className }: ControlsProps) => {
         borderRadius: 16,
         borderColor: "#E3E3E3",
         padding: "6px 16px",
-        width: "100%",
+        width: "80%",
       }}
     >
       <div
