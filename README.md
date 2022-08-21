@@ -10,7 +10,7 @@ The campfire app is a totally rewritten UI fixing many bugs and issues in the ur
 - `icepond-test`: React app demonstrating icepond
 - `switchboard`: Gall agent and marks for signalling WebRTC peer connections
 - `switchboard-js` Javascript library for setting up WebRTC peer connections via Urbit airlock to switchboard
-- `campfire`: Rebuilt UI built by Holium.
+- `campfire`: Rebuilt UI by Holium.
 
 ## Design
 See [DESIGN.md](DESIGN.md)
