@@ -40,7 +40,7 @@ export const Call = observer(() => {
           <Video
             size={landscape ? "mini" : "xs-mini"}
             muted={true}
-            isScreenshare={false}
+            isOur
             srcObject={mediaStore.local}
             className={classNames(
               "border border-white",
@@ -84,9 +84,10 @@ export const Call = observer(() => {
         <Flex
           className="transform"
           position="absolute"
-          left={30}
-          right={30}
-          bottom={30}
+          justifyContent="center"
+          left={20}
+          right={20}
+          bottom={20}
         >
           <Controls />
         </Flex>
