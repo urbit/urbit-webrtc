@@ -301,7 +301,13 @@
       [%default-config *] :: convenience, load and interpret the default config from the library
     $(fetcher-config default-config:icepond-lib)
       ::
+      [%default-google-config *] :: convenience, load and interpret the google version of the default config from the library
+    $(fetcher-config default-google-config:icepond-lib)
+      ::
       [%google-open *] :: convenience, load and interpret the google server url from the library
     $(fetcher-config google-open:icepond-lib)
+      ::
+      [%holium-open *] :: convenience, load and interpret the holium server url from the library
+    $(fetcher-config holium-open:icepond-lib)
   ==
 --

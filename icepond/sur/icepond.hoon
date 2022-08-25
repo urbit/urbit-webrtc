@@ -17,6 +17,8 @@
     [%from-ted ted=@tas]
     [%from-sponsor ~]
     [%default-config ~] 
+    [%default-google-config ~]
     [%google-open ~]
+    [%holium-open ~]
   ==
 --
