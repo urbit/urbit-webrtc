@@ -34,7 +34,7 @@ export const IceServers = () => {
         <Text key={idx} fontSize={3} fontWeight={100}>{server.urls}</Text>
       ))}
       <br />
-      <a href="/docs/campfire/iceservers" title="link to %docs">
+      <a href="/docs/campfire/iceservers" title="link to %docs" target="_blank" rel="noopener noreferrer">
         <Text fontSize={4} fontWeight={300}>%docs for configuring ICE servers</Text>
       </a>
       {/* <Button onClick={clickButton}>Add new server</Button> */}
