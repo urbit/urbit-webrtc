@@ -73,7 +73,7 @@ class UrbitRTCApp extends EventTarget {
   initialize() {
     this.subscriptionId =
       this._urbit.subscribe({
-        app: 'switchboard',
+        app: 'rtcswitchboard',
         path: `/incoming/${this.dap}`,
         err: err => this.onerror(err),
         event: evt => this.handleIncoming(evt),
@@ -158,7 +158,7 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
     super(configuration);
     // Urbit airlock
     this.urbit = urbit;
-    // Whether this is a reconnection to the same switchboard call
+    // Whether this is a reconnection to the same rtcswitchboard call
     this.reconnect = false;
     // Name of ship we are calling
     this.peer = peer;
@@ -192,7 +192,7 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
           if (this.urbit.verbose) {
             console.log(`Sending ICE candidate for address ${evt.candidate?.address}:${evt.candidate?.port}`);
           };
-          this.urbit.poke({ app: 'switchboard', mark: 'switchboard-from-client', json: { 'uuid': this.uuid, 'tag': 'icecandidate', ...evt.candidate?.toJSON() } })
+          this.urbit.poke({ app: 'rtcswitchboard', mark: 'rtcswitchboard-from-client', json: { 'uuid': this.uuid, 'tag': 'icecandidate', ...evt.candidate?.toJSON() } })
         }).catch(err => this.closeWithError(err));
       };
     });
@@ -227,8 +227,8 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
   static async reconnect(params: Reconnect) {
     var uuid = params.uuid;
     var urbit = params.urbit ? params.urbit : window.urbit;
-    var peer = await urbit.scry<string>({ app: 'switchboard', path: `/call/${uuid}/peer` });
-    var dap = await urbit.scry<string>({ app: 'switchboard', path: `/call/${uuid}/dap` });
+    var peer = await urbit.scry<string>({ app: 'rtcswitchboard', path: `/call/${uuid}/peer` });
+    var dap = await urbit.scry<string>({ app: 'rtcswitchboard', path: `/call/${uuid}/dap` });
 
     var conn = new UrbitRTCPeerConnection(peer, dap, uuid, urbit);
     conn.reconnect = true;
@@ -242,7 +242,7 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
    */
   async dial() {
     await this.urbit.subscribe({
-      app: 'switchboard',
+      app: 'rtcswitchboard',
       path: '/uuid',
       err: err => this.closeWithError(err),
       event: uuid => this.ring(uuid),
@@ -250,7 +250,7 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
     });
   }
 
-  /** With a UUID, tell switchboard about our call
+  /** With a UUID, tell rtcswitchboard about our call
    * @param {string} uuid the UUID of our new call
    * @returns {Promise} a promise which resolves when we have successfuly subscribed to the call.
    */
@@ -261,8 +261,8 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
       console.log('Call UUID:', this.uuid);
     }
     await this.urbit.poke({
-      app: 'switchboard',
-      mark: 'switchboard-from-client',
+      app: 'rtcswitchboard',
+      mark: 'rtcswitchboard-from-client',
       json: {
         'uuid': this.uuid,
         'tag': 'place-call',
@@ -280,7 +280,7 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
    */
   subscribe() {
     this.subscriptionId = this.urbit.subscribe({
-      app: 'switchboard',
+      app: 'rtcswitchboard',
       path: `/call/${this.uuid}`,
       err: err => this.closeWithError(err),
       event: fact => this.handleFact(fact),
@@ -292,7 +292,7 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
   async resubscribe() {
     if (this.connectionState !== 'closed') {
       await this.subscribe()
-      const last = await this.urbit.scry<LastRemote>({ 'app': 'switchboard', 'path': `/call/${this.uuid}/last-remote` });
+      const last = await this.urbit.scry<LastRemote>({ 'app': 'rtcswitchboard', 'path': `/call/${this.uuid}/last-remote` });
 
       if (last !== null) {
         this.signallingState.startSettingRemote();
@@ -313,8 +313,8 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
   close() {
     var closeP = new Promise<void>((resolve) => { super.close(); resolve(); });
     var pokeP = this.urbit.poke({
-      app: 'switchboard',
-      mark: 'switchboard-from-client',
+      app: 'rtcswitchboard',
+      mark: 'rtcswitchboard-from-client',
       json: { 'tag': 'reject', 'uuid': this.uuid }
     });
     Promise.all([closeP, pokeP]).then(() => {
@@ -369,15 +369,15 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
       }
     }
     await this.urbit.poke({
-      app: 'switchboard',
-      mark: 'switchboard-from-client',
+      app: 'rtcswitchboard',
+      mark: 'rtcswitchboard-from-client',
       json: { 'uuid': this.uuid, 'tag': 'sdp', ...this.localDescription?.toJSON() }
     });
     await this.signallingState.doneSending(this.askSignal.bind(this));
   }
 
   async askSignal() {
-    await this.urbit.poke({ app: 'switchboard', mark: 'switchboard-from-client', json: { 'uuid': this.uuid, 'tag': 'ask-signal' } });
+    await this.urbit.poke({ app: 'rtcswitchboard', mark: 'rtcswitchboard-from-client', json: { 'uuid': this.uuid, 'tag': 'ask-signal' } });
   }
 
   // Move to a state to await sending?
@@ -449,7 +449,7 @@ class UrbitRTCPeerConnection extends RTCPeerConnection {
 
   dispatchUrbitState(state: UrbitState) {
     if (this.urbit.verbose) {
-      console.log('Switchboard state', state)
+      console.log('rtcswitchboard state', state)
     };
     switch (state) {
       case 'connected-our-turn':
@@ -558,8 +558,8 @@ export class UrbitRTCIncomingCallEvent extends Event {
 
   async reject() {
     return this.urbit.poke({
-      app: 'switchboard',
-      mark: 'switchboard-from-client',
+      app: 'rtcswitchboard',
+      mark: 'rtcswitchboard-from-client',
       json: { 'tag': 'reject', 'uuid': this.uuid }
     });
   }

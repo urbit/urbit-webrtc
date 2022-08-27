@@ -26,7 +26,7 @@
     "react-router-dom": "^5.2.0",
     "styled-components": "^5.3.5",
     "styled-system": "^5.1.5",
-    "switchboard": "file:../../packages/switchboard-js",
+    "rtcswitchboard": "file:../../packages/rtcswitchboard-js",
     "urbit-ob": "^5.0.1",
     "yup": "^0.32.11",
     "zustand": "^3.5.7"

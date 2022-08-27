@@ -9,7 +9,7 @@ Campfire is a p2p video chat application made by Holium. It works by establishin
 
 # Credits
 
-This work was only possible because of the original [urbit-webrtc](https://github.com/urbit/urbit-webrtc) project that built out the gall agents (`switchboard` and `icepond`) as well as the prototype urchatfm application.
+This work was only possible because of the original [urbit-webrtc](https://github.com/urbit/urbit-webrtc) project that built out the gall agents (`switchboard` now named`rtcswitchboard` and `icepond`) as well as the prototype urchatfm application.
 
 Thank you to:
 - ~ritpub-sipsyl

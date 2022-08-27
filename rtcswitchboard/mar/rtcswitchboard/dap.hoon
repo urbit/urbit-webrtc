@@ -1,5 +1,5 @@
-/-  switchboard
-/+  *switchboard
+/-  rtcswitchboard
+/+  *rtcswitchboard
 |_  dap=@tas
 ++  grab
   |%

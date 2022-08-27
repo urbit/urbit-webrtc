@@ -7,8 +7,8 @@
   [%icecandidate candidate=@t sdp-mid=(unit @t) sdp-m-line-index=(unit @) username-fragment=(unit @t)]
 ::  mark for scry for last SDP message and counter
 +$  last-remote  (unit [count=@ =sdp])
-:: mark for communications between remote switchboards
-+$  switchboard-to-switchboard
+:: mark for communications between remote rtcswitchboards
++$  rtcswitchboard-to-rtcswitchboard
   $:  $=(uuid @ta)
     $%  [%ring dap=@tas]
         [%pickup ~]
@@ -19,8 +19,8 @@
         icecandidate
     ==
   ==
-:: mark for pokes from the client to switchboard
-+$  switchboard-from-client
+:: mark for pokes from the client to rtcswitchboard
++$  rtcswitchboard-from-client
   $:  $=(uuid @ta)
     $%  [%place-call peer=@p dap=@tas] 
       [%reject ~]
@@ -34,8 +34,8 @@
   $%  [%incoming-call peer=@p uuid=@ta]
       [%incoming-call-hangup uuid=@ta]
   ==
-:: mark for facts from the switchboard to the client
-+$  switchboard-to-client
+:: mark for facts from the rtcswitchboard to the client
++$  rtcswitchboard-to-client
   $%  [%connection-state =connection-state]
     [%hungup ~]
     sdp
