@@ -39,10 +39,13 @@ export const StartMeetingPage: FC<any> = observer(() => {
 
   // update devices if chrome devices change (like a USB microphone gets plugged in)
   useEffect(() => {
-    const updateDevices = () => mediaStore.getDevices(urchatStore.ongoingCall);
-    navigator.mediaDevices.addEventListener("devicechange", updateDevices);
-    return () =>
-      navigator.mediaDevices.removeEventListener("devicechange", updateDevices);
+    // only do this if secure, because otherwise navigator will be null
+    if (isSecure) {
+      const updateDevices = () => mediaStore.getDevices(urchatStore.ongoingCall);
+      navigator.mediaDevices.addEventListener("devicechange", updateDevices);
+      return () =>
+        navigator.mediaDevices.removeEventListener("devicechange", updateDevices);
+    }
   });
 
   const onTrack = (evt: Event & { track: MediaStreamTrack }) => {
