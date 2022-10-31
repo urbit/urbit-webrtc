@@ -2,10 +2,16 @@
 |%
 ++  default-config 
   ^-  fetcher-config:icepond
+  [%or [%team-only [%or [%holium-open ~] [%from-sponsor ~]]] [%sponsored-only [%holium-open ~]]]
+++  default-google-config
+  ^-  fetcher-config:icepond
   [%or [%team-only [%or [%google-open ~] [%from-sponsor ~]]] [%sponsored-only [%google-open ~]]]
 ++  google-open
   ^-  fetcher-config:icepond
   [%these-servers ~[[%server urls=~['stun:stun.l.google.com:19302'] auth=~]]]
+++  holium-open
+  ^-  fetcher-config:icepond
+  [%these-servers ~[[%server urls=~['stun:coturn.holium.live:3478'] auth=~]]]
 ++  enjs
   |%
   ++  server

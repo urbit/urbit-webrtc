@@ -1,4 +1,4 @@
-/-  switchboard
+/-  rtcswitchboard
 |%
 :: Helper to generate a call UUID
 ++  uuid
@@ -14,8 +14,8 @@
   :: connection-state:dejs
   ++  connection-state
     |=  jon=json
-    ^-  connection-state:switchboard
-    (connection-state:switchboard (so jon))
+    ^-  connection-state:rtcswitchboard
+    (connection-state:rtcswitchboard (so jon))
   :: peer:dejs
   ++  peer  (su fed:ag)
   :: dap:dejs
@@ -30,7 +30,7 @@
   :: call-signal:dejs
   ++  call-signal
     |=  jon=json
-    ^-  call-signal:switchboard
+    ^-  call-signal:rtcswitchboard
     ?+  jon  ~|  'jon must be object'  !!
         ::
         [%o *]
@@ -42,7 +42,7 @@
   :: signal:dejs
   ++  signal
     |=  jon=json
-    ^-  signal:switchboard
+    ^-  signal:rtcswitchboard
     ?+  jon  ~|  'jon must be object'  !!
         ::
         [%o *]
@@ -55,7 +55,7 @@
   :: icecandidate:dejs
   ++  icecandidate
     |=  jon=json
-    ^-  icecandidate:switchboard
+    ^-  icecandidate:rtcswitchboard
     ?+  jon  ~|  'jon must be object'  !!
         ::
         [%o *]
@@ -70,13 +70,13 @@
   ::  sdp:dejs
   ++  sdp
     |=  jon=json
-    ^-  sdp:switchboard
+    ^-  sdp:rtcswitchboard
     :-  %sdp
     ((ot ~[type+so sdp+so]) jon)
-  ::  switchboard-from-client:dejs
-  ++  switchboard-from-client
+  ::  rtcswitchboard-from-client:dejs
+  ++  rtcswitchboard-from-client
     |=  jon=json
-    ^-  switchboard-from-client:switchboard
+    ^-  rtcswitchboard-from-client:rtcswitchboard
     ?>  ?=  [%o *]  jon
     ~|  p.jon
     =/  tag  (so (~(got by p.jon) 'tag'))
@@ -101,7 +101,7 @@
   |%
   :: incoming-call:enjs
   ++  incoming-call
-    |=  =incoming-call:switchboard
+    |=  =incoming-call:rtcswitchboard
     ^-  json
     ?-  incoming-call
         ::
@@ -118,14 +118,14 @@
           ['type' s+%hangup]
       ==
     ==
-  :: switchboard-to-client:enjs
-  ++  switchboard-to-client
-    |=  =switchboard-to-client:switchboard
+  :: rtcswitchboard-to-client:enjs
+  ++  rtcswitchboard-to-client
+    |=  =rtcswitchboard-to-client:rtcswitchboard
     ^-  json
-    ?-  switchboard-to-client
+    ?-  rtcswitchboard-to-client
         ::
         [%connection-state *]
-      =/  state  connection-state.switchboard-to-client
+      =/  state  connection-state.rtcswitchboard-to-client
       %-  pairs
       :~
         tag+s+'connection-state'
@@ -139,14 +139,14 @@
       ==
         ::
         [%sdp *]
-      %-  sdp  switchboard-to-client
+      %-  sdp  rtcswitchboard-to-client
         ::
         [%icecandidate *]
-      %-  icecandidate  switchboard-to-client
+      %-  icecandidate  rtcswitchboard-to-client
     ==
   :: sdp:enjs
   ++  sdp
-    |=  =sdp:switchboard
+    |=  =sdp:rtcswitchboard
     ^-  json
     %-  pairs
     :~
@@ -156,7 +156,7 @@
     ==
   :: last-remote:enjs
   ++  last-remote
-  |=  =last-remote:switchboard
+  |=  =last-remote:rtcswitchboard
   ^-  json
   ?~  last-remote  ~
   %-  pairs
@@ -166,7 +166,7 @@
   ==
   :: call:enjs
   ++  call
-    |=  =call:switchboard
+    |=  =call:rtcswitchboard
     ^-  json
     %-  pairs
     :~
@@ -176,7 +176,7 @@
     ==
   :: call-signal:enjs
   ++  call-signal
-    |=  =call-signal:switchboard
+    |=  =call-signal:rtcswitchboard
     ^-  json
     %-  pairs
     :~
@@ -185,7 +185,7 @@
     ==
   :: signal:enjs
   ++  signal
-    |=  =signal:switchboard
+    |=  =signal:rtcswitchboard
     ^-  json
     ?-  signal
         ::
@@ -197,7 +197,7 @@
     ==
   :: icecandidate:enjs
   ++  icecandidate
-    |=  =icecandidate:switchboard
+    |=  =icecandidate:rtcswitchboard
     ^-  json
     %-  pairs
     :-  tag+s+'icecandidate'
@@ -221,7 +221,7 @@
     s+uuid
   :: connection-state:enjs
   ++  connection-state
-    |=  =connection-state:switchboard
+    |=  =connection-state:rtcswitchboard
     ^-  json
     s+connection-state
   :: peer:enjs

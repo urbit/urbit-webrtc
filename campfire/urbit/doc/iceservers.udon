@@ -1,0 +1,44 @@
+;>
+
+# ICE Servers
+
+ICE servers are the mechanism through which your web browser establishes a connection with your WebRTC peer. This coordination requires a 3rd party, and then the WebRTC call is peer-to-peer.
+ICE Servers come in two forms: STUN and TURN. Depending on your network topology, your WebRTC connection might require packets to be relayed through a TURN server for the duration of a call. STUN servers are more common, and are only used during the initial connection.
+
+In both cases, this process requires a third-party either for the inital connection of the call, or for the entire duration. For that reason you may want to choose your own ICE servers
+
+Icepond is the gall agent that stores your ship's ICE server configuration, specifying what servers it should use and what servers/authentication it offers to the ships you sponsor (for stars/galaxies).
+
+
+# Campfire Defaults
+
+Since v1.0.6, Campfire has shipped with this default config: 
+```
+[%or [%team-only [%or [%holium-open ~] [%from-sponsor ~]]] [%sponsored-only [%holium-open ~]]]
+```
+The `%team-only`, `%sponsored-only`, and `%from-sponsor` control the servers that you offer to your moons, the servers you get from your sponsor, and the servers we offer to the ships we sponsor (if you're ship is a moon or galaxy). `%holium-open` is a server with URL of `stun:coturn.holium.live:3478`.
+
+# Setting Icepond Config
+
+Icepond can be poked, which allows you to set what ICE servers Campfire uses, as well as what servers you offer to your moons + sponsored ships.
+The simplest example of setting the config would be
+
+```
+:icepond &set-fetcher-config [%these-servers ~[[%server urls=~['stun:stun.myserver.com:3478'] auth=~]]]
+```
+which would set the servers you use, and would not offer any servers to your moons or sponsorees, and will ignore your sponsor's offerings.
+
+to go back to the default configuration, use
+
+```
+:icepond &set-fetcher-config ~[[%default-config]]
+```
+
+If you want to use Google's public STUN servers instead of Holium's you set that with
+
+```
+:icepond &set-fetcher-config ~[[%default-google-config]]
+```
+
+See [sur/icepond.hoon](https://github.com/datryn-ribdun/urbit-webrtc/blob/master/icepond/sur/icepond.hoon) for the full configuration options.
+Icepond also allows you to set credentials (ex. username and password) to use, and to offer to your sponsorees. One intended use is for stars to offer fast, low-usage ICE servers to their sponsorees. This setup could make sense especially for organizations that require TURN servers, which require more bandwidth to run.

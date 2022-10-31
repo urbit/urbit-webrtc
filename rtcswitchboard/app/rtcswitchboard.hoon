@@ -1,8 +1,8 @@
-/-  switchboard
-/+  default-agent, dbug, switchboard-lib=switchboard, verb
+/-  rtcswitchboard
+/+  default-agent, dbug, rtcswitchboard-lib=rtcswitchboard, verb
 :: Apps informed 2 ways about call state updates
 :: - by notifications on the /call/[uuid] channel with the
-::   %switchboard-connection-state mark
+::   %rtcswitchboard-connection-state mark
 :: - by scrying the call uuid and seeing the state
 |%
 +$  versioned-state
@@ -10,9 +10,9 @@
       state-1
   ==
 +$  state-0
-    [%0 reachable=(map @tas @) calls=(map @ta call-state-0:switchboard)]
+    [%0 reachable=(map @tas @) calls=(map @ta call-state-0:rtcswitchboard)]
 +$  state-1
-    [%1 reachable=(map @tas @) calls=(map @ta call-state:switchboard)]
+    [%1 reachable=(map @tas @) calls=(map @ta call-state:rtcswitchboard)]
 +$  card  card:agent:gall
 --
 %-  agent:dbug
@@ -43,7 +43,7 @@
       %+  weld
         %+  turn  ~(tap in ~(key by reachable.stat))  kick-reachable
       %+  turn  ~(tap in ~(key by calls.stat))  kick-call
-    =/  calls  (~(run by calls.stat) |=([=call:switchboard =connection-state:switchboard] ^-(call-state:switchboard [call connection-state ~])))
+    =/  calls  (~(run by calls.stat) |=([=call:rtcswitchboard =connection-state:rtcswitchboard] ^-(call-state:rtcswitchboard [call connection-state ~])))
     [cards this(state [%1 reachable=*(map @tas @) calls=calls])]
       :: No upgrade needed, just kick everyone so they know to
       :: resubscribe
@@ -59,15 +59,15 @@
   |=  [=mark =vase]
   ^-  (quip card _this)
   ?+  mark  (on-poke:default mark vase)
-      :: Poke from peer switchboard
-      %switchboard-to-switchboard
-    =/  incoming  !<(switchboard-to-switchboard:switchboard vase)
+      :: Poke from peer rtcswitchboard
+      %rtcswitchboard-to-rtcswitchboard
+    =/  incoming  !<(rtcswitchboard-to-rtcswitchboard:rtcswitchboard vase)
     =/  uuid  uuid.incoming
     =/  msg  +.incoming
     ?-  msg
         ::
         [%ring *]
-      =/  =call:switchboard  [uuid=uuid peer=src.bowl dap=dap.msg]
+      =/  =call:rtcswitchboard  [uuid=uuid peer=src.bowl dap=dap.msg]
       =^  cards  state
         (move-to-state call %incoming-ringing)
       [cards this]
@@ -103,9 +103,9 @@
       [cards this]
     ==
       :: Poke from client
-      %switchboard-from-client
+      %rtcswitchboard-from-client
     ?>  =(src.bowl our.bowl) :: we should only get client pokes from ourselves
-    =/  incoming  !<(switchboard-from-client:switchboard vase)
+    =/  incoming  !<(rtcswitchboard-from-client:rtcswitchboard vase)
     =/  uuid  uuid.incoming
     =/  msg  +.incoming
     ?-  msg
@@ -160,7 +160,7 @@
         :*
           %give  %fact
           ~[/uuid]
-          %switchboard-uuid  !>(uuid)
+          %rtcswitchboard-uuid  !>(uuid)
         ==
         :*
           %give  %kick
@@ -218,28 +218,28 @@
     =/  uuid  +>-.pax
     =/  callstate  (~(get by calls.state) uuid)
     ?~  callstate  [~ ~]
-    =/  [=call:switchboard =connection-state:switchboard =last-remote:switchboard]  u.callstate
-    ``switchboard-last-remote+!>(last-remote)
+    =/  [=call:rtcswitchboard =connection-state:rtcswitchboard =last-remote:rtcswitchboard]  u.callstate
+    ``rtcswitchboard-last-remote+!>(last-remote)
       ::
       [%x %call @tas %connection-state ~]
     =/  uuid  +>-.pax
     =/  callstate  (~(get by calls.state) uuid)
     ?~  callstate  [~ ~]
-    =/  [=call:switchboard =connection-state:switchboard =last-remote:switchboard]  u.callstate
-    ``switchboard-connection-state+!>(connection-state)
+    =/  [=call:rtcswitchboard =connection-state:rtcswitchboard =last-remote:rtcswitchboard]  u.callstate
+    ``rtcswitchboard-connection-state+!>(connection-state)
       ::
       [%x %call @tas %peer ~]
     =/  uuid  +>-.pax
     =/  callstate  (~(get by calls.state) uuid)
     ?~  callstate  [~ ~]
-    =/  [=call:switchboard =connection-state:switchboard =last-remote:switchboard]  u.callstate
-    ``switchboard-peer+!>(peer.call)
+    =/  [=call:rtcswitchboard =connection-state:rtcswitchboard =last-remote:rtcswitchboard]  u.callstate
+    ``rtcswitchboard-peer+!>(peer.call)
       [%x %call @tas %dap ~]
     =/  uuid  +>-.pax
     =/  callstate  (~(get by calls.state) uuid)
     ?~  callstate  [~ ~]
-    =/  [=call:switchboard =connection-state:switchboard =last-remote:switchboard]  u.callstate
-    ``switchboard-dap+!>(dap.call)
+    =/  [=call:rtcswitchboard =connection-state:rtcswitchboard =last-remote:rtcswitchboard]  u.callstate
+    ``rtcswitchboard-dap+!>(dap.call)
   ==
 ::
 ++  on-arvo  on-arvo:default
@@ -263,70 +263,70 @@
   ==
 :: Produce the proper state transition and cards when moving to a state
 ++  move-to-state
-  |=  [=call:switchboard =connection-state:switchboard]
+  |=  [=call:rtcswitchboard =connection-state:rtcswitchboard]
   ?+  connection-state  ~|('Cannot just move to state {<connection-state>} (call {<uuid.call>})' !!)
       :: We got a %call poke, add the call
       %placing
     ?<  (~(has by calls.state) uuid.call)
     `state(calls (~(put by calls.state) uuid.call [call=call connection-state=%placing last-remote=~])) 
-      :: Our client watched the call so we will now tell the other switchboard
+      :: Our client watched the call so we will now tell the other rtcswitchboard
       %dialing
     ?>  (~(has by calls.state) uuid.call)
-    =/  [state-call=call:switchboard =connection-state:switchboard =last-remote:switchboard]  (~(got by calls.state) uuid.call)
+    =/  [state-call=call:rtcswitchboard =connection-state:rtcswitchboard =last-remote:rtcswitchboard]  (~(got by calls.state) uuid.call)
     ?>  =(state-call call)
     :_  state(calls (~(put by calls.state) uuid.call [call=call connection-state=%dialing last-remote=last-remote]))
     :~
       :*
         %pass   /ring-poke/[uuid.call]
-        %agent  [peer.call %switchboard]
-        %poke   [%switchboard-to-switchboard !>([uuid=uuid.call %ring dap=dap.call])]
+        %agent  [peer.call %rtcswitchboard]
+        %poke   [%rtcswitchboard-to-rtcswitchboard !>([uuid=uuid.call %ring dap=dap.call])]
       ==
       :*
         %give  %fact
         ~[/call/[uuid.call]]
-        %switchboard-to-client  !>([%connection-state %dialing])
+        %rtcswitchboard-to-client  !>([%connection-state %dialing])
       ==
     ==
-      :: We got the poke-ack from the remote switchboard so we know the
+      :: We got the poke-ack from the remote rtcswitchboard so we know the
       :: call is ringing at their end
       %ringing
     ?>  (~(has by calls.state) uuid.call)
-    =/  [state-call=call:switchboard =connection-state:switchboard =last-remote:switchboard]  (~(got by calls.state) uuid.call)
+    =/  [state-call=call:rtcswitchboard =connection-state:rtcswitchboard =last-remote:rtcswitchboard]  (~(got by calls.state) uuid.call)
     ?>  =(state-call call)
     :_  state(calls (~(put by calls.state) uuid.call [call=call connection-state=%ringing last-remote=last-remote]))
     :~
       :*
         %give  %fact
         ~[/call/[uuid.call]]
-        %switchboard-to-client  !>([%connection-state %ringing])
+        %rtcswitchboard-to-client  !>([%connection-state %ringing])
       ==
     ==
-      :: We've been poked by a remote switchboard for a call
+      :: We've been poked by a remote rtcswitchboard for a call
       %incoming-ringing
     :_  state(calls (~(put by calls.state) uuid.call [call=call connection-state=%incoming-ringing last-remote=~]))
     :~
       :*
         %give  %fact
         ~[/incoming/[dap.call]]
-        %switchboard-incoming-call  !>([%incoming-call peer=peer.call uuid=uuid.call])
+        %rtcswitchboard-incoming-call  !>([%incoming-call peer=peer.call uuid=uuid.call])
       ==
     ==
       :: The client watched the path for an incoming call
       %answering
     ?>  (~(has by calls.state) uuid.call)
-    =/  [state-call=call:switchboard =connection-state:switchboard =last-remote:switchboard]  (~(got by calls.state) uuid.call)
+    =/  [state-call=call:rtcswitchboard =connection-state:rtcswitchboard =last-remote:rtcswitchboard]  (~(got by calls.state) uuid.call)
     ?>  =(state-call call)
     :_  state(calls (~(put by calls.state) uuid.call [call=call connection-state=%answering last-remote=last-remote]))
     :~
       :*
         %pass   /answer-poke/[uuid.call]
-        %agent  [peer.call %switchboard]
-        %poke   [%switchboard-to-switchboard !>([uuid=uuid.call %pickup ~])]
+        %agent  [peer.call %rtcswitchboard]
+        %poke   [%rtcswitchboard-to-rtcswitchboard !>([uuid=uuid.call %pickup ~])]
       ==
       :*
         %give  %fact
         ~[/call/[uuid.call]]
-        %switchboard-to-client  !>([%connection-state %answering])
+        %rtcswitchboard-to-client  !>([%connection-state %answering])
       ==
     ==
   ==
@@ -339,7 +339,7 @@
     :*
       %give  %fact
       ~[/call/[uuid]]
-      %switchboard-to-client  !>([%connection-state %connected-our-turn])
+      %rtcswitchboard-to-client  !>([%connection-state %connected-our-turn])
     ==
   ==
 ++  connected-callee
@@ -351,11 +351,11 @@
     :*
       %give  %fact
       ~[/call/[uuid]]
-      %switchboard-to-client  !>([%connection-state %connected-their-turn])
+      %rtcswitchboard-to-client  !>([%connection-state %connected-their-turn])
     ==
   ==
 ++  receive-sdp
-  |=  [uuid=@ta =sdp:switchboard]
+  |=  [uuid=@ta =sdp:rtcswitchboard]
   ?>  (~(has by calls.state) uuid)
   =/  call-state  (~(got by calls.state) uuid)
   ::  we need to increment the sdp counter
@@ -376,12 +376,12 @@
     :*
       %give  %fact
       ~[/call/[uuid]]
-      %switchboard-to-client  !>(sdp)
+      %rtcswitchboard-to-client  !>(sdp)
     ==
     :*
       %give  %fact
       ~[/call/[uuid]]
-      %switchboard-to-client  !>([%connection-state result-state])
+      %rtcswitchboard-to-client  !>([%connection-state result-state])
     ==
   ==
 ++  receive-turn
@@ -394,7 +394,7 @@
     :*
       %give  %fact
       ~[/call/[uuid]]
-      %switchboard-to-client  !>([%connection-state %connected-our-turn-asked])
+      %rtcswitchboard-to-client  !>([%connection-state %connected-our-turn-asked])
     ==
   ==
 ++  give-turn
@@ -410,17 +410,17 @@
       :*
         %give  %fact
         ~[/call/[uuid]]
-        %switchboard-to-client  !>([%connection-state %connected-their-turn])
+        %rtcswitchboard-to-client  !>([%connection-state %connected-their-turn])
       ==
       :*
         %pass  /inter-poke/[uuid]
-        %agent  [peer.call.call-state %switchboard]
-        %poke   [%switchboard-to-switchboard !>([uuid=uuid %give-turn ~])]
+        %agent  [peer.call.call-state %rtcswitchboard]
+        %poke   [%rtcswitchboard-to-rtcswitchboard !>([uuid=uuid %give-turn ~])]
       ==
     ==
   ==
 ++  send-sdp
-  |=  [uuid=@ta =sdp:switchboard]
+  |=  [uuid=@ta =sdp:rtcswitchboard]
   ?>  (~(has by calls.state) uuid)
   =/  call-state  (~(got by calls.state) uuid)
   =/  call  call.call-state
@@ -429,13 +429,13 @@
   :~
     :*
       %pass   /inter-poke/[uuid]
-      %agent  [peer.call %switchboard]
-      %poke   [%switchboard-to-switchboard !>([uuid=uuid sdp])]
+      %agent  [peer.call %rtcswitchboard]
+      %poke   [%rtcswitchboard-to-rtcswitchboard !>([uuid=uuid sdp])]
     ==
     :*
       %give  %fact
       ~[/call/[uuid.call]]
-      %switchboard-to-client  !>([%connection-state %connected-their-turn])
+      %rtcswitchboard-to-client  !>([%connection-state %connected-their-turn])
     ==
   ==
 ++  ask-signal
@@ -451,13 +451,13 @@
     :~
       :*
         %pass  /inter-poke/[uuid]
-        %agent  [peer.call %switchboard]
-        %poke   [%switchboard-to-switchboard !>([uuid=uuid %ask-turn ~])]
+        %agent  [peer.call %rtcswitchboard]
+        %poke   [%rtcswitchboard-to-rtcswitchboard !>([uuid=uuid %ask-turn ~])]
       ==
       :*
         %give  %fact
         ~[/call/[uuid.call]]
-        %switchboard-to-client  !>([%connection-state %connected-want-turn])
+        %rtcswitchboard-to-client  !>([%connection-state %connected-want-turn])
       ==
     ==
       ::
@@ -467,7 +467,7 @@
       :*
         %give  %fact
         ~[/call/[uuid.call]]
-        %switchboard-to-client  !>([%connection-state %connected-our-turn-asked])
+        %rtcswitchboard-to-client  !>([%connection-state %connected-our-turn-asked])
       ==
     ==
       ::
@@ -478,7 +478,7 @@
     `state
   ==
 ++  receive-icecandidate
-  |=  [uuid=@ta =icecandidate:switchboard]
+  |=  [uuid=@ta =icecandidate:rtcswitchboard]
   ?>  (~(has by calls.state) uuid)
   =/  connection-state  connection-state:(~(got by calls.state) uuid)
   =/  call  call:(~(got by calls.state) uuid)
@@ -494,11 +494,11 @@
     :*
       %give  %fact
       ~[/call/[uuid]]
-      %switchboard-to-client  !>(icecandidate)
+      %rtcswitchboard-to-client  !>(icecandidate)
     ==
   ==
 ++  send-icecandidate
-  |=  [uuid=@ta =icecandidate:switchboard]
+  |=  [uuid=@ta =icecandidate:rtcswitchboard]
   ?>  (~(has by calls.state) uuid)
   =/  call-state  (~(got by calls.state) uuid)
   =/  call  call.call-state
@@ -514,8 +514,8 @@
   :~
     :*
       %pass  /inter-poke/[uuid]
-      %agent  [peer.call %switchboard]
-      %poke  [%switchboard-to-switchboard !>([uuid=uuid icecandidate])]
+      %agent  [peer.call %rtcswitchboard]
+      %poke  [%rtcswitchboard-to-rtcswitchboard !>([uuid=uuid icecandidate])]
     ==
   ==
 ++  place-call
@@ -528,8 +528,8 @@
   :~
     :*
       %pass  /inter-poke/[uuid]
-      %agent  [peer.call.callstate %switchboard]
-      %poke  [%switchboard-to-switchboard !>([uuid=uuid [%hangup ~]])]
+      %agent  [peer.call.callstate %rtcswitchboard]
+      %poke  [%rtcswitchboard-to-rtcswitchboard !>([uuid=uuid [%hangup ~]])]
     ==
   ==
 ++  peer-disconnected
@@ -541,7 +541,7 @@
       :*
         %give  %fact
         ~[/call/[uuid]]
-        %switchboard-to-client  !>([%hungup ~])
+        %rtcswitchboard-to-client  !>([%hungup ~])
       ==
       :*
         %give  %kick
@@ -555,7 +555,7 @@
       :*
         %give  %fact
         ~[/incoming/[dap.call.callstate]]
-        %switchboard-incoming-call  !>([%incoming-call-hangup uuid])
+        %rtcswitchboard-incoming-call  !>([%incoming-call-hangup uuid])
       ==
     ==
   ==

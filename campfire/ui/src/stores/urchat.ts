@@ -2,7 +2,7 @@ import {
   UrbitRTCApp,
   UrbitRTCIncomingCallEvent,
   UrbitRTCPeerConnection,
-} from "switchboard";
+} from "rtcswitchboard";
 import Icepond from "icepond";
 import Urbit from "@urbit/http-api";
 import { action, makeObservable, observable, runInAction } from "mobx";

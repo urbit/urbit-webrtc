@@ -1,9 +1,9 @@
-/-  switchboard
-/+  *switchboard
-|_  =signal:switchboard
+/-  rtcswitchboard
+/+  *rtcswitchboard
+|_  =signal:rtcswitchboard
 ++  grab
   |%
-  ++  noun  signal:switchboard
+  ++  noun  signal:rtcswitchboard
   ++  json  signal:dejs
   --
 ++  grow
