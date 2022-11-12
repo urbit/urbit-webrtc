@@ -1,6 +1,6 @@
 import React from 'react';
 import { useStore } from '../stores/root';
-import { Button, Text } from "@holium/design-system";
+import { Text } from "@holium/design-system";
 
 // eslint-disable-next-line
 export const IceServers = () => {
