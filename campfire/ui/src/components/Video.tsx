@@ -13,12 +13,13 @@ interface VideoProps extends VideoFromStreamProps {
 
 type VideoFromStreamProps = {
   srcObject: MediaStream;
+  sinkId?: string;
   controls?: boolean;
-} & HTMLAttributes<HTMLVideoElement>;
+} & HTMLAttributes<HTMLMediaElement>;
 
 function VideoFromStream(attrs: VideoFromStreamProps) {
   const srcObject = attrs.srcObject;
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoRef = useRef<HTMLMediaElement>(null);
   const childAttrs = { ...attrs, autoPlay: true, ref: videoRef };
   delete childAttrs.srcObject;
 
@@ -28,6 +29,10 @@ function VideoFromStream(attrs: VideoFromStreamProps) {
     }
 
     videoRef.current.srcObject = srcObject;
+    if (attrs.sinkId) {
+      console.log("set new sinkID", attrs.sinkId);
+      videoRef.current.setSinkId(attrs.sinkId);
+    }
   }, [videoRef, srcObject]);
 
   return React.createElement("video", childAttrs, null);

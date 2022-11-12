@@ -6,10 +6,13 @@ import { useStore } from "../stores/root";
 export function MediaInput() {
   const { mediaStore, urchatStore } = useStore();
   const videoDevices = mediaStore.devices.filter(
-    (dev) => dev.kind === "videoinput"
+    (d) => d.kind === "videoinput"
   );
   const audioDevices = mediaStore.devices.filter(
-    (dev) => dev.kind === "audioinput"
+    (d) => d.kind === "audioinput"
+  );
+  const audioOutputDevices = mediaStore.devices.filter(
+    (d) => d.kind === "audiooutput"
   );
 
   const onVideoChange = (evt: ChangeEvent<HTMLSelectElement>) => {
@@ -20,6 +23,12 @@ export function MediaInput() {
   const onAudioChange = (evt: ChangeEvent<HTMLSelectElement>) => {
     const device = audioDevices[parseInt(evt.target.value)];
     mediaStore.audio.changeDevice(device, urchatStore.ongoingCall);
+  };
+
+
+  const onAudioOutChange = (evt: ChangeEvent<HTMLSelectElement>) => {
+    const device = audioOutputDevices[parseInt(evt.target.value)];
+    mediaStore.setOutputSoundDevice(device.deviceId);
   };
 
   return (
@@ -48,6 +57,21 @@ export function MediaInput() {
           onChange={onAudioChange}
         >
           {audioDevices.map((dev, key) => (
+            <option key={key} value={key}>
+              {dev.label === "" ? dev.groupId : dev.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="AudioOutputs w-full">
+        <Text variant="label" pb={1}>
+          Audio Output
+        </Text>
+        <select
+          className="input default-ring bg-gray-200"
+          onChange={onAudioOutChange}
+        >
+          {audioOutputDevices.map((dev, key) => (
             <option key={key} value={key}>
               {dev.label === "" ? dev.groupId : dev.label}
             </option>
