@@ -6,10 +6,10 @@ import { useStore } from "../stores/root";
 export function MediaInput() {
   const { mediaStore, urchatStore } = useStore();
   const videoDevices = mediaStore.devices.filter(
-    (dev) => dev.kind === "videoinput"
+    (d) => d.kind === "videoinput"
   );
   const audioDevices = mediaStore.devices.filter(
-    (dev) => dev.kind === "audioinput"
+    (d) => d.kind === "audioinput"
   );
 
   const onVideoChange = (evt: ChangeEvent<HTMLSelectElement>) => {
@@ -31,6 +31,9 @@ export function MediaInput() {
         <select
           className="input default-ring bg-gray-200"
           onChange={onVideoChange}
+          defaultValue={videoDevices.findIndex(d => {
+            return d.deviceId === mediaStore.video.device.deviceId;
+          })}
         >
           {videoDevices.map((dev, key) => (
             <option key={key} value={key}>
@@ -46,6 +49,9 @@ export function MediaInput() {
         <select
           className="input default-ring bg-gray-200"
           onChange={onAudioChange}
+          defaultValue={audioDevices.findIndex(d => {
+            return d.deviceId === mediaStore.audio.device.deviceId;
+          })}
         >
           {audioDevices.map((dev, key) => (
             <option key={key} value={key}>
