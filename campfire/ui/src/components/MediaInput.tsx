@@ -11,6 +11,9 @@ export function MediaInput() {
   const audioDevices = mediaStore.devices.filter(
     (d) => d.kind === "audioinput"
   );
+  const audioOutputDevices = mediaStore.devices.filter(
+    (d) => d.kind === "audiooutput"
+  );
 
   const onVideoChange = (evt: ChangeEvent<HTMLSelectElement>) => {
     const device = videoDevices[parseInt(evt.target.value)];
@@ -20,6 +23,12 @@ export function MediaInput() {
   const onAudioChange = (evt: ChangeEvent<HTMLSelectElement>) => {
     const device = audioDevices[parseInt(evt.target.value)];
     mediaStore.audio.changeDevice(device, urchatStore.ongoingCall);
+  };
+
+
+  const onAudioOutChange = (evt: ChangeEvent<HTMLSelectElement>) => {
+    const device = audioOutputDevices[parseInt(evt.target.value)];
+    mediaStore.setOutputSoundDevice(device);
   };
 
   return (
@@ -54,6 +63,25 @@ export function MediaInput() {
           })}
         >
           {audioDevices.map((dev, key) => (
+            <option key={key} value={key}>
+              {dev.label === "" ? dev.groupId : dev.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="AudioOutputs w-full">
+        <Text variant="label" pb={1}>
+          Audio Output
+        </Text>
+        <select
+          className="input default-ring bg-gray-200"
+          onChange={onAudioOutChange}
+          defaultValue={audioOutputDevices.findIndex(d => {
+            return d.deviceId === mediaStore.outputSoundDevice.deviceId;
+          })}
+          disabled={!('sinkId' in HTMLMediaElement.prototype)}
+        >
+          {audioOutputDevices.map((dev, key) => (
             <option key={key} value={key}>
               {dev.label === "" ? dev.groupId : dev.label}
             </option>
