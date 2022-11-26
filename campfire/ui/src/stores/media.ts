@@ -217,7 +217,7 @@ async function changeDevice(
   call: OngoingCall
 ): Promise<Media> {
   const media = state[type];
-  console.log("changing "+type+" device from "+media.device.deviceId + " to " + device.deviceId);
+  console.log("switching "+type+" device from "+media.device?.deviceId! + " to "+ device?.deviceId!);
   const addTrack = (track: MediaStreamTrack) => {
     console.log("Adding track to call", track);
     state.local.addTrack(track);

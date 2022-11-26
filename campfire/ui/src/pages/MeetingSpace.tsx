@@ -52,7 +52,6 @@ export const MeetingSpace: FC<any> = observer(() => {
     const newMessages = [{ speaker: "me", message: msg }].concat(
       urchatStore.messages
     );
-    console.log(urchatStore.messages, newMessages);
     urchatStore.setMessages(newMessages);
   };
   // ---------------------------------------------------------------

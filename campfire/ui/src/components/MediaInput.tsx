@@ -40,6 +40,9 @@ export function MediaInput() {
         <select
           className="input default-ring bg-gray-200"
           onChange={onVideoChange}
+          defaultValue={videoDevices.findIndex(d => {
+            return d.deviceId === mediaStore.video.device.deviceId;
+          })}
         >
           {videoDevices.map((dev, key) => (
             <option key={key} value={key}>
@@ -55,6 +58,9 @@ export function MediaInput() {
         <select
           className="input default-ring bg-gray-200"
           onChange={onAudioChange}
+          defaultValue={audioDevices.findIndex(d => {
+            return d.deviceId === mediaStore.audio.device.deviceId;
+          })}
         >
           {audioDevices.map((dev, key) => (
             <option key={key} value={key}>

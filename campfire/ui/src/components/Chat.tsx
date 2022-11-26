@@ -52,13 +52,13 @@ export const Chat = observer(({ sendMessage, messages, ready }: ChatProps) => {
               <Text fontSize={3} className="font-bold mr-3">
                 {msg.speaker}:
               </Text>
-              <Text fontSize={3}>{msg.message}</Text>
+              <Text fontSize={3} className="break-words w-5/6">{msg.message}</Text>
             </Flex>
           ))}
         </Flex>
         {messages.length === 0 && (
           <Flex flexGrow={1} alignItems="center" justifyContent="center">
-            <Text opacity={0.7} fontSize={3}>
+            <Text opacity={0.7} fontSize={3} textAlign={"center"}>
               No messages yet
             </Text>
           </Flex>
