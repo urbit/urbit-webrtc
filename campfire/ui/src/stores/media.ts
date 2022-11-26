@@ -27,11 +27,11 @@ interface IMediaStore {
   remoteVideoTrackCounter: number;
   video: Media;
   audio: Media;
-  outputSoundDevice: string;
+  outputSoundDevice: MediaDeviceInfo;
   sharedScreen: ScreenMedia;
   devices: MediaDeviceInfo[];
   getDevices: (call: OngoingCall) => Promise<void>;
-  setOutputSoundDevice: (deviceId: string) => void;
+  setOutputSoundDevice: (device: MediaDeviceInfo) => void;
   toggleScreenShare: (call: OngoingCall) => Promise<void>;
   resetStreams: () => void;
   addTrackToRemote: (track: MediaStreamTrack) => void;
@@ -50,7 +50,7 @@ export class MediaStore implements IMediaStore {
   remoteVideoTrackCounter: number;
   video: Media;
   audio: Media;
-  outputSoundDevice: string;
+  outputSoundDevice: MediaDeviceInfo;
   sharedScreen: ScreenMedia;
   devices: MediaDeviceInfo[];
 
@@ -98,6 +98,7 @@ export class MediaStore implements IMediaStore {
       remoteVideoTrackCounter: observable,
       video: observable,
       audio: observable,
+      outputSoundDevice: observable,
       sharedScreen: observable,
       devices: observable,
       getDevices: action.bound,
@@ -124,13 +125,13 @@ export class MediaStore implements IMediaStore {
       this.devices = devices;
       this.video = video;
       this.audio = audio;
-      this.outputSoundDevice = outputDev[0].deviceId;
+      this.outputSoundDevice = outputDev[0];
     });
   }
 
-  setOutputSoundDevice(deviceId: string) {
-    console.log("Setting new output sound device", deviceId);
-    this.outputSoundDevice = deviceId;
+  setOutputSoundDevice(device: MediaDeviceInfo) {
+    console.log("Setting new output sound device", device);
+    this.outputSoundDevice = device;
   }
 
   async toggleScreenShare(call: OngoingCall) {

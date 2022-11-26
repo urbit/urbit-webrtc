@@ -28,7 +28,7 @@ export function MediaInput() {
 
   const onAudioOutChange = (evt: ChangeEvent<HTMLSelectElement>) => {
     const device = audioOutputDevices[parseInt(evt.target.value)];
-    mediaStore.setOutputSoundDevice(device.deviceId);
+    mediaStore.setOutputSoundDevice(device);
   };
 
   return (
@@ -76,6 +76,10 @@ export function MediaInput() {
         <select
           className="input default-ring bg-gray-200"
           onChange={onAudioOutChange}
+          defaultValue={audioOutputDevices.findIndex(d => {
+            return d.deviceId === mediaStore.outputSoundDevice.deviceId;
+          })}
+          disabled={!('sinkId' in HTMLMediaElement.prototype)}
         >
           {audioOutputDevices.map((dev, key) => (
             <option key={key} value={key}>

@@ -21,7 +21,10 @@ function VideoFromStream(attrs: VideoFromStreamProps) {
   const srcObject = attrs.srcObject;
   const videoRef = useRef<HTMLMediaElement>(null);
   const childAttrs = { ...attrs, autoPlay: true, ref: videoRef };
+
+  // delete the props we use so they don't get passed to the DOM element
   delete childAttrs.srcObject;
+  delete childAttrs.sinkId;
 
   useEffect(() => {
     if (!videoRef.current) {
@@ -30,10 +33,9 @@ function VideoFromStream(attrs: VideoFromStreamProps) {
 
     videoRef.current.srcObject = srcObject;
     if (attrs.sinkId) {
-      console.log("set new sinkID", attrs.sinkId);
       videoRef.current.setSinkId(attrs.sinkId);
     }
-  }, [videoRef, srcObject]);
+  }, [videoRef, srcObject, attrs.sinkId]);
 
   return React.createElement("video", childAttrs, null);
 }
