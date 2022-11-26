@@ -32,7 +32,7 @@ function VideoFromStream(attrs: VideoFromStreamProps) {
     }
 
     videoRef.current.srcObject = srcObject;
-    if (attrs.sinkId) {
+    if (attrs.sinkId && ('sinkId' in HTMLMediaElement.prototype)) {
       videoRef.current.setSinkId(attrs.sinkId);
     }
   }, [videoRef, srcObject, attrs.sinkId]);
