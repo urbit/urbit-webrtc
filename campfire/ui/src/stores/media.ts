@@ -27,9 +27,11 @@ interface IMediaStore {
   remoteVideoTrackCounter: number;
   video: Media;
   audio: Media;
+  outputSoundDevice: MediaDeviceInfo;
   sharedScreen: ScreenMedia;
   devices: MediaDeviceInfo[];
   getDevices: (call: OngoingCall) => Promise<void>;
+  setOutputSoundDevice: (device: MediaDeviceInfo) => void;
   toggleScreenShare: (call: OngoingCall) => Promise<void>;
   resetStreams: () => void;
   addTrackToRemote: (track: MediaStreamTrack) => void;
@@ -48,6 +50,7 @@ export class MediaStore implements IMediaStore {
   remoteVideoTrackCounter: number;
   video: Media;
   audio: Media;
+  outputSoundDevice: MediaDeviceInfo;
   sharedScreen: ScreenMedia;
   devices: MediaDeviceInfo[];
 
@@ -75,6 +78,7 @@ export class MediaStore implements IMediaStore {
         this.audio = toggleMedia(this.audio);
       },
     };
+    this.outputSoundDevice = null;
     this.sharedScreen = {
       enabled: false,
       tracks: [],
@@ -94,9 +98,11 @@ export class MediaStore implements IMediaStore {
       remoteVideoTrackCounter: observable,
       video: observable,
       audio: observable,
+      outputSoundDevice: observable,
       sharedScreen: observable,
       devices: observable,
       getDevices: action.bound,
+      setOutputSoundDevice: action.bound,
       toggleScreenShare: action.bound,
       resetStreams: action.bound,
       addTrackToRemote: action.bound,
@@ -109,6 +115,7 @@ export class MediaStore implements IMediaStore {
     const devices = await navigator.mediaDevices?.enumerateDevices();
     const videoDevs = devices.filter((dev) => dev.kind === "videoinput");
     const audioDevs = devices.filter((dev) => dev.kind === "audioinput");
+    const outputDev = devices.filter((dev) => dev.kind === "audiooutput");
     // Default to first video and audio device, and
     // trigger acquisition of microphone and camera permissions
     // via getUserMedia in effects below
@@ -118,7 +125,13 @@ export class MediaStore implements IMediaStore {
       this.devices = devices;
       this.video = video;
       this.audio = audio;
+      this.outputSoundDevice = outputDev[0];
     });
+  }
+
+  setOutputSoundDevice(device: MediaDeviceInfo) {
+    console.log("Setting new output sound device", device);
+    this.outputSoundDevice = device;
   }
 
   async toggleScreenShare(call: OngoingCall) {
@@ -205,6 +218,7 @@ async function changeDevice(
   call: OngoingCall
 ): Promise<Media> {
   const media = state[type];
+  console.log("switching "+type+" device from "+media.device?.deviceId! + " to "+ device?.deviceId!);
   const addTrack = (track: MediaStreamTrack) => {
     console.log("Adding track to call", track);
     state.local.addTrack(track);

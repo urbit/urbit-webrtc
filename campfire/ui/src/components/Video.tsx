@@ -13,14 +13,18 @@ interface VideoProps extends VideoFromStreamProps {
 
 type VideoFromStreamProps = {
   srcObject: MediaStream;
+  sinkId?: string;
   controls?: boolean;
-} & HTMLAttributes<HTMLVideoElement>;
+} & HTMLAttributes<HTMLMediaElement>;
 
 function VideoFromStream(attrs: VideoFromStreamProps) {
   const srcObject = attrs.srcObject;
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const videoRef = useRef<HTMLMediaElement>(null);
   const childAttrs = { ...attrs, autoPlay: true, ref: videoRef };
+
+  // delete the props we use so they don't get passed to the DOM element
   delete childAttrs.srcObject;
+  delete childAttrs.sinkId;
 
   useEffect(() => {
     if (!videoRef.current) {
@@ -28,7 +32,10 @@ function VideoFromStream(attrs: VideoFromStreamProps) {
     }
 
     videoRef.current.srcObject = srcObject;
-  }, [videoRef, srcObject]);
+    if (attrs.sinkId && ('sinkId' in HTMLMediaElement.prototype)) {
+      videoRef.current.setSinkId(attrs.sinkId);
+    }
+  }, [videoRef, srcObject, attrs.sinkId]);
 
   return React.createElement("video", childAttrs, null);
 }

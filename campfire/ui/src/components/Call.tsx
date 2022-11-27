@@ -68,6 +68,7 @@ export const Call = observer(() => {
             className="flex-1"
             isScreenshare={false}
             srcObject={mediaStore.remote}
+            sinkId={mediaStore.outputSoundDevice.deviceId}
             muted={false}
           />
           {hasRemoteScreenshare && (

@@ -6,10 +6,13 @@ import { useStore } from "../stores/root";
 export function MediaInput() {
   const { mediaStore, urchatStore } = useStore();
   const videoDevices = mediaStore.devices.filter(
-    (dev) => dev.kind === "videoinput"
+    (d) => d.kind === "videoinput"
   );
   const audioDevices = mediaStore.devices.filter(
-    (dev) => dev.kind === "audioinput"
+    (d) => d.kind === "audioinput"
+  );
+  const audioOutputDevices = mediaStore.devices.filter(
+    (d) => d.kind === "audiooutput"
   );
 
   const onVideoChange = (evt: ChangeEvent<HTMLSelectElement>) => {
@@ -22,6 +25,12 @@ export function MediaInput() {
     mediaStore.audio.changeDevice(device, urchatStore.ongoingCall);
   };
 
+
+  const onAudioOutChange = (evt: ChangeEvent<HTMLSelectElement>) => {
+    const device = audioOutputDevices[parseInt(evt.target.value)];
+    mediaStore.setOutputSoundDevice(device);
+  };
+
   return (
     <div className="space-y-6 h-fit w-full">
       <div className="VideoInputs w-full">
@@ -31,6 +40,9 @@ export function MediaInput() {
         <select
           className="input default-ring bg-gray-200"
           onChange={onVideoChange}
+          defaultValue={videoDevices.findIndex(d => {
+            return d.deviceId === mediaStore.video.device.deviceId;
+          })}
         >
           {videoDevices.map((dev, key) => (
             <option key={key} value={key}>
@@ -46,8 +58,30 @@ export function MediaInput() {
         <select
           className="input default-ring bg-gray-200"
           onChange={onAudioChange}
+          defaultValue={audioDevices.findIndex(d => {
+            return d.deviceId === mediaStore.audio.device.deviceId;
+          })}
         >
           {audioDevices.map((dev, key) => (
+            <option key={key} value={key}>
+              {dev.label === "" ? dev.groupId : dev.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="AudioOutputs w-full">
+        <Text variant="label" pb={1}>
+          Audio Output
+        </Text>
+        <select
+          className="input default-ring bg-gray-200"
+          onChange={onAudioOutChange}
+          defaultValue={audioOutputDevices.findIndex(d => {
+            return d.deviceId === mediaStore.outputSoundDevice.deviceId;
+          })}
+          disabled={!('sinkId' in HTMLMediaElement.prototype)}
+        >
+          {audioOutputDevices.map((dev, key) => (
             <option key={key} value={key}>
               {dev.label === "" ? dev.groupId : dev.label}
             </option>
