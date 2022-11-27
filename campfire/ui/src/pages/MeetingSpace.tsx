@@ -1,5 +1,4 @@
 import React, { FC, useEffect } from "react";
-import styled from "styled-components";
 import {
   Flex,
   Ship,
@@ -21,7 +20,6 @@ import { SectionHeader } from "../components/SectionHeader";
 import hangup from "../assets/hangup.wav";
 import { rgba } from "polished";
 import { ringing } from "../stores/media";
-import { Controls } from "../components/Controls";
 
 export const MeetingSpace: FC<any> = observer(() => {
   const { mediaStore, urchatStore } = useStore();
@@ -117,7 +115,7 @@ export const MeetingSpace: FC<any> = observer(() => {
                   Answering{" "}
                 </Text>
                 <Text fontSize={5} fontWeight={500} opacity={0.9}>
-                  {"~" + deSig(urchatStore.ongoingCall.call.peer)}'s call
+                  {"~" + deSig(urchatStore.ongoingCall.call.peer)}&apos;s call
                 </Text>
                 <Text fontSize={5} fontWeight={400} opacity={0.9}>
                   ...

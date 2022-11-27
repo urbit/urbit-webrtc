@@ -42,10 +42,10 @@ interface IUrchatStore {
   placeCall: (
     ship: string,
     setHandlers: (call: OngoingCall) => void
-  ) => Promise<any>;
+  ) => Promise<void>;
   answerCall: (
     setHandlers: (ship: string, conn: UrbitRTCPeerConnection) => void
-  ) => Promise<any>;
+  ) => Promise<OngoingCall>;
   rejectCall: () => void;
   hangup: () => void;
   hungup: () => void;
@@ -172,12 +172,12 @@ export class UrchatStore implements IUrchatStore {
     const { urbitRtcApp, hungup, startIcepond } = this;
     const conn = urbitRtcApp.call(ship, dap);
     conn.addEventListener("hungupcall", hungup);
-    conn.onurbitstatechanged = (ev: Event) => {
+    conn.onurbitstatechanged = (_ev: Event) => {
       runInAction(() => {
         this.connectionState = conn.urbitState;
       });
     };
-    conn.onring = (uuid: string) => {
+    conn.onring = (_uuid: string) => {
       runInAction(() => {
         const call = { peer: ship, dap: dap, uuid: conn.uuid };
         const ongoingCall = { conn, call };
@@ -201,7 +201,7 @@ export class UrchatStore implements IUrchatStore {
     const call = incomingCall.call;
     const conn = incomingCall.answer();
     conn.addEventListener("hungupcall", hungup);
-    conn.onurbitstatechanged = (ev: Event) => {
+    conn.onurbitstatechanged = (_ev: Event) => {
       runInAction(() => {
         this.connectionState = conn.urbitState;
       });

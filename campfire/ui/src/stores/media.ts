@@ -83,7 +83,7 @@ export class MediaStore implements IMediaStore {
       enabled: false,
       tracks: [],
       toggle: async (call: OngoingCall) => {
-        var screenShareState = this.sharedScreen;
+        const screenShareState = this.sharedScreen;
         if (screenShareState.enabled) {
           this.sharedScreen = await stopShareScreen(this, call);
         } else {

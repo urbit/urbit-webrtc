@@ -14,8 +14,8 @@ export const Call = observer(() => {
   console.log("rerender call");
   const hasRemoteScreenshare = mediaStore.remoteVideoTrackCounter > 1;
 
-  var localScreenShare = null;
-  var remoteScreenShare = null;
+  let localScreenShare = null;
+  let remoteScreenShare = null;
   if (hasRemoteScreenshare) {
     console.log("has remote screenshare");
     const screensharetrack = mediaStore.remote.getVideoTracks()[1];

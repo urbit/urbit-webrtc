@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useMemo, useState } from "react";
+import React, { FC, useEffect, useMemo } from "react";
 import { observer } from "mobx-react";
 import { useHistory } from "react-router";
 import { deSig } from "@urbit/api";
@@ -59,7 +59,7 @@ export const StartMeetingPage: FC<any> = observer(() => {
     ringing.loop = true;
     ringing.play();
     mediaStore.resetStreams();
-    const call = await urchatStore.placeCall(ship, (call) => {
+    await urchatStore.placeCall(ship, (call) => {
       push(`/chat/${call.conn.uuid}`);
       mediaStore.getDevices(call);
       urchatStore.setDataChannelOpen(false);

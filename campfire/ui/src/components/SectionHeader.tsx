@@ -1,8 +1,5 @@
-import { deSig } from "@urbit/api";
-import { isValidPatp } from "urbit-ob";
-import React, { useCallback } from "react";
-import { useForm } from "react-hook-form";
-import { Icons, Flex, Text } from "@holium/design-system";
+import React  from "react";
+import { Flex, Text } from "@holium/design-system";
 
 interface SectionHeaderProps {
   icon: any;
