@@ -1,6 +1,6 @@
 import React from "react";
 
-export const Exit = ({ className, primary, secondary }: IconProps) => (
+export const Exit = ({ className, primary }: IconProps) => (
   <svg
     width="25"
     height="24"

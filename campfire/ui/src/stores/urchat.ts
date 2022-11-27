@@ -71,7 +71,7 @@ export class UrchatStore implements IUrchatStore {
     console.log("make constructor");
     this.urbit = new Urbit("", "");
     // requires <script> tag for /~landscape/js/session.js
-    this.urbit.ship = (window as any).ship;
+    this.urbit.ship = (window as Window & typeof globalThis & {ship: string} ).ship;
     this.urbit.verbose = true;
     this.urbitRtcApp = new UrbitRTCApp(dap, this.configuration);
     this.urbitRtcApp.addEventListener(

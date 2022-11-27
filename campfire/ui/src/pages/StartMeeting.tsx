@@ -190,7 +190,7 @@ export const StartMeetingPage: FC<any> = observer(() => {
               }
               onFocus={() => meetingCode.actions.onFocus()}
               onBlur={() => meetingCode.actions.onBlur()}
-              onChange={(evt: any) => {
+              onChange={(evt: React.ChangeEvent<HTMLInputElement>) => {
                 meetingCode.actions.onChange(evt.target.value);
               }}
             />
@@ -271,7 +271,7 @@ export const StartMeetingPage: FC<any> = observer(() => {
 });
 
 export const meetingCodeForm = (
-  defaults: any = {
+  defaults = {
     meetingCode: "",
   }
 ) => {

@@ -1,6 +1,6 @@
 import React from "react";
 
-export const Campfire = ({ className, primary, secondary, }: IconProps) => (
+export const Campfire = ({ className }: IconProps) => (
   <svg
     width="172"
     height="172"

@@ -12,7 +12,7 @@ export class PalsStore {
     constructor() {
         this.urbit = new Urbit("", "");
         // requires <script> tag for /~landscape/js/session.js
-        this.urbit.ship = (window as any).ship;
+        this.urbit.ship = (window as Window & typeof globalThis & {ship: string} ).ship;
         this.urbit.verbose = true;
         this.palsInterface = new Pals(this.urbit);
         this.loadPals();
