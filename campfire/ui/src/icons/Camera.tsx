@@ -1,6 +1,6 @@
 import React from "react";
 
-export const Camera = ({ className, primary, secondary }: IconProps) => (
+export const Camera = ({ className, primary }: IconProps) => (
   <svg
     width="24"
     height="24"

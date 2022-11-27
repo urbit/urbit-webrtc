@@ -19,7 +19,7 @@ type VideoFromStreamProps = {
 
 function VideoFromStream(attrs: VideoFromStreamProps) {
   const srcObject = attrs.srcObject;
-  const videoRef = useRef<HTMLMediaElement>(null);
+  const videoRef = useRef<HTMLAudioElement & { setSinkId (deviceId: string): void }>(null); // add the setSinkId because typescript has an outdated type of MediaElement
   const childAttrs = { ...attrs, autoPlay: true, ref: videoRef };
 
   // delete the props we use so they don't get passed to the DOM element
