@@ -232,6 +232,7 @@ export const MeetingSpace: FC<any> = observer(() => {
               audio.volume = 0.8;
               audio.play();
               mediaStore.stopAllTracks();
+              urchatStore.makeFalseWasHungUp();
               push("/");
             }}
           >
