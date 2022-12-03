@@ -49,6 +49,7 @@ interface IUrchatStore {
   rejectCall: () => void;
   hangup: () => void;
   hungup: () => void;
+  makeFalseWasHungUp: () => void;
   setMessages: (new_mesages: Message[]) => void;
 }
 
@@ -114,6 +115,7 @@ export class UrchatStore implements IUrchatStore {
       rejectCall: action.bound,
       hangup: action.bound,
       hungup: action.bound,
+      makeFalseWasHungUp: action.bound,
       setMessages: action.bound,
     });
   }
@@ -252,6 +254,10 @@ export class UrchatStore implements IUrchatStore {
     this.ongoingCall = null;
     this.dataChannelOpen = false;
     this.wasHungUp = true;
+  }
+
+  makeFalseWasHungUp() {
+    this.wasHungUp = false;
   }
 
   setMessages(new_messages: Message[]) {

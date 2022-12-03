@@ -1,4 +1,4 @@
-import React, { FC, useEffect, useMemo } from "react";
+import React, { FC, useEffect, useMemo, useRef } from "react";
 import { observer } from "mobx-react";
 import { useHistory } from "react-router";
 import { deSig } from "@urbit/api";
@@ -16,12 +16,19 @@ import { resetRing, ringing } from "../stores/media";
 import { IceServers } from "../components/IceServers";
 
 export const StartMeetingPage: FC<any> = observer(() => {
-  console.log("Rerender StartMeetingPage");
   document.title = "Campfire";
   const { form, meetingCode } = useMemo(meetingCodeForm, []);
   const { mediaStore, urchatStore, palsStore } = useStore();
   const { push } = useHistory();
-  // const audio = new Audio(ring);
+  const icepondLoaded = useRef<boolean>(false);
+
+  //fetch icepond config on inital load so we can display them in "Settings"
+  useEffect(() => {
+    if(!icepondLoaded.current){
+      urchatStore.startIcepond();
+      icepondLoaded.current = true;
+    }
+  })
 
   //fetch icepond config initally so we can display them in "Settings"
   urchatStore.startIcepond();
