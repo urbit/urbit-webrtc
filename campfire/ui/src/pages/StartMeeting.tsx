@@ -24,14 +24,11 @@ export const StartMeetingPage: FC<any> = observer(() => {
 
   //fetch icepond config on inital load so we can display them in "Settings"
   useEffect(() => {
-    if(!icepondLoaded.current){
+    if (!icepondLoaded.current) {
       urchatStore.startIcepond();
       icepondLoaded.current = true;
     }
   })
-
-  //fetch icepond config initally so we can display them in "Settings"
-  urchatStore.startIcepond();
 
   const isSecure =
     location.protocol.startsWith("https") || location.hostname === "localhost";
