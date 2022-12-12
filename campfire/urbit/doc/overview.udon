@@ -18,7 +18,7 @@ If you have trouble installing, the most common issue is users also having %urch
 
 # Credits
 
-This work was only possible because of the original [urbit-webrtc](https://github.com/urbit/urbit-webrtc) project that built out the gall agents (`switchboard` now name `rtcswitchboard` and `icepond`) as well as the prototype urchatfm application.
+This work was only possible because of the original [urbit-webrtc](https://github.com/urbit/urbit-webrtc) project that built out the gall agents (`switchboard` now named `rtcswitchboard` and `icepond`) as well as the prototype urchatfm application.
 
 Thank you to:
 - ~ritpub-sipsyl

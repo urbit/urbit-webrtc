@@ -1,0 +1,16 @@
+;>
+
+# 0.1.17
+
+## Bug fixes:
+
+- Fix chat formatting from running off screen [#9](https://github.com/holium/campfire/pull/9)
+- Fix icepond over-rendering [#19](https://github.com/holium/campfire/pull/19)
+- Fix hangup modal being hung [#19](https://github.com/holium/campfire/pull/19)
+
+## Improvements:
+
+- Add support for Holium's Realm themeing [#11](https://github.com/holium/campfire/pull/11)
+- Add ability to control audio output device [#14](https://github.com/holium/campfire/pull/14)
+- Smart handling of selected media device in Media Settings [#15](https://github.com/holium/campfire/pull/15)
+
