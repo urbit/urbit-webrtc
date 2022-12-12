@@ -34,7 +34,7 @@ export function MediaInput() {
   return (
     <div className="space-y-6 h-fit w-full">
       <div className="VideoInputs w-full">
-        <Text variant="label" pb={1}>
+        <Text variant="label" pb={1} style={{color: "var(--rlm-text-color, #FF0000)"}}>
           Camera
         </Text>
         <select
@@ -52,7 +52,7 @@ export function MediaInput() {
         </select>
       </div>
       <div className="AudioInputs w-full">
-        <Text variant="label" pb={1}>
+        <Text variant="label" pb={1} style={{color: "var(--rlm-text-color, #FF0000)"}}>
           Microphone
         </Text>
         <select
@@ -70,7 +70,7 @@ export function MediaInput() {
         </select>
       </div>
       <div className="AudioOutputs w-full">
-        <Text variant="label" pb={1}>
+        <Text variant="label" pb={1} style={{color: "var(--rlm-text-color, #FF0000)"}}>
           Audio Output
         </Text>
         <select

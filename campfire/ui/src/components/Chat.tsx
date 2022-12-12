@@ -44,6 +44,7 @@ export const Chat = observer(({ sendMessage, messages, ready }: ChatProps) => {
         display: "flex",
         flexDirection: "column",
         opacity: disabled ? 0.5 : 1,
+        backgroundColor: "var(--rlm-card-color, #FBFBFB)"
       }}
     >
       <Flex flexDirection="column" flexGrow={1}>

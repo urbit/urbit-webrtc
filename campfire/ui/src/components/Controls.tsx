@@ -30,13 +30,17 @@ export const Controls = observer(({ className }: ControlsProps) => {
       elevation="none"
       style={{
         borderRadius: 16,
-        borderColor: "#E3E3E3",
+        borderColor: "var(--rlm-border-color, #E3E3E3)",
         padding: "6px 16px",
         width: "80%",
+        backgroundColor: "var(--rlm-card-color, #FEFEFE)"
       }}
     >
       <div
         className={classNames("flex justify-center p-3 space-x-4", className)}
+        style={{
+          backgroundColor: "var(--rlm-card-color, #FEFEFE)"
+        }}
       >
         <IconToggle
           className="w-10 h-10"
@@ -93,6 +97,7 @@ export const Controls = observer(({ className }: ControlsProps) => {
         <button
           className="flex justify-center items-center w-10 h-10 text-pink-600 bg-pink-100 rounded-full default-ring"
           onClick={leaveCall}
+          title="Hang Up"
         >
           <Exit
             className="w-6 h-6"

@@ -35,7 +35,7 @@ export const Call = observer(() => {
 
   return (
     <>
-      <div className="relative w-full h-full bg-gray-500 overflow-hidden lg:rounded-xl">
+      <div className="relative w-full h-full overflow-hidden lg:rounded-xl">
         <div className="absolute z-10 top-2 left-2 sm:top-6 sm:left-6">
           <Video
             size={landscape ? "mini" : "xs-mini"}
@@ -92,7 +92,6 @@ export const Call = observer(() => {
         >
           <Controls />
         </Flex>
-        {/* <Controls className="absolute z-10 bottom-0 left-1/2 transform -translate-x-1/2" /> */}
       </div>
     </>
   );

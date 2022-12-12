@@ -14,8 +14,7 @@ export const SectionHeader = ({ icon, header }: SectionHeaderProps) => {
         fontSize={3}
         fontWeight={500}
         mt="1px"
-        color="text.primary"
-        title={`Sidebar section ${header}`}
+        title={`Sidebar - ${header}`}
       >
         {header}
       </Text>

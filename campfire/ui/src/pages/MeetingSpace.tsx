@@ -57,22 +57,24 @@ export const MeetingSpace: FC<any> = observer(() => {
   // ---------------------------------------------------------------
   return (
     <Flex
-      style={{ background: "#FBFBFB" }}
+      // style={{ background: "#FBFBFB" }}
       flex={1}
       height="100vh"
       width="100%"
       justifyContent="center"
       alignItems="center"
       flexDirection="row"
+      className="windowColor"
     >
       <Flex
-        style={{ background: "#EBEBEB", position: "relative" }}
+        style={{ position: "relative" }}
         borderRadius={20}
         width="75%"
         height="90%"
         m={10}
         justifyContent="center"
         alignItems="center"
+        className="baseColor"
       >
         {!urchatStore.dataChannelOpen && urchatStore.ongoingCall && (
           <Flex
@@ -142,6 +144,7 @@ export const MeetingSpace: FC<any> = observer(() => {
             )}
             <Flex mt={3}>
               <Button
+                title="Hangup"
                 style={{
                   fontSize: 20,
                   borderRadius: 24,
@@ -176,7 +179,7 @@ export const MeetingSpace: FC<any> = observer(() => {
             <Icons.Participants
               opacity={0.5}
               fontSize="20px"
-              color="text.primary"
+              color="var(--rlm-icon-color, #000000)"
               aria-hidden
             />
           }
@@ -186,15 +189,19 @@ export const MeetingSpace: FC<any> = observer(() => {
           borderRadius={9}
           mt={1}
           mb={3}
-          style={{ padding: 8, gap: 4 }}
+          style={{
+            padding: 8,
+            gap: 4 ,
+            backgroundColor: "var(--rlm-card-color, #FBFBFB)"
+          }}
         >
           <Flex gap={4} flexDirection="column">
             {/* TODO load contact store into local storage and lookup sigil metadata */}
-            <Ship patp={"~" + deSig(urchatStore.urbit.ship)} color="#000000" />
+            <Ship patp={"~" + deSig(urchatStore.urbit.ship)} textColor="var(--rlm-text-color, #000000)"/>
             {urchatStore.dataChannelOpen && (
               <Ship
                 patp={"~" + deSig(urchatStore.ongoingCall.call.peer)}
-                color="#000000"
+                textColor="var(--rlm-text-color, #000000)"
               />
             )}
           </Flex>
@@ -205,7 +212,7 @@ export const MeetingSpace: FC<any> = observer(() => {
             <Icons.ChatLine
               opacity={0.5}
               fontSize="20px"
-              color="text.primary"
+              color="var(--rlm-icon-color, #000000)"
               aria-hidden
             />
           }

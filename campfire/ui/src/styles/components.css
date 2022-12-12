@@ -3,5 +3,35 @@
 }
 
 .input {
-  @apply px-4 py-2 w-full text-base sm:text-sm bg-gray-100 rounded-md;
+  @apply px-4 py-2 w-full text-base sm:text-sm rounded-md;
+}
+
+
+/* Global */
+p {
+  color: var(--rlm-text-color, #000000);
+}
+.textColor{
+  color: var(--rlm-text-color, #FF0000);
+}
+.windowColor {
+  background-color: var(--rlm-window-color, #FBFBFB);
+}
+.baseColor {
+  background-color: var(--rlm-base-color, #EBEBEB);
+}
+.inputColor {
+  background-color: var(--rlm-input-color, #f3f4f6);
+}
+.cardColor {
+  background-color: var(--rlm-card-color, #FF0000);
+}
+.iconColor {
+  background-color: var(--rlm-icon-color, #0F0F0F);
+}
+.borderColor {
+  background-color: var(--rlm-border-color, #FF0000);
+}
+.accentColor {
+  background-color: var(--rlm-accent-color, #FF0000);
 }
