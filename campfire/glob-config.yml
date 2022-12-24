@@ -1,0 +1,19 @@
+env:
+  desk: 'base'
+  urbit_path: '~/dev/urbit/urbit'
+  repo_path: '~/dev/urbit/holium/campfire/'
+  ui_path: '~/dev/urbit/holium/campfire/campfire/ui/'
+  ship_path: '~/dev/urbit/ships'
+script:
+  - mount:
+    - cmd: 'mount %base'
+      type: 'urbit:app'
+  - buildandcopyui:
+    - cmd: '~/dev/urbit/holium/campfire/campfire/build-ui.sh'
+      type: 'system'
+  - commit:
+    - cmd: 'commit %base'
+      type: 'urbit:app'
+  - glob:
+    - cmd: '-garden!make-glob %base /ui'
+      type: 'urbit:dojo'
